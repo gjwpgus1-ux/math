@@ -8,11 +8,32 @@ import re, unicodedata
 
 BANNER_H  = 60.0            # 합본 제작 시 상단에 찍힌 시험명 배너 높이
 PUA       = re.compile('[-]')
-CHROME_KW = ('저작권', '문제지에', '평가원', '교육청', '무단', '복제', '교육과정')
+CHROME_KW = ('저작권', '문제지', '평가원', '교육청', '무단', '복제', '교육과정',
+             '학년도', '교시', '모의평가', '학력평가', '전국연합', '수학영역',
+             '대학수학능력', '홀수형', '짝수형')
 LABELS    = ('5지선다형', '단답형', '주관식', '5지 선다형', '단 답 형', '선다형')
 # 시험지 끝에 붙는 안내 상자 (문항이 아님)
 NOTE_KW   = ('확인사항', '답안지의해당란', '수고하셨습니다', '문제지와답안지', '이어서선택과목')
 DIGITS    = '0123456789'
+
+
+def squeeze(s):
+    """겹쳐 찍힌 글자를 하나로. '확확인인 사사항항' → '확인 사항'
+
+    문제지 안내 상자는 굵게 보이도록 같은 글자를 두 번 겹쳐 인쇄한 것이 있어,
+    그대로 읽으면 낱말이 맞지 않는다."""
+    out, i = [], 0
+    while i < len(s):
+        out.append(s[i])
+        i += 2 if i + 1 < len(s) and s[i + 1] == s[i] else 1
+    return ''.join(out)
+
+
+def has_kw(s, kws):
+    """겹쳐 찍힌 경우까지 감안해 낱말이 들어 있는지 본다."""
+    a = s.replace(' ', '')
+    b = squeeze(a)
+    return any(k.replace(' ', '') in a or k.replace(' ', '') in b for k in kws)
 
 
 # ---------------------------------------------------------------- 문자 추출
@@ -301,7 +322,7 @@ def analyse(chars, W, H, force_split=None):
     # 머리말/꼬리말 잘라내기: 위/아래 끝에서 짧고 번호 없는 줄들을 벗겨낸다
     def is_chrome(ln, num, H):
         s = clean_text(line_text(ln)).replace(' ', '')
-        if any(k in s for k in CHROME_KW):
+        if has_kw(s, CHROME_KW):
             return True
         if num is not None:
             return False
@@ -331,8 +352,10 @@ def analyse(chars, W, H, force_split=None):
         for ln in ls:
             t = clean_text(line_text(ln)).replace(' ', '')
             top = line_box(ln)[1]
-            if top > 0.45 * H and any(k in t for k in NOTE_KW):
-                c_bot = min(c_bot, top - 6)
+            if top > 0.45 * H and has_kw(t, NOTE_KW):
+                # 안내 상자의 «테두리 선»까지 함께 잘라 낸다.
+                # 글자만 피해 자르면 선이 남아 문항 아래가 길게 비어 보인다.
+                c_bot = min(c_bot, top - 26)
 
     if single:
         cols = [(max(0.0, min(c[1] for c in body) - 14), min(W, max(c[3] for c in body) + 14))]

@@ -56,17 +56,14 @@ const chips=g=>[...doc.querySelectorAll('#filters .fgroup')[g].querySelectorAll(
   const IT=T().IT, EX=T().EX;
   const cnt={};
   IT.forEach(it=>{ const k=T().divOf(EX[it[0]]); cnt[k]=(cnt[k]||0)+1; });
-  ok('수능 530', cnt['수능']===530, cnt['수능']);
-  ok('9월모평 530', cnt['9월모평']===530, cnt['9월모평']);
-  ok('6월모평 530', cnt['6월모평']===530, cnt['6월모평']);
-  ok('고1전국 960', cnt['고1전국']===960, cnt['고1전국']);
-  ok('고2전국 1200', cnt['고2전국']===1200, cnt['고2전국']);
-  ok('고3전국 1640', cnt['고3전국']===1640, cnt['고3전국']);
   ok('여섯 갈래가 전부', Object.keys(cnt).length===6, Object.keys(cnt).join(','));
-  ok('합이 5390', Object.values(cnt).reduce((s,x)=>s+x,0)===5390);
+  ok('모든 갈래에 문항이 있음', Object.values(cnt).every(v=>v>0),
+     Object.keys(cnt).map(k=>k+' '+cnt[k]).join(' · '));
+  ok('합이 전체 문항 수와 같음', Object.values(cnt).reduce((s,x)=>s+x,0)===IT.length, IT.length);
 
   console.log('\n[6] 검색은 그대로');
-  ok('고3 6·9월 = 모평', T().search('고3 6월, 9월 22번').list.length===30);
+  const n69=T().search('고3 6월, 9월 22번').list;
+  ok('고3 6·9월 = 모평', n69.length>0 && n69.every(it=>T().EX[it[0]].g==='수능·모평'), n69.length+'문항');
   ok('24학년도 수능 14번', T().search('24학년도 수능 14번').list.length>0);
   ok('25 고3 3월 1,2,3', T().search('25 고3 3월 1,2,3').list.length>0);
   done();

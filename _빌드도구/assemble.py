@@ -139,10 +139,18 @@ def build_section(sec, margins):
             lead = ''.join(ln['s'] for ln in p['lines'][ci] if ctop - 3 <= ln['t'] < first - 5)
             for L in LABELS:
                 lead = lead.replace(L, '')
+            # 쪽머리 밑줄(━━━)이나 점선은 글자로 치지 않는다.
+            # 이것을 글자로 세면 «단답형» 딱지만 있는 칸이 앞 문항에 딸려 붙는다.
+            lead = re.sub(r'[\u2500-\u257f\u2014\u2013\-_.·…\s]+', '', lead)
             if len(lead.strip()) > 3 and qs:
                 qs[-1]['rects'].append((p, ci, ctop, first - 8))
         for k, (num, top) in enumerate(anc):
             bot = anc[k + 1][1] - 8 if k + 1 < len(anc) else cbot
+            # 문항 사이에 놓인 «단답형» 같은 구분 딱지는 앞 문항에 딸려 들어가지 않게 자른다
+            for ln in p['lines'][ci]:
+                t = ln['s'].replace(' ', '')
+                if t and any(t == L.replace(' ', '') for L in LABELS) and top + 20 < ln['t'] < bot:
+                    bot = min(bot, ln['t'] - 6)
             qs.append(dict(num=num, rects=[(p, ci, top - 9, bot)]))
 
     out = []

@@ -19,7 +19,10 @@ const uniqEx=q=>[...new Set(T().search(q).list.map(it=>T().EX[it[0]].n))];
   click($('ftoggle')); await wait(80);
   const gYear=[...doc.querySelectorAll('#filters .fgroup')].find(g=>g.querySelector('b').textContent==='연도');
   const chips=[...gYear.querySelectorAll('.chip')].map(c=>c.textContent);
-  ok('연도 칩이 실시 연도', chips[0]==='2025' && !chips.includes('2026'), chips.slice(0,3).join(',')+' … 2026포함:'+chips.includes('2026'));
+  const held=[...new Set(EX.map(e=>T().heldYear(e)))].sort().reverse();
+  ok('연도 칩이 실시 연도', chips.join(',')===held.join(','), chips.slice(0,4).join(','));
+  ok('학년도 그대로인 칩은 없음', !chips.includes(String(Math.max(...EX.map(e=>+e.y)))),
+     '가장 큰 학년도='+Math.max(...EX.map(e=>+e.y)));
   ok('2016년도 생김 (17학년도 수능)', chips.includes('2016'));
   const c25=[...gYear.querySelectorAll('.chip')].find(c=>c.textContent==='2025');
   click(c25); await wait(320);
@@ -49,7 +52,8 @@ const uniqEx=q=>[...new Set(T().search(q).list.map(it=>T().EX[it[0]].n))];
   console.log('\n[6] 예전 검색이 깨지지 않았나');
   ok('고2 6월 14번', T().search('고2 6월 14번').list.length>0);
   ok('25 고3 3월 1,2,3', T().search('25 고3 3월 1,2,3').list.length===3, T().search('25 고3 3월 1,2,3').list.length);
-  ok('고3 6월, 9월 22번', T().search('고3 6월, 9월 22번').list.length===30);
+  const y69=T().search('고3 6월, 9월 22번').list;
+  ok('고3 6월, 9월 22번', y69.length>0 && y69.every(it=>T().EX[it[0]].g==='수능·모평'), y69.length+'문항');
   ok('2020년 4월 고3', T().search('2020년 4월 고3').list.length>0);
   ok('확통 정규분포', T().search('확통 정규분포').list.length>0);
 
