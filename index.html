@@ -1466,10 +1466,11 @@
       function(){
         $('rpCancel').onclick=closeModal;
         $('rpOk').onclick=function(){
-          REPORTS.unshift({path:it[2],label:label(it),kind:$('rpKind').value,who:UID,
-                           memo:$('rpMemo').value.trim(),at:nowStr(),done:false});
-          repSave(); closeModal(); refreshCards();
-          toast('제보했습니다. 관리자 메뉴에서 확인할 수 있습니다.');
+          var rec={t:'rep', id:newId(), path:it[2], label:label(it), kind:$('rpKind').value,
+                   memo:$('rpMemo').value.trim(), done:false, who:UID, at:nowStr()};
+          REPORTS.unshift(rec); repSave(); sendCollect(rec);
+          closeModal(); refreshCards();
+          toast(COLLECT_URL?'제보했습니다. 고맙습니다.':'제보했습니다. 관리자 메뉴에서 확인할 수 있습니다.');
         };
         $('rpKind').focus();
       });
@@ -1949,8 +1950,8 @@
     function sift(arr){
       for(var i=arr.length-1;i>=0;i--) if(arr[i].id && DEL[arr[i].id]){ arr.splice(i,1); n++; }
     }
-    sift(PAIRS); sift(STDV); sift(NEGV);
-    if(n){ pairSave(); stdSave(); negSave(); prefClear(); STDMAP=null; }
+    sift(PAIRS); sift(STDV); sift(NEGV); sift(REPORTS);
+    if(n){ pairSave(); stdSave(); negSave(); repSave(); prefClear(); STDMAP=null; }
     return n;
   }
 
@@ -1977,12 +1978,14 @@
         var np=mergeById(PAIRS, j.pairs||[]);
         var ns=mergeById(STDV,  j.std  ||[]);
         var nn=mergeById(NEGV,  j.neg  ||[]);
+        var nr=mergeById(REPORTS, j.rep||[]);
         applyDeletions();
         if(np){ pairSave(); prefClear(); }
         if(ns){ stdSave(); }
         if(nn){ negRebuild(); negSave(); }
+        if(nr){ REPORTS.sort(function(a,b){ return (b.at||'')<(a.at||'')?-1:1; }); repSave(); }
         try{ localStorage.setItem('gich_pulled', nowStr()); }catch(e){}
-        if(cb) cb('', np, ns, nn);
+        if(cb) cb('', np, ns, nn+nr);
       })
       .catch(function(err){ if(cb) cb(err.message||String(err)); });
     }catch(e){ if(cb) cb(e.message||String(e)); }
@@ -2080,14 +2083,20 @@
           $('admin').classList.remove('open');
         });
         mkb('이미지 교체',function(){ var it=BY_PATH[r.path]; if(it) pickImage(it); });
-        mkb(r.done?'미처리로':'처리완료',function(){ r.done=!r.done; repSave(); drawAdmin(); refreshCards(); });
-        mkb('삭제',function(){ REPORTS.splice(i,1); repSave(); drawAdmin(); refreshCards(); },'warn');
+        mkb(r.done?'미처리로':'처리완료',function(){
+          r.done=!r.done; repSave();
+          if(r.id) sendCollect({t:'repdone', id:newId(), target:r.id, done:r.done, who:UID, at:nowStr()});
+          drawAdmin(); refreshCards();
+        });
+        mkb('삭제',function(){ dropRecord(r.id,'rep'); REPORTS.splice(i,1); repSave(); drawAdmin(); refreshCards(); },'warn');
         d.appendChild(bar); L.appendChild(d);
       });
       var b1=document.createElement('button'); b1.textContent='제보 목록 CSV로 저장';
       b1.style.flex='1'; b1.onclick=exportReports; Fo.appendChild(b1);
       var b2=document.createElement('button'); b2.textContent='처리완료 지우기'; b2.className='warn';
-      b2.onclick=function(){ REPORTS=REPORTS.filter(function(r){return !r.done;}); repSave(); drawAdmin(); refreshCards(); };
+      b2.onclick=function(){
+        REPORTS.filter(function(r){return r.done;}).forEach(function(r){ dropRecord(r.id,'rep'); });
+        REPORTS=REPORTS.filter(function(r){return !r.done;}); repSave(); drawAdmin(); refreshCards(); };
       Fo.appendChild(b2);
 
     } else if(adminTab==='sync'){
@@ -2210,7 +2219,7 @@
         '<span style="font-family:Consolas,monospace">var COLLECT_URL = \'\';</span><br>'+
         '따옴표 안에 붙여 넣고 저장하시면 됩니다.</div></div>';
       h+='<div class="rrow"><div class="rt">지금 브라우저에 있는 응답</div>'+
-        '<div class="rm">유사문항 비교 '+PAIRS.length+'건 · 성취기준 '+STDV.length+'건</div>'+
+        '<div class="rm">유사문항 비교 '+PAIRS.length+'건 · 성취기준 '+STDV.length+'건 · 오류제보 '+REPORTS.length+'건</div>'+
         '<div class="rm">주소를 넣으면 이 응답들도 다음에 열 때 함께 올라갑니다.</div></div>';
       L.innerHTML=h;
       var bq=document.createElement('button'); bq.textContent='지금 응답을 파일로 받아 두기';
@@ -2228,7 +2237,7 @@
     h+='</div>';
     var nd=Object.keys(DEL).length;
     h+='<div class="rrow"><div class="rt">합쳐진 응답</div>'+
-      '<div class="rm">유사문항 비교 '+PAIRS.length+'건 · 성취기준 '+STDV.length+'건 · 유사하지않음 '+NEGV.length+'건</div>'+
+      '<div class="rm">유사문항 비교 '+PAIRS.length+'건 · 성취기준 '+STDV.length+'건 · 유사하지않음 '+NEGV.length+'건 · 오류제보 '+REPORTS.length+'건</div>'+
       (nd?'<div class="rm">지운 응답 '+nd+'건 — 시트에도 알렸으므로 다시 받아와도 되살아나지 않습니다</div>':'')+
       '<div class="rm">시트에서 받아온 다른 분들의 응답까지 함께 셉니다. '+
       '못 보낸 것이 있어도 사라지지 않고, 다음에 앱을 열면 다시 보냅니다.</div></div>';
@@ -2257,7 +2266,7 @@
     b4.onclick=function(){
       var has={}; QUEUE.forEach(function(r){ has[r.id]=1; });
       var n=0;
-      PAIRS.concat(STDV).concat(NEGV).forEach(function(r){
+      PAIRS.concat(STDV).concat(NEGV).concat(REPORTS).forEach(function(r){
         if(!r.id || has[r.id]) return;
         has[r.id]=1; QUEUE.push(r); n++;
       });
@@ -2478,7 +2487,10 @@
         ovPut(it[2],cv.toDataURL('image/png'),function(ok,msg){
           if(!ok){ toast(msg||'저장하지 못했습니다',true); return; }
           var n=0;
-          REPORTS.forEach(function(r){ if(r.path===it[2]&&!r.done){ r.done=true; n++; } });
+          REPORTS.forEach(function(r){
+            if(r.path===it[2]&&!r.done){ r.done=true; n++;
+              if(r.id) sendCollect({t:'repdone', id:newId(), target:r.id, done:true, who:UID, at:nowStr()}); }
+          });
           if(n) repSave();
           refreshCards(); if($('admin').classList.contains('open')) drawAdmin();
           toast('이미지를 교체했습니다 — '+label(it)+(n?' (제보 '+n+'건 처리완료)':''));

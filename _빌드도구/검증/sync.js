@@ -7,7 +7,7 @@ let pass=0,fail=0;
 const ok=(n,c,e)=>{ if(c){pass++;console.log('  OK   '+n);} else {fail++;console.log('  FAIL '+n+(e!==undefined?'  → '+e:''));} };
 
 /* 가짜 시트 */
-const SHEET={cmp:[],std:[],neg:[],del:[]};
+const SHEET={cmp:[],std:[],neg:[],rep:[],del:[]};
 let ONLINE=true, POSTS=0, GETS=0;
 function server(url,opt){
   if(!ONLINE) return Promise.reject(new Error('오프라인'));
@@ -15,19 +15,25 @@ function server(url,opt){
     GETS++;
     return Promise.resolve({json:()=>Promise.resolve({ok:true,
       pairs:SHEET.cmp.slice(), std:SHEET.std.slice(),
-      neg:SHEET.neg.slice(), del:SHEET.del.map(d=>d.target)})});
+      neg:SHEET.neg.slice(), rep:SHEET.rep.slice(), del:SHEET.del.map(d=>d.target)})});
   }
   POSTS++;
   const body=JSON.parse(opt.body);
   let saved=0, skipped=0;
   let erased=0;
   (body.records||[]).forEach(r=>{
-    const kind = r.t==='std'?'std' : r.t==='neg'?'neg' : r.t==='del'?'del' : 'cmp';
+    const kind = r.t==='std'?'std' : r.t==='neg'?'neg' : r.t==='rep'?'rep'
+               : r.t==='del'?'del' : r.t==='repdone'?'repdone' : 'cmp';
+    if(kind==='repdone'){
+      const t=SHEET.rep.find(x=>x.id===r.target);
+      if(t){ t.done=r.done; saved++; }
+      return;
+    }
     const box = SHEET[kind];
     if(box.some(x=>x.id===r.id)){ skipped++; return; }
     box.push(JSON.parse(JSON.stringify(r))); saved++;
     if(kind==='del'){
-      const from = SHEET[r.kind==='std'?'std' : r.kind==='neg'?'neg' : 'cmp'];
+      const from = SHEET[r.kind==='std'?'std' : r.kind==='neg'?'neg' : r.kind==='rep'?'rep' : 'cmp'];
       const i=from.findIndex(x=>x.id===r.target);
       if(i>=0){ from.splice(i,1); erased++; }
     }
@@ -243,6 +249,51 @@ const dump=w=>({q:JSON.parse(w.localStorage.getItem('gich_queue')||'[]'),
   ok('다른 브라우저가 받아옴', negv.length===SHEET.neg.length, negv.length);
   const negObj=JSON.parse(I.w.localStorage.getItem('gich_neg')||'{}');
   ok('NEG 표가 다시 만들어짐', Object.keys(negObj).length>0, Object.keys(negObj).length);
+
+  console.log('\n[12] 오류제보가 시트로 간다');
+  const R=boot(); await wait(400);
+  const nr=SHEET.rep.length;
+  R.$('q').value='둘러싸인 부분의 넓이'; R.$('q').dispatchEvent(new R.w.Event('input')); await wait(340);
+  const card=doc0(R).querySelector('.card');
+  const rep=[...card.querySelectorAll('button')].find(b=>b.textContent==='오류제보');
+  rep.dispatchEvent(new R.w.Event('click',{bubbles:true})); await wait(80);
+  R.$('rpMemo').value='아래쪽 선택지가 잘려 있습니다';
+  R.$('rpOk').dispatchEvent(new R.w.Event('click',{bubbles:true})); await wait(400);
+  ok('시트에 제보 1건', SHEET.rep.length===nr+1, SHEET.rep.length);
+  const last=SHEET.rep[SHEET.rep.length-1];
+  ok('파일 경로가 감', /\.png$/.test(last.path||''), last.path);
+  ok('시험·문항 이름도 감', !!last.label, last.label);
+  ok('유형이 감', !!last.kind, last.kind);
+  ok('메모가 감', last.memo==='아래쪽 선택지가 잘려 있습니다', last.memo);
+  ok('익명번호', /^u[a-z0-9]{6}$/.test(last.who||''), last.who);
+  ok('이름은 안 물음', !R.$('rpWho'));
+
+  console.log('\n[13] 다른 사람도 제보를 받아본다');
+  const S2=boot(); await wait(450);
+  const got=JSON.parse(S2.w.localStorage.getItem('gich_reports')||'[]');
+  ok('제보를 받아옴', got.length===SHEET.rep.length, got.length+' vs '+SHEET.rep.length);
+  ok('관리자 배지에 잡힘', S2.$('adminN').textContent!=='0' || got.length>0);
+
+  console.log('\n[14] 처리완료 표시가 시트에 반영된다');
+  for(let i=0;i<3;i++) S2.click(S2.$('title'));
+  await wait(40);
+  S2.$('pwIn').value='gich2026'; S2.click(S2.$('pwOk')); await wait(60);
+  S2.click(S2.$('atabRep')); await wait(80);
+  const rrow=doc0(S2).querySelector('#adminList .rrow');
+  const doneBtn=[...rrow.querySelectorAll('button')].find(b=>b.textContent==='처리완료');
+  ok('처리완료 단추', !!doneBtn);
+  doneBtn.dispatchEvent(new S2.w.Event('click',{bubbles:true})); await wait(400);
+  ok('시트에도 처리완료', SHEET.rep.some(r=>r.done===true), JSON.stringify(SHEET.rep.map(r=>!!r.done)));
+
+  console.log('\n[15] 제보 삭제도 시트에 반영');
+  const n15=SHEET.rep.length;
+  const row2=doc0(S2).querySelector('#adminList .rrow');
+  const delBtn=[...row2.querySelectorAll('button')].find(b=>b.textContent==='삭제');
+  delBtn.dispatchEvent(new S2.w.Event('click',{bubbles:true})); await wait(400);
+  ok('시트에서 사라짐', SHEET.rep.length===n15-1, n15+' → '+SHEET.rep.length);
+  const S3=boot(); await wait(450);
+  ok('새 브라우저에서도 안 살아남',
+     JSON.parse(S3.w.localStorage.getItem('gich_reports')||'[]').length===SHEET.rep.length);
 
   console.log('\n결과: 통과 '+pass+' · 실패 '+fail);
   process.exit(fail?1:0);

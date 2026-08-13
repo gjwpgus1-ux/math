@@ -14,6 +14,7 @@
 var SHEET_CMP = '비교';
 var SHEET_STD = '성취기준';
 var SHEET_NEG = '유사아님';
+var SHEET_REP = '오류제보';
 var SHEET_DEL = '지운응답';
 var MAX_BACK  = 20000;          // 앱으로 돌려보낼 최대 줄 수
 
@@ -21,6 +22,7 @@ var HEAD_CMP = ['id','기준','왼쪽','오른쪽','선택','검증쌍',
                 '점수L','점수R','글자L','글자R','익명번호','시각','받은시각'];
 var HEAD_STD = ['id','문항','성취기준','기타','이웃확인','익명번호','시각','받은시각'];
 var HEAD_NEG = ['id','기준문항','제외할문항','익명번호','시각','받은시각'];
+var HEAD_REP = ['id','파일','시험·문항','유형','메모','처리','익명번호','시각','받은시각'];
 var HEAD_DEL = ['id','지운응답id','종류','익명번호','시각','받은시각'];
 
 
@@ -48,6 +50,8 @@ function idSet_(sh) {
 function kindOf_(r) {
   if (r.t === 'std') return 'std';
   if (r.t === 'neg') return 'neg';
+  if (r.t === 'rep') return 'rep';
+  if (r.t === 'repdone') return 'repdone';
   if (r.t === 'del') return 'del';
   return 'cmp';
 }
@@ -61,11 +65,29 @@ function rowOf_(r, now) {
   if (k === 'neg') {
     return [r.id || '', r.a || '', r.x || '', r.who || '', r.at || '', now];
   }
+  if (k === 'rep') {
+    return [r.id || '', r.path || '', r.label || '', r.kind || '', r.memo || '',
+            r.done ? '처리완료' : '', r.who || '', r.at || '', now];
+  }
   if (k === 'del') {
     return [r.id || '', r.target || '', r.kind || '', r.who || '', r.at || '', now];
   }
   return [r.id || '', r.a || '', r.x || '', r.y || '', r.c || '', r.chk ? '예' : '',
           r.sx, r.sy, r.bx, r.by, r.who || '', r.at || '', now];
+}
+
+/** 오류제보의 «처리» 칸을 고친다 */
+function markDone_(sh, id, done) {
+  var n = sh.getLastRow();
+  if (n < 2 || !id) return false;
+  var vals = sh.getRange(2, 1, n - 1, 1).getValues();
+  for (var i = 0; i < vals.length; i++) {
+    if (String(vals[i][0]) === String(id)) {
+      sh.getRange(i + 2, 6).setValue(done ? '처리완료' : '');
+      return true;
+    }
+  }
+  return false;
 }
 
 /** 지운 응답을 실제 줄에서도 없앤다 (없으면 조용히 넘어간다) */
@@ -87,11 +109,12 @@ function doPost(e) {
     var now = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd HH:mm:ss');
 
     var sh = { cmp: sheet_(SHEET_CMP, HEAD_CMP), std: sheet_(SHEET_STD, HEAD_STD),
-               neg: sheet_(SHEET_NEG, HEAD_NEG), del: sheet_(SHEET_DEL, HEAD_DEL) };
-    var head = { cmp: HEAD_CMP, std: HEAD_STD, neg: HEAD_NEG, del: HEAD_DEL };
-    var seen = { cmp: idSet_(sh.cmp), std: idSet_(sh.std),
-                 neg: idSet_(sh.neg), del: idSet_(sh.del) };
-    var add = { cmp: [], std: [], neg: [], del: [] };
+               neg: sheet_(SHEET_NEG, HEAD_NEG), rep: sheet_(SHEET_REP, HEAD_REP),
+               del: sheet_(SHEET_DEL, HEAD_DEL) };
+    var head = { cmp: HEAD_CMP, std: HEAD_STD, neg: HEAD_NEG, rep: HEAD_REP, del: HEAD_DEL };
+    var seen = { cmp: idSet_(sh.cmp), std: idSet_(sh.std), neg: idSet_(sh.neg),
+                 rep: idSet_(sh.rep), del: idSet_(sh.del), repdone: {} };
+    var add = { cmp: [], std: [], neg: [], rep: [], del: [], repdone: [] };
     var erased = 0;
 
     for (var i = 0; i < list.length; i++) {
@@ -100,21 +123,28 @@ function doPost(e) {
       var id = String(r.id || '');
       if (id && seen[kind][id]) { out.skipped++; continue; }
       if (id) seen[kind][id] = 1;
+      /* 처리완료 표시만 바꾸는 것은 새 줄을 만들지 않고 원래 줄을 고친다 */
+      if (kind === 'repdone') {
+        if (markDone_(sh.rep, r.target, r.done)) out.marked = (out.marked || 0) + 1;
+        continue;
+      }
       add[kind].push(rowOf_(r, now));
       /* 지움 표시가 오면 원래 줄도 없앤다 */
       if (kind === 'del') {
-        var from = (r.kind === 'std') ? sh.std : (r.kind === 'neg' ? sh.neg : sh.cmp);
+        var from = (r.kind === 'std') ? sh.std
+                 : (r.kind === 'neg') ? sh.neg
+                 : (r.kind === 'rep') ? sh.rep : sh.cmp;
         if (eraseRow_(from, r.target)) erased++;
       }
     }
-    ['cmp', 'std', 'neg', 'del'].forEach(function (k) {
+    ['cmp', 'std', 'neg', 'rep', 'del'].forEach(function (k) {
       if (add[k].length) {
         sh[k].getRange(sh[k].getLastRow() + 1, 1, add[k].length, head[k].length).setValues(add[k]);
       }
     });
 
     out.ok = true;
-    out.saved = add.cmp.length + add.std.length + add.neg.length + add.del.length;
+    out.saved = add.cmp.length + add.std.length + add.neg.length + add.rep.length + add.del.length;
     out.erased = erased;
   } catch (err) {
     out.error = String(err);
@@ -124,10 +154,11 @@ function doPost(e) {
 }
 
 function doGet(e) {
-  var out = { ok: false, pairs: [], std: [], neg: [], del: [] };
+  var out = { ok: false, pairs: [], std: [], neg: [], rep: [], del: [] };
   try {
     var shC = sheet_(SHEET_CMP, HEAD_CMP), shS = sheet_(SHEET_STD, HEAD_STD);
     var shN = sheet_(SHEET_NEG, HEAD_NEG), shD = sheet_(SHEET_DEL, HEAD_DEL);
+    var shR = sheet_(SHEET_REP, HEAD_REP);
     var n, v, i;
 
     n = shC.getLastRow();
@@ -157,6 +188,16 @@ function doGet(e) {
       for (i = 0; i < v.length; i++) {
         out.neg.push({ id: String(v[i][0]), a: v[i][1], x: v[i][2],
                        who: v[i][3], at: String(v[i][4]) });
+      }
+    }
+    n = shR.getLastRow();
+    if (n > 1) {
+      var f5 = Math.max(2, n - MAX_BACK + 1);
+      v = shR.getRange(f5, 1, n - f5 + 1, HEAD_REP.length).getValues();
+      for (i = 0; i < v.length; i++) {
+        out.rep.push({ id: String(v[i][0]), path: v[i][1], label: v[i][2], kind: v[i][3],
+                       memo: v[i][4], done: String(v[i][5]) === '처리완료',
+                       who: v[i][6], at: String(v[i][7]) });
       }
     }
     n = shD.getLastRow();
