@@ -81,11 +81,15 @@ const T=()=>w.__T;
   ok('그림칸이 따로 생김', /\.simg\{[^}]*flex:1;min-height:0/.test(html));
   ok('슬롯마다 .simg', [...doc.querySelectorAll('.sslot')].every(s=>!!s.querySelector('.simg')));
 
-  console.log('\n[6] 오답노트에는 안 들어감 (요청대로 학습지만)');
-  click($('printNote')); await wait(500);
+  console.log('\n[6] 오답노트에도 같은 문구');
+  click($('printNote')); await wait(600);
   const ns=[...doc.querySelectorAll('.sheet')];
-  ok('오답노트도 인쇄됨', ns.length===22, ns.length);
-  ok('오답노트엔 문구 없음', ns.every(s=>!s.querySelector('.pgn .cpr')));
-  ok('오답노트 쪽 번호는 있음', /1 \/ 22/.test(ns[0].querySelector('.pn').textContent));
+  ok('오답노트 인쇄됨', ns.length===22, ns.length);
+  ok('모든 장에 문구', ns.every(s=>!!s.querySelector('.pgn .cpr')), ns.length+'장');
+  ok('문구 내용 같음',
+     ns[0].querySelector('.pgn .cpr').textContent==='공교육을 위해 제작했습니다. 영리적인 목적을 위하여 사용을 금합니다.',
+     ns[0].querySelector('.pgn .cpr').textContent);
+  ok('쪽 번호도 그대로', /1 \/ 22/.test(ns[0].querySelector('.pn').textContent));
+  ok('오답노트도 그림칸 분리', !!ns[0].querySelector('.sslot .simg'));
   done();
 })();
