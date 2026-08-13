@@ -1257,9 +1257,16 @@
     });
     return chunkCache[id];
   }
+  /* 웹 주소(http·https)로 열었으면 그림을 그대로 캔버스에 올릴 수 있다.
+     b64 조각은 컴퓨터에서 파일을 직접 열었을 때(file://)만 필요하다 —
+     그때는 브라우저가 보안상 캔버스에서 그림을 읽지 못하기 때문이다. */
+  function needB64(){
+    try{ return location.protocol==='file:'; }catch(e){ return true; }
+  }
   function dataUrlOf(it){
     var path=it[2];
     if(OV[path]) return Promise.resolve(OV[path]);
+    if(!needB64()) return Promise.resolve(imgSrc(it));
     return loadChunk(path).then(function(){
       var b64=window.__B64 && window.__B64[path];
       if(!b64) throw new Error('데이터 없음');
@@ -1285,7 +1292,12 @@
       if(!(navigator.clipboard && window.ClipboardItem)) throw new Error('미지원');
       return navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);
     }).then(function(){ toast('복사했습니다 — '+label(it)); })
-      .catch(function(err){ toast('복사하지 못했습니다 ('+(err.message||err)+'). 저장 버튼을 이용해 주세요.',true); });
+      .catch(function(err){
+        var m=err.message||err;
+        if(m==='복사용 데이터 없음' || m==='데이터 없음')
+          m='이 컴퓨터에서 파일을 직접 열면 b64 폴더가 있어야 합니다';
+        toast('복사하지 못했습니다 ('+m+'). 저장 버튼을 이용해 주세요.',true);
+      });
   }
 
   /* ================= 인쇄 =================
