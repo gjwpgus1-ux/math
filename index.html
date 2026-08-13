@@ -530,6 +530,9 @@
   /* 시작할 때 «제대로 된 응답»을 몇 건 받을지. 잘 모르겠음으로 답하면 한 건 더 묻습니다. */
   var GATE_QUOTA = 1;
   var GATE_MAX   = 5;      /* 잘 모르겠음이 이어져도 이 횟수를 넘기면 그냥 보내 줍니다 */
+  /* true — 접속할 때마다 묻습니다 (새로고침해도 뜹니다)
+     false — 한 번 답하면 그 창을 닫기 전까지 다시 묻지 않습니다 */
+  var GATE_EVERY = true;
 
   /* 질문 중 '공통 검증 세트'에서 내는 비율.
      모든 컴퓨터가 똑같이 만들어내는 고정된 쌍이라, 여러 사람의 의견이 같은 쌍에 모입니다. */
@@ -2692,7 +2695,7 @@
       }catch(e){}      /* 수집이 안 되더라도 앱은 정상 동작해야 한다 */
     }
     var gateDone=true;
-    try{ gateDone = sessionStorage.getItem('gich_gate')==='1'; }catch(e){}
+    try{ gateDone = !GATE_EVERY && sessionStorage.getItem('gich_gate')==='1'; }catch(e){ gateDone=false; }
     if(SIM && GATE_QUOTA>0 && !gateDone){ openGate(); }
     else $('q').focus();
   });
