@@ -91,5 +91,30 @@ const T=()=>w.__T;
      ns[0].querySelector('.pgn .cpr').textContent);
   ok('쪽 번호도 그대로', /1 \/ 22/.test(ns[0].querySelector('.pn').textContent));
   ok('오답노트도 그림칸 분리', !!ns[0].querySelector('.sslot .simg'));
+
+  console.log('\n[7] 오답노트 질문 네 가지');
+  const qs=[...ns[0].querySelectorAll('.nq')].map(q=>q.textContent);
+  ok('질문 4개', qs.length===4, qs.length);
+  ok('1. 구하고자 하는 것', qs[0]==='1. 구하고자 하는 것은 무엇인가', qs[0]);
+  ok('2. 활용된 지식', qs[1]==='2. 문제해결에 활용된 지식은 무엇인가', qs[1]);
+  ok('3. 막힌 지점', qs[2]==='3. 어느 지점에서 막혔고, 그때 무엇을 시도했는가', qs[2]);
+  ok('4. 다음에 할 일', qs[3]==='4. 다음에 같은 유형을 만나면 무엇부터 할 것인가', qs[3]);
+  ok('질문마다 줄 6개', [...ns[0].querySelectorAll('.nlines')].every(l=>l.children.length===6),
+     [...ns[0].querySelectorAll('.nlines')].map(l=>l.children.length).join(','));
+  ok('네 묶음이 자리를 나눠 가짐', /\.nblk\{[^}]*flex:1/.test(html));
+  ok('줄 높이도 남는 자리에 맞춤', /\.nlines div\{[^}]*flex:1/.test(html));
+  ok('모든 장에 질문 4개', ns.every(s=>s.querySelectorAll('.nq').length===4));
+
+  console.log('\n[8] 맨 위 왼쪽에 만든이');
+  ok('오답노트 머리말', ns[0].querySelector('.shd').textContent==='만든이 : 허선생',
+     ns[0].querySelector('.shd').textContent);
+  ok('오답노트 모든 장', ns.every(s=>s.querySelector('.shd')));
+  ok('머리말이 맨 위', ns[0].firstElementChild.className==='shd', ns[0].firstElementChild.className);
+  click($('printWork')); await wait(600);
+  const ws=[...doc.querySelectorAll('.sheet')];
+  ok('학습지에도 머리말', ws.every(s=>s.querySelector('.shd')&&s.querySelector('.shd').textContent==='만든이 : 허선생'),
+     ws[0].querySelector('.shd').textContent);
+  ok('학습지도 맨 위', ws[0].firstElementChild.className==='shd');
+  ok('아래 문구는 그대로', ws.every(s=>!!s.querySelector('.pgn .cpr')));
   done();
 })();

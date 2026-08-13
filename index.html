@@ -339,6 +339,7 @@
   .sheet{width:190mm;height:277mm;page-break-after:always;overflow:hidden;
          display:flex;flex-direction:column;position:relative}
   .sbody{flex:1;display:flex;min-height:0}
+  .shd{height:5mm;font-size:8.5pt;color:#7a7f86;padding-left:1mm}
   .pgn{height:7mm;font-size:9pt;color:#555;padding-top:1.5mm;position:relative}
   .pgn .pn{display:block;text-align:center}
   .pgn .cpr{position:absolute;right:0;bottom:0.5mm;font-size:7.5pt;color:#8a8f96;white-space:nowrap}
@@ -353,8 +354,10 @@
   .sslot{flex:1;min-height:0;display:flex;flex-direction:column;padding:3mm 0;overflow:hidden}
   .simg{flex:1;min-height:0;display:flex;align-items:flex-start}
   .sslot img{max-width:100%;max-height:100%;object-fit:contain;object-position:left top}
-  .nq{font-size:10.5pt;font-weight:bold;margin:4mm 0 2mm}
-  .nlines div{border-bottom:1px solid #b9c0c9;height:9mm}
+  .nblk{flex:1;min-height:0;display:flex;flex-direction:column}
+  .nq{font-size:10pt;font-weight:bold;margin:3.5mm 0 1.5mm;flex:none}
+  .nlines{flex:1;min-height:0;display:flex;flex-direction:column}
+  .nlines div{flex:1;min-height:6mm;border-bottom:1px solid #b9c0c9}
   @media print{
     header,main,.drawer,.nav,#pager,#toast,.modal,#cmp{display:none !important}
     #printArea{display:block}
@@ -1346,12 +1349,22 @@
   /* 시트 하나를 만들고 아래에 쪽 번호를 붙인다 */
   function makeSheet(){
     var sh=document.createElement('div'); sh.className='sheet';
+    var hd=document.createElement('div'); hd.className='shd';
+    hd.textContent=MAKER;
     var body=document.createElement('div'); body.className='sbody';
-    sh.appendChild(body);
+    sh.appendChild(hd); sh.appendChild(body);
     return {sheet:sh, body:body};
   }
   /* 문구를 바꾸시려면 아래 NOTICE 안의 글만 고치세요. */
   var NOTICE='공교육을 위해 제작했습니다. 영리적인 목적을 위하여 사용을 금합니다.';
+  /* 학습지·오답노트 맨 위 왼쪽에 찍히는 이름 */
+  var MAKER='만든이 : 허선생';
+  /* 오답노트에서 묻는 것 — 문구를 바꾸시려면 이 줄만 고치세요 */
+  var NOTE_Q=['구하고자 하는 것은 무엇인가',
+              '문제해결에 활용된 지식은 무엇인가',
+              '어느 지점에서 막혔고, 그때 무엇을 시도했는가',
+              '다음에 같은 유형을 만나면 무엇부터 할 것인가'];
+  var NOTE_LINES=6;      /* 질문 하나에 몇 줄을 줄지 (줄 높이는 남는 자리에 맞춰 저절로 조절됩니다) */
   function numberSheets(P, notice){
     var all=P.querySelectorAll('.sheet');
     for(var i=0;i<all.length;i++){
@@ -1394,11 +1407,13 @@
                   '<div class="slab">'+esc(labelHeld(it))+'</div>'+
                   '<div class="simg"><img src="'+imgSrc(it)+'"></div></div>';
       var R=document.createElement('div'); R.className='scol';
-      R.innerHTML='<div class="sslot" style="flex:1">'+
-        '<div class="nq" style="margin-top:0">어느 지점에서 막혔고, 그때 무엇을 시도했는가</div>'+
-        '<div class="nlines">'+lines(7)+'</div>'+
-        '<div class="nq">다음에 같은 유형을 만나면 무엇부터 할 것인가</div>'+
-        '<div class="nlines">'+lines(8)+'</div></div>';
+      var qs='';
+      NOTE_Q.forEach(function(q,qi){
+        qs+='<div class="nblk">'+
+            '<div class="nq"'+(qi===0?' style="margin-top:0"':'')+'>'+(qi+1)+'. '+esc(q)+'</div>'+
+            '<div class="nlines">'+lines(NOTE_LINES)+'</div></div>';
+      });
+      R.innerHTML='<div class="sslot" style="flex:1">'+qs+'</div>';
       m.body.appendChild(L); m.body.appendChild(R); P.appendChild(m.sheet);
     });
     numberSheets(P, true);
@@ -1433,11 +1448,11 @@
    ['문항 위 1회·2회·3회 칸은 «다시 푼 날»을 적는 자리입니다',
     '처음 풀 때 1회에 날짜를 적고, 일주일 뒤 다시 풀어 맞으면 2회에 ○, 또 틀리면 ✗를 칩니다. '+
     '세 칸이 다 차기 전에 맞히는 것이 목표라고 일러 주면 학생이 스스로 관리합니다.', '', ''],
-   ['오른쪽 두 질문은 «답»이 아니라 «과정»을 적는 칸입니다',
+   ['오른쪽 네 질문은 «답»이 아니라 «과정»을 적는 칸입니다',
     '다시 푼 풀이를 옮겨 적게 하면 오답노트가 아니라 답지 베끼기가 됩니다. '+
-    '첫 질문에는 어디서 손이 멈췄는지와 그때 해 본 시도를, '+
-    '둘째 질문에는 다음에 같은 유형을 만나면 가장 먼저 할 일 한 줄을 적게 하세요.',
-    'ex', '"삼각함수 그래프의 주기를 못 구해서 멈췄고, 그래프를 그려 보려다 포기했다"'],
+    '1·2번은 문제를 다시 읽고 무엇을 구하는지와 어떤 지식이 필요한지 정리하는 칸, '+
+    '3·4번은 막힌 지점과 다음에 할 일을 적는 칸입니다. 3번이 가장 중요합니다.',
+    'ex', '3번 예 — "삼각함수 그래프의 주기를 못 구해서 멈췄고, 그래프를 그려 보려다 포기했다"'],
    ['«비슷한 문항»으로 재도전용 학습지를 짝지어 만드세요',
     '오답노트를 뽑은 뒤, 같은 문항의 «비슷한 문항» 단추를 눌러 새 탭에서 난이도 순으로 고르고 '+
     '«학습지 인쇄»로 뽑으면 됩니다. 오답노트는 되돌아보기용, 학습지는 확인용입니다.', '', ''],
