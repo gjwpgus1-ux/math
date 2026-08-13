@@ -354,7 +354,7 @@
   .sslot{flex:1;min-height:0;display:flex;flex-direction:column;padding:3mm 0;overflow:hidden}
   .simg{flex:1;min-height:0;display:flex;align-items:flex-start}
   .sslot img{max-width:100%;max-height:100%;object-fit:contain;object-position:left top}
-  .nblk{flex:1;min-height:0;display:flex;flex-direction:column}
+  .nblk{min-height:0;display:flex;flex-direction:column}
   .nq{font-size:10pt;font-weight:bold;margin:3.5mm 0 1.5mm;flex:none}
   .nlines{flex:1;min-height:0;display:flex;flex-direction:column}
   .nlines div{flex:1;min-height:6mm;border-bottom:1px solid #b9c0c9}
@@ -1374,12 +1374,13 @@
   var NOTICE='공교육을 위해 제작했습니다. 영리적인 목적을 위하여 사용을 금합니다.';
   /* 학습지·오답노트 맨 위 왼쪽에 찍히는 이름 */
   var MAKER='만든이 : 허선생';
-  /* 오답노트에서 묻는 것 — 문구를 바꾸시려면 이 줄만 고치세요 */
-  var NOTE_Q=['구하고자 하는 것은 무엇인가',
-              '문제해결에 활용된 지식은 무엇인가',
-              '어느 지점에서 막혔고, 그때 무엇을 시도했는가',
-              '다음에 같은 유형을 만나면 무엇부터 할 것인가'];
-  var NOTE_LINES=6;      /* 질문 하나에 몇 줄을 줄지 (줄 높이는 남는 자리에 맞춰 저절로 조절됩니다) */
+  /* 오답노트에서 묻는 것 — [질문, 칸 비중, 줄 수]
+     칸 비중은 서로의 비율입니다. 1번은 짧게 적는 칸이라 0.5로 두어 절반만 씁니다.
+     문구·비중·줄 수를 바꾸시려면 이 줄만 고치세요. */
+  var NOTE_Q=[['구하고자 하는 것은 무엇인가',              0.5, 3],
+              ['문제해결에 활용된 지식은 무엇인가',          1, 6],
+              ['어느 지점에서 막혔고, 그때 무엇을 시도했는가', 1, 6],
+              ['다음에 같은 유형을 만나면 무엇부터 할 것인가', 1, 6]];
   function numberSheets(P, notice){
     var all=P.querySelectorAll('.sheet');
     for(var i=0;i<all.length;i++){
@@ -1424,9 +1425,9 @@
       var R=document.createElement('div'); R.className='scol';
       var qs='';
       NOTE_Q.forEach(function(q,qi){
-        qs+='<div class="nblk">'+
-            '<div class="nq"'+(qi===0?' style="margin-top:0"':'')+'>'+(qi+1)+'. '+esc(q)+'</div>'+
-            '<div class="nlines">'+lines(NOTE_LINES)+'</div></div>';
+        qs+='<div class="nblk" style="flex:'+q[1]+'">'+
+            '<div class="nq"'+(qi===0?' style="margin-top:0"':'')+'>'+(qi+1)+'. '+esc(q[0])+'</div>'+
+            '<div class="nlines">'+lines(q[2])+'</div></div>';
       });
       R.innerHTML='<div class="sslot" style="flex:1">'+qs+'</div>';
       m.body.appendChild(L); m.body.appendChild(R); P.appendChild(m.sheet);

@@ -99,9 +99,11 @@ const T=()=>w.__T;
   ok('2. 활용된 지식', qs[1]==='2. 문제해결에 활용된 지식은 무엇인가', qs[1]);
   ok('3. 막힌 지점', qs[2]==='3. 어느 지점에서 막혔고, 그때 무엇을 시도했는가', qs[2]);
   ok('4. 다음에 할 일', qs[3]==='4. 다음에 같은 유형을 만나면 무엇부터 할 것인가', qs[3]);
-  ok('질문마다 줄 6개', [...ns[0].querySelectorAll('.nlines')].every(l=>l.children.length===6),
-     [...ns[0].querySelectorAll('.nlines')].map(l=>l.children.length).join(','));
-  ok('네 묶음이 자리를 나눠 가짐', /\.nblk\{[^}]*flex:1/.test(html));
+  const lc=[...ns[0].querySelectorAll('.nlines')].map(l=>l.children.length);
+  ok('1번은 3줄, 나머지는 6줄', lc.join(',')==='3,6,6,6', lc.join(','));
+  const fw=[...ns[0].querySelectorAll('.nblk')].map(b=>parseFloat(b.style.flex));
+  ok('1번 칸이 절반', fw.join(',')==='0.5,1,1,1', fw.join(','));
+  ok('네 묶음이 자리를 나눠 가짐', fw.every(v=>v>0));
   ok('줄 높이도 남는 자리에 맞춤', /\.nlines div\{[^}]*flex:1/.test(html));
   ok('모든 장에 질문 4개', ns.every(s=>s.querySelectorAll('.nq').length===4));
 
