@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # 한 PDF의 추출 → 단 경계 보정 → 재추출 → 문항 확정
 set -u
-DIR=/sessions/serene-festive-hamilton/mnt/outputs
-BASE="/sessions/serene-festive-hamilton/mnt/클로드 코워크/기출문제검색기 제작"
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# PDF 위치는 findpdf.sh 가 찾아 준다
 key="$1"; file="$2"; label="$3"
-P="$BASE/${file}.pdf"
+P="$(bash "$DIR/findpdf.sh" "$file")" || exit 1
 W=/tmp/qbuild/$key; mkdir -p "$W"
 N=$(python3 -c "import pypdfium2 as p;print(len(p.PdfDocument(r'''$P''')))")
 rm -f "$W/pass1.jsonl" "$W/pass2.jsonl"

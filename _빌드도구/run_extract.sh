@@ -3,7 +3,7 @@
 # 사용: bash run_extract.sh <pdf경로> <작업이름> <표시이름>
 set -u
 PDF="$1"; KEY="$2"; LABEL="$3"
-DIR=/sessions/serene-festive-hamilton/mnt/outputs
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORK=/tmp/qbuild/$KEY
 mkdir -p "$WORK"
 N=$(python3 -c "import pypdfium2 as p;print(len(p.PdfDocument(r'''$PDF''')))")
