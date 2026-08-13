@@ -13,6 +13,9 @@ function boot(expose){
   Object.defineProperty(w.Image.prototype,'src',{set(v){this._src=v;setTimeout(()=>this.onload&&this.onload(),0);},get(){return this._src;}});
   Object.defineProperty(w.Image.prototype,'naturalWidth',{get(){return 800;}});
   Object.defineProperty(w.Image.prototype,'naturalHeight',{get(){return 400;}});
+  /* jsdom은 그림을 실제로 내려받지 않아 load 이벤트가 오지 않는다.
+     인쇄가 «그림 다 실릴 때까지» 기다리므로, 이미 실린 것으로 보이게 한다. */
+  Object.defineProperty(w.Image.prototype,'complete',{get(){return true;}});
   w.indexedDB=undefined;
   w.print=function(){ w.__printed=(w.__printed||0)+1; };
   w.HTMLElement.prototype.click=function(){ this.dispatchEvent(new w.Event('click',{bubbles:true})); };

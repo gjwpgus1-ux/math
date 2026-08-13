@@ -73,6 +73,14 @@ const T=()=>w.__T;
   ok('오른쪽에 붙음', /\.pgn \.cpr\{[^}]*right:0/.test(html));
   ok('한 줄로 유지', /\.pgn \.cpr\{[^}]*white-space:nowrap/.test(html));
 
+  console.log('\n[5-2] 그림이 다 실린 뒤에 인쇄한다');
+  ok('printWhenReady 씀', /printWhenReady\(P\)/.test(html));
+  ok('0.3초 타이머는 없어짐', !/setTimeout\(function\(\)\{ window\.print\(\); \},300\)/.test(html));
+  ok('load·error 둘 다 기다림', /addEventListener\('load', one\)/.test(html) && /addEventListener\('error', one\)/.test(html));
+  ok('늦으면 20초 뒤 그냥 인쇄', /\}, 20000\)/.test(html));
+  ok('그림칸이 따로 생김', /\.simg\{[^}]*flex:1;min-height:0/.test(html));
+  ok('슬롯마다 .simg', [...doc.querySelectorAll('.sslot')].every(s=>!!s.querySelector('.simg')));
+
   console.log('\n[6] 오답노트에는 안 들어감 (요청대로 학습지만)');
   click($('printNote')); await wait(500);
   const ns=[...doc.querySelectorAll('.sheet')];

@@ -351,6 +351,7 @@
              font-size:7pt;color:#c2c8d0;display:flex;align-items:center;justify-content:center}
   .sbox span:first-child{margin-left:0}
   .sslot{flex:1;min-height:0;display:flex;flex-direction:column;padding:3mm 0;overflow:hidden}
+  .simg{flex:1;min-height:0;display:flex;align-items:flex-start}
   .sslot img{max-width:100%;max-height:100%;object-fit:contain;object-position:left top}
   .nq{font-size:10.5pt;font-weight:bold;margin:4mm 0 2mm}
   .nlines div{border-bottom:1px solid #b9c0c9;height:9mm}
@@ -1300,8 +1301,25 @@
   function slotBox(it,units){
     var d=document.createElement('div'); d.className='sslot'; d.style.flex=units;
     d.innerHTML=BOX3+'<div class="slab">'+esc(labelHeld(it))+'</div>'+
-                '<img src="'+imgSrc(it)+'">';
+                '<div class="simg"><img src="'+imgSrc(it)+'"></div>';
     return d;
+  }
+  /* 그림이 다 실린 뒤에 인쇄한다.
+     예전에는 0.3초만 기다리고 인쇄해서, 느리게 실리는 문항은 빈칸으로 나갔다. */
+  function printWhenReady(P){
+    var imgs=P.querySelectorAll('img'), left=imgs.length, done=false;
+    function go(){ if(done) return; done=true; setTimeout(function(){ window.print(); },120); }
+    if(!left){ go(); return; }
+    var timer=setTimeout(function(){
+      if(!done) toast('그림 '+left+'장이 늦게 실려 그대로 인쇄합니다',true);
+      go();
+    }, 20000);                       /* 아무리 늦어도 20초 뒤에는 인쇄 */
+    function one(){ if(--left<=0){ clearTimeout(timer); go(); } }
+    Array.prototype.forEach.call(imgs,function(im){
+      if(im.complete && im.naturalWidth) { one(); return; }
+      im.addEventListener('load', one);
+      im.addEventListener('error', one);
+    });
   }
   /* 시트 하나를 만들고 아래에 쪽 번호를 붙인다 */
   function makeSheet(){
@@ -1340,7 +1358,7 @@
       P.appendChild(m.sheet);
     }
     numberSheets(P, true);
-    setTimeout(function(){ window.print(); },300);
+    printWhenReady(P);
   }
   function printNote(){
     var list=selectedItems();
@@ -1352,7 +1370,7 @@
       var L=document.createElement('div'); L.className='scol divider';
       L.innerHTML='<div class="sslot" style="flex:1">'+BOX3+
                   '<div class="slab">'+esc(labelHeld(it))+'</div>'+
-                  '<img src="'+imgSrc(it)+'"></div>';
+                  '<div class="simg"><img src="'+imgSrc(it)+'"></div></div>';
       var R=document.createElement('div'); R.className='scol';
       R.innerHTML='<div class="sslot" style="flex:1">'+
         '<div class="nq" style="margin-top:0">어느 지점에서 막혔고, 그때 무엇을 시도했는가</div>'+
@@ -1362,7 +1380,7 @@
       m.body.appendChild(L); m.body.appendChild(R); P.appendChild(m.sheet);
     });
     numberSheets(P);
-    setTimeout(function(){ window.print(); },300);
+    printWhenReady(P);
   }
 
   /* ================= 창(모달) ================= */
