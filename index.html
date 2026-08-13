@@ -1,0 +1,2604 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>수학 수능/모평/학평 기출문제 검색기</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --card:#fff; --line:#e2e5ea; --ink:#1d2129; --dim:#6b7280;
+    --accent:#2563eb; --accent-soft:#eff4ff; --warn:#b45309; --danger:#c0392b; --ok:#15803d;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font-family:"Malgun Gothic","맑은 고딕",-apple-system,"Segoe UI",sans-serif;}
+  header{position:sticky;top:0;z-index:20;background:var(--card);
+         border-bottom:1px solid var(--line);padding:11px 20px 0;}
+  h1{margin:0 0 9px;font-size:17px;letter-spacing:-.2px;user-select:none;
+     display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  h1 small{font-weight:400;color:var(--dim);font-size:12px}
+  .modesw{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-left:4px}
+  .modesw button{border:none;border-radius:0;padding:6px 14px;font-size:13.5px;background:var(--card)}
+  h1 .by{font-size:12.5px;font-weight:500;color:var(--dim);margin-left:6px;vertical-align:middle}
+  h1 #cmpBtn,h1 #stdBtn{margin-left:9px;padding:6px 14px;font-size:13.5px;border-radius:8px;
+             font-weight:500;vertical-align:middle;border-color:#c9d6ea;color:var(--accent);background:#f4f8ff}
+  h1 #cmpBtn:hover,h1 #stdBtn:hover{background:#e8f0ff}
+  h1 #stdBtn{margin-left:6px}
+  .modesw button.on{background:var(--accent);color:#fff;font-weight:600}
+  .searchbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  #q{flex:1;min-width:280px;padding:11px 14px;font-size:16px;border:1px solid var(--line);
+     border-radius:8px;outline:none}
+  #q:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);
+         color:var(--ink);border-radius:7px;padding:9px 13px}
+  button:hover{background:#f0f2f5}
+  button:disabled{opacity:.35;cursor:default}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  button.primary:hover{filter:brightness(1.08)}
+  button.warn{border-color:#e8c9c4;color:var(--danger)}
+  .filters{display:none;flex-direction:column;gap:7px;margin-top:10px;font-size:13px}
+  .filters.open{display:flex}
+  .fgroup{display:flex;gap:5px;align-items:center;flex-wrap:wrap;width:100%}
+  .fgroup b{color:var(--dim);font-weight:600;width:38px;flex:none}
+  #fbar{display:flex;align-items:center;gap:8px;margin-top:9px;flex-wrap:wrap}
+  #scopebar{display:flex;align-items:center;gap:5px;padding-left:9px;margin-left:2px;border-left:1px solid var(--line)}
+  #scopebar b{font-size:12px;color:var(--dim);font-weight:600;margin-right:1px}
+  #keyhint{margin-left:auto;font-size:12px;color:var(--dim)}
+  #keyhint b{display:inline-block;background:#eceff3;border:1px solid var(--line);border-radius:4px;
+             padding:0 5px;font-size:11.5px;color:var(--ink);margin:0 1px}
+  @media (max-width:900px){ #keyhint{display:none} }
+  #ftoggle{padding:5px 12px;font-size:12.5px;border-radius:99px}
+  #ftoggle .arrow{display:inline-block;transition:transform .15s;margin-left:3px}
+  #ftoggle.open .arrow{transform:rotate(180deg)}
+  #fsummary{font-size:12.5px;color:var(--accent);font-weight:600}
+  #fclear{padding:4px 10px;font-size:12px;border-radius:99px}
+  #adminBtn{padding:5px 12px;font-size:12.5px;border-radius:99px;
+            border-color:#cfd8e8;color:var(--accent)}
+  #adminBtn .n{background:var(--danger);color:#fff;border-radius:99px;padding:0 6px;
+               font-size:11px;margin-left:5px}
+  .chip{padding:4px 10px;border:1px solid var(--line);border-radius:99px;background:var(--card);
+        font-size:12.5px;cursor:pointer;user-select:none}
+  .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  #status{margin:9px 0;font-size:13px;color:var(--dim);min-height:18px}
+  #status b{color:var(--ink)}
+  .badge.held{background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0}
+  .pill.alt{background:#fff4e5;color:#b45309}
+  .pill.alt{background:#fff4e5;color:#b45309}
+  .pill.way{background:#fff;border:1px solid #e5c9a0;color:#b45309;cursor:pointer}
+  .pill.way:hover{background:#fff4e5}
+  .pill.way.on{background:#b45309;color:#fff;border-color:#b45309}
+  .pill{display:inline-block;background:var(--accent-soft);color:var(--accent);border-radius:5px;
+        padding:1px 7px;margin-right:4px;font-size:12px;font-weight:600}
+  .hint{color:var(--dim);font-size:12px}
+
+  #studybar{display:none;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 9px;
+            background:var(--accent-soft);border:1px solid #d7e3f7;border-radius:8px;padding:8px 11px}
+  #studybar.on{display:flex}
+  #studybar .cnt{font-size:13px;font-weight:600;color:var(--accent)}
+  #studybar button{padding:6px 11px;font-size:12.5px}
+  #tipBtn{border-color:#e5c9a0;color:#b45309;background:#fffaf2}
+  #tipBtn:hover{background:#fff4e5}
+
+  #tabs{display:flex;gap:5px;overflow-x:auto;align-items:flex-end;min-height:34px}
+  .tab{display:flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--line);
+       border-bottom:none;border-radius:8px 8px 0 0;background:#f1f3f6;font-size:12.5px;
+       cursor:pointer;white-space:nowrap;color:var(--dim)}
+  .tab:hover{background:#e9ecf1}
+  .tab.on{background:var(--card);color:var(--ink);font-weight:600;box-shadow:0 1px 0 0 var(--card)}
+  .tab.sim{background:#eef7f0;color:var(--ok)}
+  .tab .x{opacity:.45;font-size:14px;line-height:1}
+  .tab .x:hover{opacity:1;color:var(--danger)}
+  .tab .cnt{color:var(--dim);font-weight:400;font-size:11.5px}
+  #tabsEmpty{color:var(--dim);font-size:12px;padding:8px 2px}
+
+  main{padding:18px 20px 60px;max-width:1700px;margin:0 auto}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:16px}
+  .grid.page4{grid-template-columns:repeat(4,1fr);gap:10px}
+  .grid.page4 .card .body{max-height:var(--cardh,58vh)}
+  .grid.page4 .card .head{padding:6px 8px;gap:5px;font-size:11.5px}
+  .grid.page4 .card .head .fp{display:none}
+  .grid.page4 .card .head button{padding:3px 7px;font-size:11px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;
+        display:flex;flex-direction:column}
+  .card.flagged{border-color:#e8c9c4}
+  .card.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+  .card .head{display:flex;align-items:center;gap:8px;padding:8px 11px;border-bottom:1px solid var(--line);
+              font-size:12.5px;color:var(--dim);background:#fafbfc;flex-wrap:wrap}
+  .card .head .tag{font-weight:700;color:var(--ink)}
+  .card .head .sp{flex:1}
+  .card .head .fp{font-size:11px;color:#9aa1ab;font-family:Consolas,monospace;user-select:all}
+  .card .head button{padding:4px 9px;font-size:12px;border-radius:6px}
+  .card .head input[type=checkbox]{width:17px;height:17px;cursor:pointer;flex:none}
+  .badge{font-size:11px;padding:2px 7px;border-radius:99px;font-weight:600}
+  .badge.rep{background:#fdecea;color:var(--danger)}
+  .badge.ov{background:#e7f6ec;color:var(--ok)}
+  .badge.pt{background:#f1efe8;color:#5f5e5a}
+  .badge.sc{background:#fff4e5;color:var(--warn)}
+  .badge.neg{background:#fdecea;color:var(--danger)}
+  .card.dim{opacity:.5}
+  .card .body{padding:10px;overflow:auto;max-height:620px;background:#fff;cursor:copy;position:relative}
+  .card .body:hover{background:#fcfdff}
+  .card img{width:100%;height:auto;display:block}
+  .card .cue{position:absolute;right:12px;top:10px;background:rgba(37,99,235,.92);color:#fff;
+             font-size:11.5px;padding:3px 8px;border-radius:5px;opacity:0;transition:opacity .15s;
+             pointer-events:none}
+  .card .body:hover .cue{opacity:1}
+  .empty{padding:60px 20px;text-align:center;color:var(--dim);line-height:1.9}
+  .empty code{background:#eceff3;padding:2px 7px;border-radius:4px;color:var(--ink)}
+  #more{display:block;margin:26px auto 0;padding:11px 26px}
+
+  .nav{position:fixed;top:50%;transform:translateY(-50%);z-index:22;width:44px;height:78px;
+       border-radius:10px;font-size:24px;line-height:1;background:rgba(255,255,255,.94);
+       box-shadow:0 2px 10px rgba(0,0,0,.13);display:none;align-items:center;justify-content:center}
+  .nav.on{display:flex}
+  #navPrev{left:8px} #navNext{right:8px}
+  #pager{display:none;justify-content:center;align-items:center;gap:12px;margin-top:20px;
+         font-size:13px;color:var(--dim)}
+  #pager.on{display:flex}
+  #pager b{color:var(--ink)}
+
+  .drawer{position:fixed;right:0;left:0;bottom:0;top:0;background:var(--card);
+          transform:translateX(100%);transition:transform .18s;
+          z-index:30;display:flex;flex-direction:column}
+  .drawer.open{transform:none}
+  .drawer .th{padding:13px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}
+  .drawer .th b{flex:1;font-size:14px}
+  .drawer .tl{flex:1;overflow:auto;padding:10px 16px}
+  .drawer .th{position:sticky;top:0;background:var(--card);z-index:2}
+  .drawer .tf{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:8px;flex-wrap:wrap}
+  /* 비교데이터 — 기준·왼쪽·오른쪽을 클릭 없이 나란히 */
+  .cmprow{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px}
+  .cmprow .ctop{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:8px}
+  .cmprow .ctop .pick{font-weight:600;font-size:13.5px}
+  .cmprow .ctop .meta{color:var(--dim);font-size:12px;font-family:Consolas,monospace}
+  .cmprow .ctop .sp{flex:1}
+  .cmpimgs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .cmpimgs figure{margin:0;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff}
+  .cmpimgs figure.anchor{border-color:#9aa1ab}
+  .cmpimgs figure.picked{border:2px solid var(--accent);box-shadow:0 0 0 3px #dbeafe}
+  .cmpimgs figcaption{font-size:11.5px;padding:5px 8px;background:var(--bg);color:var(--dim);
+                      border-bottom:1px solid var(--line);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cmpimgs figure.picked figcaption{background:#eff5ff;color:var(--accent);font-weight:600}
+  .cmpimgs figure.anchor figcaption{font-weight:600;color:var(--ink)}
+  .cmpimgs img{display:block;width:100%;max-height:320px;object-fit:contain;object-position:top}
+  @media (max-width:800px){ .cmpimgs{grid-template-columns:1fr} }
+
+  .rrow{border:1px solid var(--line);border-radius:8px;padding:9px 10px;margin-bottom:8px;font-size:13px;max-width:1000px}
+  .rrow.done{opacity:.55}
+  .rrow .rt{font-weight:600;margin-bottom:2px}
+  .rrow .rm{color:var(--dim);font-size:12.5px;margin:3px 0;white-space:pre-wrap;word-break:break-word}
+  .rrow .rf{font-family:Consolas,monospace;font-size:11px;color:#9aa1ab}
+  .rrow .rb{display:flex;gap:5px;margin-top:7px;flex-wrap:wrap}
+  .rrow .rb button{padding:3px 9px;font-size:12px;border-radius:6px}
+  .atab{display:flex;gap:6px;padding:9px 12px 0;flex-wrap:wrap}
+  .atab button{border-radius:8px 8px 0 0;padding:6px 11px;font-size:12.5px;border-bottom:none}
+  .atab button.on{background:var(--accent-soft);border-color:#cfd8e8;color:var(--accent);font-weight:600}
+
+  .modal{position:fixed;inset:0;background:rgba(17,24,39,.45);z-index:50;
+         display:none;align-items:center;justify-content:center;padding:20px}
+  .modal.open{display:flex}
+  .mbox{background:var(--card);border-radius:12px;width:100%;max-width:460px;padding:18px 20px}
+  .mbox h3{margin:0 0 4px;font-size:15px}
+  .mbox p.sub{margin:0 0 14px;color:var(--dim);font-size:12.5px}
+  .mbox label{display:block;font-size:12.5px;color:var(--dim);margin:10px 0 4px}
+  .mbox input[type=text],.mbox input[type=password],.mbox textarea,.mbox select{
+    width:100%;padding:9px 11px;font:inherit;font-size:14px;border:1px solid var(--line);
+    border-radius:7px;outline:none}
+  .mbox textarea{min-height:74px;resize:vertical}
+  .mbox .mb{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+  .mbox.wide{max-width:720px;max-height:86vh;overflow:auto}
+  .tip{font-size:13.5px;line-height:1.65}
+  .tip h4{margin:16px 0 6px;font-size:13.5px;color:var(--accent);
+          display:flex;align-items:center;gap:7px}
+  .tip h4 i{font-style:normal;background:var(--accent);color:#fff;border-radius:99px;
+            width:19px;height:19px;line-height:19px;text-align:center;font-size:11.5px;flex:none}
+  .tip p{margin:0 0 6px;padding-left:26px}
+  .tip .ex{margin:4px 0 8px 26px;padding:7px 10px;background:var(--bg);
+           border-left:3px solid var(--accent);border-radius:0 6px 6px 0;
+           font-family:Consolas,monospace;font-size:12.5px}
+  .tip .warn2{margin:4px 0 8px 26px;padding:7px 10px;background:#fff4e5;color:#8a4b09;
+              border-radius:6px;font-size:12.5px}
+  .tip .lead{margin:0 0 4px;padding:0;color:var(--dim);font-size:13px}
+
+  #cmp{position:fixed;inset:0;background:var(--bg);z-index:40;display:none;flex-direction:column}
+  #cmp.open{display:flex}
+  #cmp .ch{background:var(--card);border-bottom:1px solid var(--line);padding:11px 18px;
+           display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  #cmp .ch b{font-size:15px}
+  #cmp .ch .sp{flex:1}
+  #cmp .ch input{padding:7px 11px;font:inherit;font-size:13px;border:1px solid var(--line);
+                 border-radius:7px;width:130px}
+  #cmp .cq{text-align:center;font-size:15px;padding:12px 10px 4px}
+  #cmp .cq b{color:var(--accent)}
+  #cmp .cb{flex:1;display:grid;grid-template-columns:1fr 2fr 230px;gap:12px;
+           padding:12px 18px 14px;overflow:hidden;min-height:0;align-items:start}
+  #cmp .cb>.cc,#cmp .cmid>.cc{max-height:calc(40vh + 42px)}
+  #cmp .cmid{display:grid;grid-template-columns:1fr 1fr;gap:12px;min-height:0;min-width:0}
+  #cmp .cc.pick{cursor:pointer;transition:transform .12s, border-color .12s, box-shadow .12s}
+  #cmp .cc.pick:hover{border-color:#c3d2e8}
+  #cmp .cc.pick.on{border-color:var(--accent);border-width:2px;
+                   transform:scale(1.015);box-shadow:0 4px 14px rgba(37,99,235,.16)}
+  #cmp .cc .tick{margin-left:auto;width:18px;height:18px;border-radius:5px;
+                 border:1px solid var(--line);color:transparent;font-size:12px;
+                 line-height:17px;text-align:center;flex:none}
+  #cmp .cc.pick.on .tick{background:var(--accent);border-color:var(--accent);color:#fff}
+  /* 오른쪽 안내판 — 비교·성취기준 두 화면이 함께 씁니다 */
+  .crail{display:flex;flex-direction:column;gap:9px;min-height:0;
+         background:var(--accent-soft);border:1px solid #d6e2f5;border-radius:10px;padding:13px 12px}
+  .crail .sp{flex:1}
+  .crail button{padding:12px 10px;font-size:14px;width:100%}
+  .crail .primary{font-weight:600}
+  .crail .rq{font-size:17px;font-weight:600;color:var(--accent);line-height:1.4}
+  .crail .rq b{color:var(--ink)}
+  .crail .rtag{font-size:12px;color:var(--accent);line-height:1.55;
+               border-top:1px solid #d6e2f5;border-bottom:1px solid #d6e2f5;padding:8px 0}
+  .crail .rtag span{color:#6b86ad}
+  .crail .rhint{font-size:11.5px;color:#6b86ad;line-height:1.6}
+  .crail .rhint b{display:inline-block;background:#fff;border:1px solid #d6e2f5;
+                  border-radius:4px;padding:0 5px;font-size:11px;color:var(--accent);margin:0 1px}
+  @media (max-width:1000px){
+    #cmp .cb,#std .sb{grid-template-columns:1fr;overflow:auto}
+    #cmp .cmid{grid-template-columns:1fr 1fr}
+  }
+  #cmp .cc{background:var(--card);border:1px solid var(--line);border-radius:10px;
+           display:flex;flex-direction:column;overflow:hidden}
+  #cmp .cc.anchor{border-color:var(--accent);border-width:2px}
+  #cmp .cl{padding:7px 11px;font-size:12.5px;font-weight:600;border-bottom:1px solid var(--line);
+           background:#fafbfc;display:flex;align-items:center;gap:7px}
+  #cmp .cl .lb{background:var(--accent-soft);color:var(--accent);border-radius:5px;
+               padding:1px 8px;font-size:12px}
+  #cmp .ci{flex:1;overflow:auto;padding:9px;background:#fff;max-height:40vh}
+  #cmp .ci img{width:100%;height:auto;display:block}
+  #cmp .cf{background:var(--card);border-top:1px solid var(--line);padding:11px 18px;
+           display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center}
+  #cmp .cf button{padding:10px 18px;font-size:14px}
+  #cmp .cf .k{display:inline-block;background:#eceff3;border-radius:4px;padding:0 5px;
+              font-size:11.5px;margin-right:5px;color:var(--dim)}
+  #cmp .cf .hint{width:100%;text-align:center;margin-top:4px}
+  #cmp.gate #cmpClose{display:none}
+  #std .ch{background:var(--card);border-bottom:1px solid var(--line);padding:11px 18px;
+           display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  #std .ch b{font-size:15px}
+  #std .ch .sp{flex:1}
+  #cmp .gatebar{width:100%;height:6px;background:#e2e5ea;border-radius:99px;overflow:hidden;margin-top:8px}
+  #cmp .gatebar i{display:block;height:100%;background:var(--accent);width:0;transition:width .25s}
+  #cmpGateMsg,#stdGateMsg{font-size:13px;color:var(--accent);font-weight:600}
+
+  /* 성취기준 달기 — 왼쪽 문항 40%, 오른쪽 한 단에 목록과 단추까지 */
+  #std{position:fixed;inset:0;background:var(--bg);z-index:40;display:none;flex-direction:column}
+  #std.open{display:flex}
+  #std.gate #stdClose{display:none}
+  #std .sb{flex:1;display:grid;grid-template-columns:40% 1fr;gap:14px;
+           padding:12px 18px 14px;overflow:hidden;min-height:0}
+  #std .cc{background:var(--card);border:1px solid var(--line);border-radius:10px;
+           display:flex;flex-direction:column;overflow:hidden;min-height:0}
+  #std .cc.anchor{border-color:var(--accent);border-width:2px}
+  #std .cl{padding:8px 12px;font-size:13px;font-weight:600;border-bottom:1px solid var(--line);
+           background:#fafbfc;display:flex;align-items:center;gap:7px}
+  #std .cl .lb{background:var(--accent-soft);color:var(--accent);border-radius:5px;
+               padding:1px 8px;font-size:12px}
+  #std .ci{flex:1;overflow:auto;padding:10px;background:#fff}
+  #std .ci img{width:100%;height:auto;display:block}
+
+  #std .sp2{display:flex;flex-direction:column;min-height:0;gap:8px;
+            background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  #std .stop{flex:none}
+  #std .stop .rq{font-size:19px;font-weight:600;color:var(--accent);line-height:1.35}
+  #std .stop .rq b{color:var(--ink)}
+  #std .stop .rtag{font-size:12.5px;color:var(--accent);line-height:1.5;margin-top:4px;
+                   background:var(--accent-soft);border-radius:7px;padding:7px 10px}
+  #std .stop .rtag span{color:#6b86ad}
+  #std .shead{font-size:12.5px;color:var(--dim);margin:9px 0 0}
+  #stdScope{color:var(--accent);font-weight:600}
+  #stdCands{overflow:auto;display:flex;flex-direction:column;gap:7px;min-height:0;flex:1}
+  #stdHits{overflow:auto;max-height:30vh;display:flex;flex-direction:column;gap:7px;margin-top:7px}
+  #std .srch{flex:none}
+  #std .srch input{width:100%;padding:10px 12px;font:inherit;font-size:14px;
+                   border:1px solid var(--line);border-radius:8px;box-sizing:border-box}
+  #std .sfoot{flex:none;border-top:1px solid var(--line);padding-top:10px}
+  #std .sbtn{display:flex;gap:8px}
+  #std .sbtn button{flex:1;padding:12px 8px;font-size:14px}
+  #std .sbtn .primary{flex:1.6;font-weight:600}
+  #std .rhint{font-size:11.5px;color:var(--dim);line-height:1.6;margin-top:7px}
+  #std .rhint b{display:inline-block;background:#eceff3;border:1px solid var(--line);
+                border-radius:4px;padding:0 5px;font-size:11px;color:var(--ink);margin:0 1px}
+  #std .gatebar{width:100%;height:6px;background:#e2e5ea;border-radius:99px;overflow:hidden;margin-top:8px}
+  #std .gatebar i{display:block;height:100%;background:var(--accent);width:0;transition:width .25s}
+
+  .scand{display:flex;gap:10px;align-items:flex-start;text-align:left;width:100%;
+         background:var(--card);border:1px solid var(--line);border-radius:9px;
+         padding:10px 12px;font:inherit;font-size:15px;cursor:pointer;line-height:1.5}
+  .scand:hover{border-color:var(--accent);background:#f6f9ff}
+  .scand .k{flex:none;background:#eceff3;border-radius:5px;padding:1px 7px;
+            font-size:11.5px;color:var(--dim);margin-top:2px}
+  .scand .tx{flex:1;min-width:0}
+  .scand .cd{font-family:Consolas,monospace;font-size:12px;color:var(--accent);font-weight:600}
+  .scand .sj{font-size:12px;color:var(--dim);margin-left:6px}
+  .scand .bd{margin-top:3px;line-height:1.5;font-size:15px}
+  .scand .why{margin-top:4px;font-size:12px;color:#b45309}
+  .scand.prop{border-color:#f0c98a;background:#fffaf2}
+  .scand .ck{flex:none;width:19px;height:19px;border-radius:5px;border:1px solid var(--line);
+             color:transparent;font-size:12px;line-height:18px;text-align:center;margin-top:2px}
+  .scand.on{border-color:var(--accent);background:#eff5ff;box-shadow:0 0 0 2px #dbeafe}
+  .scand.on .ck{background:var(--accent);border-color:var(--accent);color:#fff}
+  #stdSel{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:9px;min-height:22px;align-items:center}
+  #stdSel .none{font-size:12px;color:var(--dim)}
+  #stdSel .stag{background:var(--accent-soft);color:var(--accent);border-radius:99px;
+                padding:3px 6px 3px 10px;font-size:12.5px;font-family:Consolas,monospace;
+                display:inline-flex;align-items:center;gap:5px}
+  #stdSel .stag i{font-style:normal;cursor:pointer;background:#fff;border-radius:99px;
+                  width:16px;height:16px;line-height:15px;text-align:center;font-size:12px}
+  @media (max-width:900px){ #std .sb{grid-template-columns:1fr;overflow:auto} }
+
+  #toast{position:fixed;left:50%;bottom:32px;transform:translateX(-50%) translateY(20px);
+         background:#111827;color:#fff;padding:11px 20px;border-radius:8px;font-size:14px;
+         opacity:0;pointer-events:none;transition:all .2s;z-index:60;max-width:80vw;text-align:center}
+  #toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  /* ── 인쇄 양식 ── */
+  #printArea{display:none}
+  .sheet{width:190mm;height:277mm;page-break-after:always;overflow:hidden;
+         display:flex;flex-direction:column;position:relative}
+  .sbody{flex:1;display:flex;min-height:0}
+  .pgn{height:7mm;text-align:center;font-size:9pt;color:#555;padding-top:1.5mm}
+  .sheet:last-child{page-break-after:auto}
+  .scol{flex:1;min-width:0;display:flex;flex-direction:column;padding:0 5mm}
+  .scol.divider{border-right:1.1px solid #333}
+  .slab{font-size:9.5pt;color:#444;margin:0 0 1.5mm;font-weight:bold}
+  .sbox{display:flex;margin:0 0 1.5mm}
+  .sbox span{width:9mm;height:6mm;border:1px solid #9aa1ab;margin-left:-1px;
+             font-size:7pt;color:#c2c8d0;display:flex;align-items:center;justify-content:center}
+  .sbox span:first-child{margin-left:0}
+  .sslot{flex:1;min-height:0;display:flex;flex-direction:column;padding:3mm 0;overflow:hidden}
+  .sslot img{max-width:100%;max-height:100%;object-fit:contain;object-position:left top}
+  .nq{font-size:10.5pt;font-weight:bold;margin:4mm 0 2mm}
+  .nlines div{border-bottom:1px solid #b9c0c9;height:9mm}
+  @media print{
+    header,main,.drawer,.nav,#pager,#toast,.modal,#cmp{display:none !important}
+    #printArea{display:block}
+    body{background:#fff}
+    @page{size:A4;margin:10mm}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1 id="title">수학 수능/모평/학평 기출문제 검색기 <span class="by">제작자 : 허선생</span> <small id="sub"></small>
+    <span class="modesw">
+      <button id="modeSearch" class="on">문항검색모드</button>
+      <button id="modeStudy">학습모드</button>
+    </span>
+    <button id="cmpBtn">유사문항 비교</button>
+    <button id="stdBtn">성취기준 달기</button>
+  </h1>
+  <div class="searchbar">
+    <input id="q" placeholder="문구·연도·문항번호·과목·학년을 섞어 입력하세요   예) 고2 6월 14번 · 확통 정규분포 · 둘러싸인 부분의 넓이" autocomplete="off">
+    <button id="clear">초기화</button>
+  </div>
+  <div id="fbar">
+    <button id="ftoggle">필터 열기<span class="arrow">▾</span></button>
+    <span id="scopebar"><b>범위</b></span>
+    <span id="fsummary"></span>
+    <button id="fclear" style="display:none">필터 해제</button>
+    <span id="keyhint">검색한 뒤 <b>←</b> <b>→</b> 키로 다음 4문항을 볼 수 있습니다</span>
+    <button id="adminBtn" style="display:none">관리자<span class="n" id="adminN" style="display:none">0</span></button>
+  </div>
+  <div class="filters" id="filters"></div>
+  <div id="status"></div>
+  <div id="studybar">
+    <span class="cnt" id="selCnt">선택 0개</span>
+    <button id="selAll">전체 선택</button>
+    <button id="selNone">전체 해제</button>
+    <span style="flex:1"></span>
+    <button id="printWork" class="primary">학습지 인쇄</button>
+    <button id="printNote">오답노트 인쇄</button>
+    <button id="tipBtn" title="오답노트를 빨리 만드는 방법">💡 오답노트 팁</button>
+  </div>
+  <div id="tabs"></div>
+</header>
+
+<main>
+  <div class="grid" id="grid"></div>
+  <button id="more" style="display:none">더 보기</button>
+  <div id="pager">
+    <button id="pagePrev">이전</button>
+    <span><b id="pageNow">1</b> / <span id="pageAll">1</span></span>
+    <button id="pageNext">다음</button>
+  </div>
+</main>
+
+<button class="nav" id="navPrev">‹</button>
+<button class="nav" id="navNext">›</button>
+
+<div class="drawer" id="admin">
+  <div class="th"><b>관리자</b><button id="adminClose">닫기</button></div>
+  <div class="atab">
+    <button id="atabRep" class="on">오류제보</button>
+    <button id="atabOv">교체한 이미지</button>
+    <button id="atabCmp">비교데이터</button>
+    <button id="atabStd">성취기준</button>
+    <button id="atabSync">수집 상태</button>
+  </div>
+  <div class="tl" id="adminList"></div>
+  <div class="tf" id="adminFoot"></div>
+</div>
+
+<div id="cmp">
+  <div class="ch">
+    <b>유사문항 비교</b>
+    <span id="cmpCount" class="hint"></span>
+    <span class="sp"></span>
+    <span id="cmpGateMsg"></span>
+    <button id="cmpSkip">건너뛰기</button>
+    <button id="cmpClose">닫기</button>
+  </div>
+  <div class="cb">
+    <div class="cc anchor"><div class="cl"><span class="lb">기준</span><span id="cmpL0"></span></div>
+      <div class="ci" id="cmpI0"></div></div>
+    <div class="cmid">
+      <div class="cc pick" id="cmpP1"><div class="cl"><span class="lb">1</span><span id="cmpL1"></span>
+        <span class="tick">✓</span></div>
+        <div class="ci" id="cmpI1"></div></div>
+      <div class="cc pick" id="cmpP2"><div class="cl"><span class="lb">2</span><span id="cmpL2"></span>
+        <span class="tick">✓</span></div>
+        <div class="ci" id="cmpI2"></div></div>
+    </div>
+    <div class="crail">
+      <div class="rq">기준 문항과 <b>비슷한 것</b>을 고르세요</div>
+      <div class="rtag">함께 만들어가는 AI 유사문항 추천 시스템<br>
+        <span>정확한 응답이 모여 완성도가 올라갑니다</span></div>
+      <button id="cmpOk" class="primary">둘 다 다름으로 확정</button>
+      <button id="cmpUnsure">잘 모르겠음</button>
+      <div class="rhint">둘 다 골라도, 하나도 안 골라도 됩니다.<br>
+        다시 누르면 취소됩니다.</div>
+      <div class="sp"></div>
+      <div class="rhint">키보드 <b>1</b> <b>2</b> 로 고르고 <b>Enter</b>로 확정,
+        <b>0</b>은 잘 모르겠음입니다. 이름은 묻지 않습니다.</div>
+      <div class="gatebar"><i id="gateFill"></i></div>
+    </div>
+  </div>
+</div>
+
+<div id="std">
+  <div class="ch">
+    <b>성취기준 달기</b>
+    <span id="stdCount" class="hint"></span>
+    <span class="sp"></span>
+    <span id="stdGateMsg"></span>
+    <button id="stdSkip">건너뛰기</button>
+    <button id="stdClose">닫기</button>
+  </div>
+  <div class="sb">
+    <div class="cc anchor">
+      <div class="cl"><span class="lb">문항</span><span id="stdLab"></span></div>
+      <div class="ci" id="stdImg"></div>
+    </div>
+    <div class="sp2">
+      <div class="stop">
+        <div class="rq">이 문항의 <b>성취기준</b>을 고르세요</div>
+        <div class="rtag">함께 만들어가는 AI 유사문항 추천 시스템 —
+          <span>정확한 응답이 모여 완성도가 올라갑니다</span></div>
+        <div class="shead">해당하는 것을 모두 누르세요 · 여러 개도 됩니다 <b id="stdScope"></b></div>
+      </div>
+      <div id="stdCands"></div>
+      <div class="srch">
+        <input id="stdQ" placeholder="없으면 여기서 찾기 — 등차수열 · 정규분포 · 12대수03" autocomplete="off">
+        <div id="stdHits"></div>
+      </div>
+      <div class="sfoot">
+        <div id="stdSel"></div>
+        <div class="sbtn">
+          <button id="stdOk" class="primary" disabled>고른 것 저장</button>
+          <button id="stdUnsure">잘 모르겠음</button>
+          <button id="stdNone">해당 없음</button>
+        </div>
+        <div class="rhint">숫자키 <b>1</b>~<b>4</b> 로 켜고 끄고 <b>Enter</b>로 저장합니다. 이름은 묻지 않습니다.</div>
+        <div class="gatebar"><i id="stdGateFill"></i></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="modal"><div class="mbox" id="mbox"></div></div>
+<input type="file" id="filePick" accept="image/png,image/jpeg" style="display:none">
+<div id="printArea"></div>
+<div id="toast"></div>
+
+<script src="data/index.js"></script>
+<script src="data/sim.js"></script>
+<script src="data/std.js"></script>
+<script>
+(function(){
+  /* ===================================================================
+     관리자 비밀번호 — 바꾸시려면 따옴표 안의 글자만 고치세요.
+     =================================================================== */
+  var ADMIN_PW = 'gich2026';
+
+  /* 유사문항 비교 응답을 온라인으로도 모으려면 수집 주소를 넣으세요.
+     비워 두면 이 브라우저에만 저장되고 관리자 메뉴에서 CSV로 받을 수 있습니다. */
+  /* 응답을 구글 시트로 모으려면 아래 따옴표 안에 Apps Script 웹앱 주소를 넣으세요.
+     («_수집서버\설치 방법.md» 참고 · 비워 두면 브라우저 안에만 쌓입니다) */
+  var COLLECT_URL = 'https://script.google.com/macros/s/AKfycbyG4haAlx6sI3BzYosK0sRnq54Db2FU3Q5eMdK8h2BMdXqZgP1PUanpnmMkfJSFzeDbPQ/exec';
+
+  /* 처음 열 때 유사문항 비교를 몇 건 답해야 넘어가는지. 0으로 두면 묻지 않습니다. */
+  /* 시작할 때 «제대로 된 응답»을 몇 건 받을지. 잘 모르겠음으로 답하면 한 건 더 묻습니다. */
+  var GATE_QUOTA = 1;
+  var GATE_MAX   = 5;      /* 잘 모르겠음이 이어져도 이 횟수를 넘기면 그냥 보내 줍니다 */
+
+  /* 질문 중 '공통 검증 세트'에서 내는 비율.
+     모든 컴퓨터가 똑같이 만들어내는 고정된 쌍이라, 여러 사람의 의견이 같은 쌍에 모입니다. */
+  var CHECK_RATIO = 0.35;
+  var CHECK_STEP  = 90;      // 문항을 몇 개 건너뛰며 검증 쌍을 뽑을지 (작을수록 세트가 커짐)
+
+  /* '유사하지 않아요'가 몇 명에게서 모여야 실제로 추천에서 빼는지 */
+  var NEG_THRESHOLD = 2;
+  /* 성취기준 — 몇 명이 같게 답해야 «확정»으로 볼지 */
+  var STD_CONFIRM = 2;
+  /* 확정된 성취기준이 서로 다를 때 유사도에 주는 가감 */
+  var WSTD = { same:0.30, area:0.05, subj:-0.10, diff:-0.50 };
+  /* 유사문항 비교 응답 한 표가 추천 점수를 얼마나 움직일지.
+     난이도 순서를 크게 흔들지 않도록 약하게 잡고, 아무리 쌓여도 아래 한도를 넘지 않는다. */
+  var WPREF = 0.05, PREF_CAP = 0.20;
+
+  var D = window.QDATA;
+  if(!D){ document.body.innerHTML='<p style="padding:40px">데이터 파일(data/index.js)을 찾을 수 없습니다.</p>'; return; }
+  var EX = D.exams, IT = D.items;
+  var SIM = window.QSIM || null;
+  var RATE = window.QRATE || {};   // 오답률(%) 자료가 생기면 난이도 정렬에 우선 사용
+  var BY_PATH = {}, IDX = {};
+  IT.forEach(function(it,i){ BY_PATH[it[2]]=it; IDX[it[2]]=i; });
+
+  var MODE='search', PAGE4=4, PAGE=24, shown=0, page=0;
+  var hits=[], TABS=[], activeTab=-1, SEL={};
+  var OV={}, REPORTS=[], PAIRS=[], NEG={}, NEGV=[], DEL={}, PREF=null;
+  var isAdmin=false, adminTab='rep';
+  var gateLeft=0, SIM_ANCHOR='', SIM_SAME=0, WAY_PIN=-1;
+  var STD=window.QSTD||null, STDV=[], STDMAP=null, stdCur=null, stdPick=[], stdSel=[];
+
+  /* 이름 대신 브라우저마다 익명 번호를 하나 만들어 둔다.
+     응답자 수를 세는 데만 쓰이고 누구인지는 알 수 없다. */
+  var UID=(function(){
+    try{
+      var v=localStorage.getItem('gich_uid');
+      if(!v){ v='u'+Math.random().toString(36).slice(2,8); localStorage.setItem('gich_uid',v); }
+      return v;
+    }catch(e){ return 'u000000'; }
+  })();
+
+  function $(id){ return document.getElementById(id); }
+  $('sub').textContent='시험 '+EX.length+'개 · 문항 '+IT.length.toLocaleString()+'개';
+
+  function norm(s){ return (s||'').toLowerCase().replace(/[^0-9a-z가-힣]/g,''); }
+  function esc(s){ return String(s).replace(/[&<>"]/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function toast(msg,bad){
+    var t=$('toast'); t.textContent=msg; t.style.background=bad?'#b91c1c':'#111827';
+    t.classList.add('on'); clearTimeout(t._t);
+    t._t=setTimeout(function(){t.classList.remove('on');},2200);
+  }
+  function nowStr(){
+    var d=new Date(), p=function(n){return (n<10?'0':'')+n;};
+    return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());
+  }
+  function label(it){ return EX[it[0]].n+' '+it[1]+'번'; }
+  /* 수능·모의평가는 «학년도»로 부르지만 실제로 친 날은 그 앞 해다.
+     26학년도 수능 → 2025년 11월 시행 */
+  var HELD_M={'수능':'11월','9월':'9월','6월':'6월'};
+  function heldAt(e){
+    if(e.g!=='수능·모평') return '';
+    var m=HELD_M[e.r]; if(!m) return '';
+    return (parseInt(e.y,10)-1)+'년 '+m+' 시행';
+  }
+  function ptsOf(it){ var m=/([234])점/.exec(it[5]); return m? +m[1] : 0; }
+  function lsGet(k,dflt){ try{ var v=JSON.parse(localStorage.getItem(k)); return v==null?dflt:v; }catch(e){ return dflt; } }
+  function lsSet(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){ toast('저장 공간이 부족합니다',true); } }
+
+  /* ================= 교체 이미지 저장소 ================= */
+  var DB=null;
+  function idb(cb){
+    if(DB){ cb(DB); return; }
+    try{
+      var rq=indexedDB.open('gich',1);
+      rq.onupgradeneeded=function(e){ e.target.result.createObjectStore('ov'); };
+      rq.onsuccess=function(e){ DB=e.target.result; cb(DB); };
+      rq.onerror=function(){ cb(null); };
+    }catch(e){ cb(null); }
+  }
+  function lsOv(){ try{ return JSON.parse(localStorage.getItem('gich_ov')||'{}'); }catch(e){ return {}; } }
+  function ovLoad(done){
+    idb(function(db){
+      if(!db){ OV=lsOv(); done(); return; }
+      try{
+        var req=db.transaction('ov','readonly').objectStore('ov').openCursor();
+        req.onsuccess=function(e){ var c=e.target.result;
+          if(c){ OV[c.key]=c.value; c.continue(); } else done(); };
+        req.onerror=function(){ OV=lsOv(); done(); };
+      }catch(e){ OV=lsOv(); done(); }
+    });
+  }
+  function ovPut(path,data,cb){
+    OV[path]=data;
+    idb(function(db){
+      if(!db){
+        try{ var m=lsOv(); m[path]=data; localStorage.setItem('gich_ov',JSON.stringify(m)); cb(true); }
+        catch(e){ cb(false,'브라우저 저장 공간이 부족합니다'); }
+        return;
+      }
+      try{
+        var tx=db.transaction('ov','readwrite');
+        tx.objectStore('ov').put(data,path);
+        tx.oncomplete=function(){ cb(true); };
+        tx.onerror=function(){ cb(false,'저장하지 못했습니다'); };
+      }catch(e){ cb(false,'저장하지 못했습니다'); }
+    });
+  }
+  function ovDel(path,cb){
+    delete OV[path];
+    idb(function(db){
+      if(!db){ try{ var m=lsOv(); delete m[path];
+        localStorage.setItem('gich_ov',JSON.stringify(m)); }catch(e){} cb(); return; }
+      try{
+        var tx=db.transaction('ov','readwrite');
+        tx.objectStore('ov').delete(path);
+        tx.oncomplete=function(){ cb(); }; tx.onerror=function(){ cb(); };
+      }catch(e){ cb(); }
+    });
+  }
+  function imgSrc(it){ return OV[it[2]] || ('img/'+it[2]); }
+
+  /* ================= 저장 도우미 ================= */
+  function repSave(){ lsSet('gich_reports',REPORTS); updateAdminBadge(); }
+  function pairSave(){ lsSet('gich_pairs',PAIRS); }
+  function negSave(){ lsSet('gich_neg',NEG); lsSet('gich_negv',NEGV); }
+  function delSave(){ lsSet('gich_del',DEL); }
+  function prefClear(){ PREF=null; }
+  /* «유사하지 않아요» 기록으로 NEG를 다시 만든다 (내 것 + 시트에서 받아온 것) */
+  function negRebuild(){
+    NEG={};
+    NEGV.forEach(function(r){
+      if(!r.a||!r.x) return;
+      var m=NEG[r.a]||(NEG[r.a]={});
+      var cell=m[r.x]||(m[r.x]={u:{}});
+      if(!cell.u) cell.u={};
+      cell.u[r.who||'?']=1;
+      m[r.x]=cell;
+    });
+    lsSet('gich_neg',NEG);
+  }
+  /* 비교 응답을 «이 문항과 저 문항은 비슷하다/아니다» 표로 바꾼다 */
+  function prefMap(){
+    if(PREF) return PREF;
+    var P={};
+    function add(a,b,v){
+      if(!a||!b) return;
+      var m=P[a]||(P[a]={}); m[b]=(m[b]||0)+v;
+      var m2=P[b]||(P[b]={}); m2[a]=(m2[a]||0)+v;   /* 방향은 없다고 본다 */
+    }
+    PAIRS.forEach(function(r){
+      if(DEL[r.id]) return;
+      if(r.c==='x'){ add(r.a,r.x,1); add(r.a,r.y,-1); }
+      else if(r.c==='y'){ add(r.a,r.y,1); add(r.a,r.x,-1); }
+      else if(r.c==='both'){ add(r.a,r.x,0.5); add(r.a,r.y,0.5); }
+      else if(r.c==='none'){ add(r.a,r.x,-0.5); add(r.a,r.y,-0.5); }
+    });
+    PREF=P; return P;
+  }
+  function prefAdjust(pa,pb){
+    var m=prefMap()[pa];
+    if(!m || !m[pb]) return 0;
+    var v=m[pb]*WPREF;
+    return Math.max(-PREF_CAP, Math.min(PREF_CAP, v));
+  }
+  function repOpen(path){ return REPORTS.filter(function(r){ return r.path===path && !r.done; }).length; }
+  function updateAdminBadge(){
+    var n=REPORTS.filter(function(r){ return !r.done; }).length;
+    var b=$('adminN'); b.textContent=n; b.style.display=n?'':'none';
+  }
+
+  /* ================= 비슷한 문항 =================
+     미리 계산한 글자 유사도에 과목·배점·문항번호를 얹어 다시 정렬한다.
+     이 숫자들은 비교 응답이 쌓이면 조정할 대상이다. */
+  var W={text:1.00, subj:0.10, pts:0.05, num:0.05, samexam:-0.15};
+
+  /* '유사하지 않아요'는 여러 사람이 같은 판단을 했을 때만 실제로 뺀다.
+     한 사람 의견으로 바로 빼면 잘못된 제외가 굳어지기 때문. */
+  function negVotes(a,x){
+    var m=NEG[a] && NEG[a][x];
+    if(!m) return 0;
+    return (typeof m==='object' && m.u) ? Object.keys(m.u).length : 1;
+  }
+  function negBlocked(a,x){ return negVotes(a,x) >= NEG_THRESHOLD; }
+
+  function recommend(i,k){
+    if(!SIM || !SIM[i]) return [];
+    var it=IT[i], e=EX[it[0]], p=ptsOf(it), sc0=scopeOf(e), out=[];
+    SIM[i].forEach(function(pr){
+      var j=pr[0], jt=IT[j];
+      if(negBlocked(it[2],jt[2])) return;
+      var je=EX[jt[0]], base=pr[1]/1000, sc=W.text*base;
+      if(je.s===e.s && e.s) sc+=W.subj;
+      if(ptsOf(jt)===p && p) sc+=W.pts;
+      sc+=W.num*Math.max(0,1-Math.abs(jt[1]-it[1])/10);
+      if(jt[0]===it[0]) sc+=W.samexam;
+      if(STD) sc += stdAdjust(it[2], jt[2]);
+      sc += prefAdjust(it[2], jt[2]);
+      out.push({j:j,sc:sc,base:base,same:scopeOf(je)===sc0});
+    });
+    out.sort(function(a,b){ return b.sc-a.sc; });
+    return out.slice(0,k||24);
+  }
+
+  /* 출제 범위 세 갈래
+       중학  : 고1 3월          (중학교 범위)
+       고1   : 고1 3월 제외 + 고2 3월
+       고2·3 : 나머지 (고2 3월 제외 · 고3 · 수능/모평) */
+  function scopeOf(e){
+    if(e.g==='고1') return e.r==='3월' ? '중학' : '고1';
+    if(e.g==='고2') return e.r==='3월' ? '고1' : '고2·3';
+    return '고2·3';
+  }
+  function scopeOfItem(it){ return scopeOf(EX[it[0]]); }
+
+  /* 난이도: 배점 → (오답률 자료가 있으면 오답률, 없으면 문항번호) */
+  function diffKey(it){
+    var r=RATE[it[2]];
+    return [ptsOf(it)||9, (r!=null? r : it[1]*2)];
+  }
+  function byDifficulty(a,b){
+    var ka=diffKey(a), kb=diffKey(b);
+    return ka[0]-kb[0] || ka[1]-kb[1] || a[1]-b[1];
+  }
+
+  /* ================= 검색어 해석 ================= */
+  var SUBJ_ALIAS=[['확률과통계','확통'],['확률과 통계','확통'],['확통','확통'],
+    ['미적분','미적'],['미적','미적'],['기하와벡터','기하'],['기하','기하'],
+    ['공통','공통'],['가형','가형'],['나형','나형']];
+  var ROUNDS=['수능','11월','10월','9월','7월','6월','5월','4월','3월'];
+
+  var YEARS=null;                       /* 자료에 실제로 있는 연도 */
+  function yearSet(){
+    if(!YEARS){ YEARS={}; EX.forEach(function(e){ YEARS[e.y]=1; }); }
+    return YEARS;
+  }
+  var MAXNUM=30;
+
+  /* 숫자 덩어리 하나: '12' 또는 '1,2,3' 또는 '21~25' */
+  function numGroup(t){
+    var vals=[], ok=true;
+    t.split(/[,·、]/).forEach(function(part){
+      part=part.trim(); if(!part) return;
+      var m=part.match(/^(\d{1,4})\s*[~\-–]\s*(\d{1,4})$/);
+      if(m){
+        var a=+m[1], b=+m[2];
+        if(a>b){ var sw=a; a=b; b=sw; }
+        if(b-a>60){ ok=false; return; }
+        for(var v=a;v<=b;v++) vals.push(v);
+        return;
+      }
+      if(/^\d{1,4}$/.test(part)) vals.push(+part); else ok=false;
+    });
+    return (ok && vals.length) ? vals : null;
+  }
+  function y4(v){ return v>=2000 ? String(v) : (v<100 ? '20'+(v<10?'0':'')+v : ''); }
+  /* 자료에 없는 해·달이어도 «그렇게 읽을 수는 있는지»만 본다 (결과가 0개로 나올 뿐) */
+  function canYear(vals){
+    return vals.every(function(v){ var y=y4(v); return y && +y>=1990 && +y<=2099; });
+  }
+  function canRound(vals){
+    return vals.every(function(v){ return v>=1 && v<=12; });
+  }
+  function canNum(vals){
+    return vals.every(function(v){ return v>=1 && v<=MAXNUM; });
+  }
+
+  /* 검색어 한 줄 → 뜻이 여러 갈래면 갈래마다 조건을 하나씩 만든다 */
+  function parseQuery(raw){
+    var s=' '+raw.trim().replace(/\s*,\s*/g,',')+' ';
+    var base={years:[],rounds:[],subjects:[],grades:[],nums:[]}, text=[], groups=[];
+
+    SUBJ_ALIAS.forEach(function(pr){
+      var re=new RegExp(pr[0].replace(/ /g,'\\s*'),'g');
+      if(re.test(s)){ if(base.subjects.indexOf(pr[1])<0) base.subjects.push(pr[1]); s=s.replace(re,' '); }
+    });
+    ['고1','고2','고3'].forEach(function(g){
+      var re=new RegExp('(?:^|[\\s,])'+g+'(?=[\\s,])','g');
+      if(re.test(s)){ if(base.grades.indexOf(g)<0) base.grades.push(g); s=s.replace(re,' '); }
+    });
+    ROUNDS.forEach(function(r){
+      var re=new RegExp('(?:^|[\\s,])'+r+'(?=[\\s,])','g');
+      if(re.test(s)){ if(base.rounds.indexOf(r)<0) base.rounds.push(r); s=s.replace(re,' '); }
+    });
+
+    s.replace(/,/g,' ').trim();
+    s.trim().split(/\s+/).filter(Boolean).forEach(function(t){
+      var m, g;
+      /* 뜻이 분명한 것부터 */
+      if((m=t.match(/^(\d{4})(?:학년도|년)$/)) || (m=t.match(/^(\d{2})(?:학년도|년)$/))){
+        var y=m[1].length===4?m[1]:'20'+m[1];
+        if(base.years.indexOf(y)<0) base.years.push(y); return;
+      }
+      if((m=t.match(/^([\d,~\-–·]+)\s*번$/)) && (g=numGroup(m[1]))){
+        g.forEach(function(v){ if(base.nums.indexOf(v)<0) base.nums.push(v); }); return;
+      }
+      if((m=t.match(/^(\d{1,2})월$/))){
+        var r=m[1]+'월'; if(ROUNDS.indexOf(r)>=0 && base.rounds.indexOf(r)<0) base.rounds.push(r);
+        else if(ROUNDS.indexOf(r)<0) base.rounds.push(r);      /* 없는 달이면 결과 0개 */
+        return;
+      }
+      if(/^\d{4}$/.test(t)){ if(base.years.indexOf(t)<0) base.years.push(t); return; }
+      if((g=numGroup(t))){ groups.push(g); return; }
+      text.push(t);
+    });
+
+    /* 맨숫자 덩어리를 «연도 → 월 → 번호» 차례에 순서대로 끼워 넣는 모든 경우 */
+    var roles=[];
+    if(!base.years.length)  roles.push('year');
+    if(!base.rounds.length) roles.push('round');
+    if(!base.nums.length)   roles.push('num');
+    var plans=[];
+    (function walk(gi, ri, acc){
+      if(gi>=groups.length){ plans.push(acc.slice()); return; }
+      for(var r=ri;r<roles.length;r++){
+        var role=roles[r], v=groups[gi];
+        if(role==='year'  && !canYear(v))  continue;
+        if(role==='round' && !canRound(v)) continue;
+        if(role==='num'   && !canNum(v))   continue;
+        acc.push({role:role, vals:v});
+        walk(gi+1, r+1, acc);
+        acc.pop();
+      }
+    })(0,0,[]);
+
+    var specs=[];
+    if(!groups.length || !plans.length){
+      specs.push({years:base.years.slice(),rounds:base.rounds.slice(),
+                  subjects:base.subjects.slice(),grades:base.grades.slice(),
+                  nums:base.nums.slice(),why:''});
+      /* 숫자를 어디에도 못 넣으면(예: 99) 결과가 없도록 표시 */
+      if(groups.length && !plans.length) specs[0].dead=true;
+    }else{
+      plans.forEach(function(pl){
+        var sp={years:base.years.slice(),rounds:base.rounds.slice(),
+                subjects:base.subjects.slice(),grades:base.grades.slice(),
+                nums:base.nums.slice(),why:''};
+        var tag=[];
+        pl.forEach(function(a){
+          if(a.role==='year'){ a.vals.forEach(function(v){ sp.years.push(y4(v)); });
+            tag.push(a.vals.map(function(v){return (''+v).slice(-2);}).join(',')+'년'); }
+          if(a.role==='round'){ a.vals.forEach(function(v){ sp.rounds.push(v+'월'); });
+            tag.push(a.vals.join(',')+'월'); }
+          if(a.role==='num'){ a.vals.forEach(function(v){ sp.nums.push(v); });
+            tag.push(a.vals.join(',')+'번'); }
+        });
+        sp.why=tag.join(' ');
+        specs.push(sp);
+      });
+    }
+    return {specs:specs, text:text, base:base};
+  }
+
+  /* 고3에는 6·9월 전국연합이 없다 — «고3 6월»은 평가원 모의평가를 뜻한다 */
+  function gradeOK(e, grades){
+    if(!grades.length) return true;
+    if(grades.indexOf(e.g)>=0) return true;
+    return e.g==='수능·모평' && grades.indexOf('고3')>=0;
+  }
+  function matchOne(it,sp){
+    if(sp.dead) return false;
+    var e=EX[it[0]];
+    if(sp.years.length   && sp.years.indexOf(e.y)<0) return false;
+    if(sp.rounds.length  && sp.rounds.indexOf(e.r)<0) return false;
+    if(sp.subjects.length&& sp.subjects.indexOf(e.s)<0) return false;
+    if(!gradeOK(e, sp.grades)) return false;
+    if(sp.nums.length    && sp.nums.indexOf(it[1])<0) return false;
+    return true;
+  }
+  function matchSpec(it,plan){
+    var ways=plan.specs.filter(function(sp){ return sp.why; });
+    if(WAY_PIN>=0 && ways.length>1 && ways[WAY_PIN]) return matchOne(it,ways[WAY_PIN]);
+    for(var i=0;i<plan.specs.length;i++) if(matchOne(it,plan.specs[i])) return true;
+    return false;
+  }
+  function search(raw){
+    var plan=parseQuery(raw);
+    var pool=IT.filter(function(it){ return passFilter(EX[it[0]]) && matchSpec(it,plan); });
+    var phrase=norm(plan.text.join(''));
+    if(!phrase) return {list:pool,mode:raw.trim()?'spec':'all',spec:plan};
+    var exact=pool.filter(function(it){ return it[5].indexOf(phrase)>=0; });
+    if(exact.length || plan.text.length<2) return {list:exact,mode:'phrase',spec:plan};
+    var words=plan.text.map(norm).filter(Boolean);
+    return {list:pool.filter(function(it){
+      return words.every(function(w){ return it[5].indexOf(w)>=0; }); }),mode:'and',spec:plan};
+  }
+
+  /* ================= 필터 ================= */
+  var F={grade:new Set(),round:new Set(),subject:new Set(),year:new Set(),scope:new Set()};
+  function uniq(fn){ var out=[],has={};
+    EX.forEach(function(e){ var v=fn(e); if(v&&!has[v]){has[v]=1;out.push(v);} }); return out; }
+  var GRADE_LABEL={'수능·모평':'수능모평','고1':'고1전국연합','고2':'고2전국연합','고3':'고3전국연합'};
+  function buildFilters(){
+    var box=$('filters');
+    [['구분','grade',uniq(function(e){return e.g})],
+     ['시행','round',uniq(function(e){return e.r})],
+     ['과목','subject',uniq(function(e){return e.s})],
+     ['연도','year',uniq(function(e){return e.y}).sort().reverse()]].forEach(function(d){
+      var g=document.createElement('div'); g.className='fgroup';
+      var b=document.createElement('b'); b.textContent=d[0]; g.appendChild(b);
+      d[2].forEach(function(v){
+        var c=document.createElement('span'); c.className='chip';
+        c.textContent = d[1]==='grade' ? GRADE_LABEL[v]||v : v;
+        c.onclick=function(){
+          var S=F[d[1]];
+          if(S.has(v)){S.delete(v);c.classList.remove('on');} else {S.add(v);c.classList.add('on');}
+          fsummary(); run(false,true);
+        };
+        g.appendChild(c);
+      });
+      box.appendChild(g);
+    });
+    // 출제 범위는 필터를 접어도 늘 보이도록 검색창 바로 아래 줄에 둔다
+    var sb=$('scopebar');
+    ['중학','고1','고2·3'].forEach(function(v){
+      var c=document.createElement('span'); c.className='chip'; c.textContent=v;
+      c.title=({'중학':'고1 3월','고1':'3월을 뺀 고1 ~ 고2 3월','고2·3':'그 밖의 모든 시험'})[v]+' 에서 나온 문항';
+      c.onclick=function(){
+        if(F.scope.has(v)){F.scope.delete(v);c.classList.remove('on');}
+        else {F.scope.add(v);c.classList.add('on');}
+        fsummary(); run(false,true);
+      };
+      sb.appendChild(c);
+    });
+  }
+  function fsummary(){
+    var on=[];
+    ['scope','grade','round','subject','year'].forEach(function(k){
+      F[k].forEach(function(v){ on.push(k==='grade'?(GRADE_LABEL[v]||v):v); }); });
+    $('fsummary').textContent=on.length?on.join(' · '):'';
+    $('fclear').style.display=on.length?'':'none';
+  }
+  function passFilter(e){
+    return (!F.grade.size||F.grade.has(e.g)) && (!F.round.size||F.round.has(e.r))
+        && (!F.subject.size||F.subject.has(e.s)) && (!F.year.size||F.year.has(e.y))
+        && (!F.scope.size||F.scope.has(scopeOf(e)));
+  }
+  function clearFilters(){
+    F.grade.clear();F.round.clear();F.subject.clear();F.year.clear();F.scope.clear();
+    Array.prototype.forEach.call(document.querySelectorAll('.chip'),function(c){c.classList.remove('on');});
+    fsummary();
+  }
+
+  /* ================= 모드 ================= */
+  function setMode(m){
+    MODE=m;
+    $('modeSearch').className=m==='search'?'on':'';
+    $('modeStudy').className =m==='study' ?'on':'';
+    $('studybar').classList.toggle('on',m==='study');
+    try{ localStorage.setItem('gich_mode',m); }catch(e){}
+    page=0; shown=0; render(true);
+  }
+  $('modeSearch').onclick=function(){ setMode('search'); };
+  $('modeStudy').onclick=function(){ setMode('study'); };
+  function selCount(){ return Object.keys(SEL).length; }
+  function updateSel(){
+    $('selCnt').textContent='선택 '+selCount()+'개';
+    $('selCnt').title='다른 쪽에서 고른 것까지 함께 셉니다';
+    $('printWork').disabled=$('printNote').disabled=(selCount()===0);
+  }
+
+  /* ================= 결과 그리기 ================= */
+  function sortHits(list){
+    var ord={'수능':0,'11월':1,'10월':2,'9월':3,'7월':4,'6월':5,'5월':6,'4월':7,'3월':8};
+    return list.slice().sort(function(a,b){
+      var ea=EX[a[0]],eb=EX[b[0]];
+      if(ea.y!==eb.y) return eb.y<ea.y?-1:1;
+      var oa=ord[ea.r]===undefined?9:ord[ea.r], ob=ord[eb.r]===undefined?9:ord[eb.r];
+      if(oa!==ob) return oa-ob;
+      if(a[0]!==b[0]) return a[0]-b[0];
+      return a[1]-b[1];
+    });
+  }
+
+  function render(reset){
+    var grid=$('grid'), pageMode=true;   // 두 모드 모두 한 화면 4문항
+    grid.classList.toggle('page4',pageMode);
+    $('more').style.display='none';
+    if(!hits.length){
+      grid.innerHTML='<div class="empty">찾는 문항이 없습니다.<br>'
+        +'<span class="hint">이렇게도 찾을 수 있어요 — '
+        +'<code>고2 6월 14번</code> &nbsp; <code>확통 정규분포</code> &nbsp; '
+        +'<code>2020년 4월 고3</code> &nbsp; <code>둘러싸인 부분의 넓이</code></span></div>';
+      $('navPrev').classList.remove('on'); $('navNext').classList.remove('on');
+      $('pager').classList.remove('on');
+      return;
+    }
+    var many=pageMode && hits.length>PAGE4;
+    $('navPrev').classList.toggle('on',many);
+    $('navNext').classList.toggle('on',many);
+    $('pager').classList.toggle('on',pageMode);
+
+    if(pageMode){
+      var total=Math.max(1,Math.ceil(hits.length/PAGE4));
+      if(page>=total) page=total-1;
+      if(page<0) page=0;
+      grid.innerHTML='';
+      hits.slice(page*PAGE4,(page+1)*PAGE4).forEach(function(it){ grid.appendChild(makeCard(it)); });
+      $('pageNow').textContent=page+1; $('pageAll').textContent=total;
+      $('navPrev').disabled=$('pagePrev').disabled=(page===0);
+      $('navNext').disabled=$('pageNext').disabled=(page>=total-1);
+      fitCards();
+      try{ window.scrollTo(0,0); }catch(e){}
+    } else {
+      if(reset){ grid.innerHTML=''; shown=0; }
+      hits.slice(shown,shown+PAGE).forEach(function(it){ grid.appendChild(makeCard(it)); });
+      shown+=Math.min(PAGE,hits.length-shown);
+      var m=$('more');
+      m.style.display=shown<hits.length?'block':'none';
+      m.textContent='더 보기 ('+(hits.length-shown)+'개 남음)';
+    }
+  }
+  function refreshCards(){ shown=0; render(true); }
+
+  /* 4문항이 한 화면에 들어오도록 카드 높이를 계산한다 (도구줄이 늘면 그만큼 줄인다) */
+  function fitCards(){
+    try{
+      var hd=document.querySelector('header').offsetHeight||220;
+      var h=Math.max(220, window.innerHeight-hd-130);
+      document.documentElement.style.setProperty('--cardh', h+'px');
+    }catch(e){}
+  }
+  window.addEventListener('resize', fitCards);
+
+  function makeCard(it){
+    var c=document.createElement('div'); c.className='card';
+    var nrep=repOpen(it[2]);
+    if(nrep) c.classList.add('flagged');
+    if(MODE==='study' && SEL[it[2]]) c.classList.add('sel');
+
+    var h=document.createElement('div'); h.className='head';
+    if(MODE==='study'){
+      var cb=document.createElement('input'); cb.type='checkbox'; cb.checked=!!SEL[it[2]];
+      cb.onclick=function(ev){
+        ev.stopPropagation();
+        if(cb.checked) SEL[it[2]]=true; else delete SEL[it[2]];
+        c.classList.toggle('sel',cb.checked); updateSel();
+      };
+      h.appendChild(cb);
+    }
+    var tag=document.createElement('span'); tag.className='tag'; tag.textContent=label(it);
+    h.appendChild(tag);
+    var held=heldAt(EX[it[0]]);
+    if(held){
+      var bh=document.createElement('span'); bh.className='badge held'; bh.textContent=held;
+      bh.title='«학년도»는 이 시험이 대비하는 해입니다. 실제로 친 날은 그 앞 해입니다.';
+      h.appendChild(bh);
+    }
+    var p=ptsOf(it);
+    if(p){ var bp=document.createElement('span'); bp.className='badge pt'; bp.textContent=p+'점'; h.appendChild(bp); }
+    if(curTabIsSim()){
+      var anc=BY_PATH[TABS[activeTab].k];
+      if(anc && scopeOfItem(it)!==scopeOfItem(anc)){
+        var bs=document.createElement('span'); bs.className='badge sc';
+        bs.textContent=scopeOfItem(it)+' 범위';
+        bs.title='기준 문항과 출제 범위가 다릅니다';
+        h.appendChild(bs);
+      }
+      var votes=negVotes(TABS[activeTab].k, it[2]);
+      if(votes>0){
+        c.classList.add('dim');
+        var bn=document.createElement('span'); bn.className='badge neg';
+        bn.textContent='제외 의견 '+votes+'/'+NEG_THRESHOLD;
+        bn.title=votes>=NEG_THRESHOLD?'추천에서 빠집니다':'의견이 '+NEG_THRESHOLD+'명 모이면 추천에서 빠집니다';
+        h.appendChild(bn);
+      }
+    }
+    if(nrep){ var b1=document.createElement('span'); b1.className='badge rep'; b1.textContent='제보 '+nrep; h.appendChild(b1); }
+    if(OV[it[2]]){ var b2=document.createElement('span'); b2.className='badge ov'; b2.textContent='교체됨'; h.appendChild(b2); }
+    var sp=document.createElement('span'); sp.className='sp'; h.appendChild(sp);
+    var fp=document.createElement('span'); fp.className='fp'; fp.textContent=it[2];
+    fp.title='이 문항의 이미지 파일 (img 폴더 안 경로)'; h.appendChild(fp);
+
+    function mk(txt,fn,cls){
+      var b=document.createElement('button'); b.textContent=txt;
+      if(cls) b.className=cls;
+      b.onclick=function(ev){ ev.stopPropagation(); fn(); };
+      h.appendChild(b); return b;
+    }
+    if(MODE==='study') mk('복사',function(){ copyImage(it); });
+    mk('저장',function(){ saveImage(it); });
+    if(SIM) mk('비슷한 문항',function(){ openSimTab(it); });
+    if(curTabIsSim()) mk('유사하지 않아요',function(){ markNotSimilar(it); },'warn');
+    mk('오류제보',function(){ openReport(it); },'warn');
+    if(isAdmin) mk('이미지 교체',function(){ pickImage(it); });
+
+    var study=(MODE==='study');
+    var body=document.createElement('div'); body.className='body';
+    body.title=study?'클릭하면 선택/해제됩니다 (복사는 위의 «복사» 버튼)':'클릭하면 이미지가 복사됩니다';
+    var cue=document.createElement('div'); cue.className='cue';
+    cue.textContent=study?'클릭하면 선택':'클릭하면 복사';
+    var img=document.createElement('img');
+    img.loading='lazy'; img.src=imgSrc(it); img.alt=label(it);
+    if(!OV[it[2]]){ img.width=it[3]; img.height=it[4]; }
+    body.appendChild(cue); body.appendChild(img);
+    body.onclick=function(){
+      if(!study){ copyImage(it); return; }
+      var on=!SEL[it[2]];
+      if(on) SEL[it[2]]=true; else delete SEL[it[2]];
+      c.classList.toggle('sel',on);
+      var box=c.querySelector('.head input[type=checkbox]'); if(box) box.checked=on;
+      updateSel();
+    };
+    c.appendChild(h); c.appendChild(body);
+    return c;
+  }
+
+  /* ================= 탭 (검색기록 + 유사문항) ================= */
+  function curTabIsSim(){ return activeTab>=0 && TABS[activeTab] && TABS[activeTab].t==='sim'; }
+  function tabsSave(){ lsSet('gich_tabs',TABS.slice(0,20)); }
+  function pushTab(tab){
+    TABS=TABS.filter(function(t){ return !(t.t===tab.t && t.k===tab.k); });
+    TABS.unshift(tab);
+    if(TABS.length>20) TABS.length=20;
+    activeTab=0; tabsSave(); drawTabs();
+  }
+  function drawTabs(){
+    var box=$('tabs'); box.innerHTML='';
+    if(!TABS.length){ box.innerHTML='<div id="tabsEmpty">검색하거나 «비슷한 문항»을 누르면 이곳에 탭으로 쌓입니다.</div>'; return; }
+    TABS.forEach(function(t,i){
+      var d=document.createElement('div');
+      d.className='tab'+(t.t==='sim'?' sim':'')+(i===activeTab?' on':'');
+      var s=document.createElement('span'); s.textContent=(t.t==='sim'?'유사 · ':'')+t.label;
+      var c=document.createElement('span'); c.className='cnt'; c.textContent=t.n;
+      var x=document.createElement('span'); x.className='x'; x.textContent='×';
+      x.onclick=function(ev){ ev.stopPropagation(); TABS.splice(i,1);
+        if(activeTab===i) activeTab=-1; else if(activeTab>i) activeTab--;
+        tabsSave(); drawTabs(); };
+      d.onclick=function(){ openTab(i); };
+      d.appendChild(s); d.appendChild(c); d.appendChild(x); box.appendChild(d);
+    });
+  }
+  function openTab(i){
+    var t=TABS[i]; activeTab=i; drawTabs();
+    if(t.t==='q'){ $('q').value=t.k; run(false,true); }
+    else showSim(t.k);
+  }
+  function openSimTab(it){
+    var rec=recommend(IDX[it[2]],24);
+    if(!rec.length){ toast('비슷한 문항을 찾지 못했습니다',true); return; }
+    pushTab({t:'sim',k:it[2],label:label(it),n:rec.length});
+    showSim(it[2]);
+  }
+  function showSim(path){
+    var it=BY_PATH[path];
+    if(!it){ toast('문항을 찾지 못했습니다',true); return; }
+    var rec=recommend(IDX[path],24);
+    /* 같은 출제 범위를 앞에 두고, 다른 범위는 뒤에 이어 붙인다.
+       범위를 아예 막으면 중학 범위처럼 후보가 몇 개 없는 곳이 비어 버리기 때문. */
+    var same=rec.filter(function(r){ return r.same; }).map(function(r){ return IT[r.j]; }).sort(byDifficulty);
+    var other=rec.filter(function(r){ return !r.same; }).map(function(r){ return IT[r.j]; }).sort(byDifficulty);
+    hits=same.concat(other);
+    SIM_ANCHOR=path; SIM_SAME=same.length;
+    page=0; shown=0; render(true);
+    var sc=scopeOfItem(it);
+    $('status').style.display='';
+    $('status').innerHTML='<b>'+esc(label(it))+'</b> 와 비슷한 문항 '+
+      '<span class="pill">'+esc(sc)+' 범위 '+same.length+'개</span>'+
+      (other.length?'<span class="pill" style="background:#fff4e5;color:#b45309">다른 범위 '+other.length+'개</span>':'')+
+      '<span class="hint">· 같은 범위를 먼저, 각 묶음 안에서는 난이도 순(배점 → 문항번호)으로 놓았습니다.'+
+      (MODE==='study'?' 체크해서 인쇄하세요.':'')+'</span>';
+    try{ window.scrollTo(0,0); }catch(e){}
+  }
+  function markNotSimilar(it){
+    if(!curTabIsSim()) return;
+    var anchor=TABS[activeTab].k;
+    NEG[anchor]=NEG[anchor]||{};
+    var cell=NEG[anchor][it[2]];
+    if(!cell || typeof cell!=='object') cell={u:{}};
+    if(cell.u[UID]){ toast('이미 표를 던지셨습니다'); return; }
+    cell.u[UID]=1; NEG[anchor][it[2]]=cell;
+    var nrec={t:'neg', id:newId(), a:anchor, x:it[2], who:UID, at:nowStr()};
+    NEGV.push(nrec); negSave(); sendCollect(nrec);
+    var v=negVotes(anchor,it[2]);
+    if(v>=NEG_THRESHOLD){
+      toast('의견이 '+v+'명 모여 추천에서 뺐습니다 — '+label(it));
+      showSim(anchor);
+    } else {
+      toast('의견을 받았습니다 ('+v+'/'+NEG_THRESHOLD+'). '+
+            NEG_THRESHOLD+'명이 모이면 추천에서 빠집니다.');
+      refreshCards();
+    }
+  }
+
+  /* ================= 저장 / 복사 ================= */
+  function fileName(it){ return label(it).replace(/\s+/g,'_')+'.png'; }
+  function saveImage(it){
+    var a=document.createElement('a'); a.href=imgSrc(it); a.download=fileName(it); a.click();
+  }
+  var chunkCache={};
+  function loadChunk(path){
+    var key=path.split('/')[0], pre=path.split('/')[1].split('_')[0], id=key+'/'+pre;
+    if(chunkCache[id]) return chunkCache[id];
+    chunkCache[id]=new Promise(function(res,rej){
+      var s=document.createElement('script');
+      s.src='b64/'+key+'/'+pre+'.js';
+      s.onload=function(){ res(true); };
+      s.onerror=function(){ rej(new Error('복사용 데이터 없음')); };
+      document.head.appendChild(s);
+    });
+    return chunkCache[id];
+  }
+  function dataUrlOf(it){
+    var path=it[2];
+    if(OV[path]) return Promise.resolve(OV[path]);
+    return loadChunk(path).then(function(){
+      var b64=window.__B64 && window.__B64[path];
+      if(!b64) throw new Error('데이터 없음');
+      return 'data:image/png;base64,'+b64;
+    });
+  }
+  function copyImage(it){
+    dataUrlOf(it).then(function(url){
+      return new Promise(function(res,rej){
+        var im=new Image();
+        im.onload=function(){
+          var cv=document.createElement('canvas');
+          cv.width=im.naturalWidth; cv.height=im.naturalHeight;
+          var cx=cv.getContext('2d');
+          cx.fillStyle='#fff'; cx.fillRect(0,0,cv.width,cv.height);
+          cx.drawImage(im,0,0);
+          cv.toBlob(function(b){ b?res(b):rej(new Error('변환 실패')); },'image/png');
+        };
+        im.onerror=function(){ rej(new Error('이미지 오류')); };
+        im.src=url;
+      });
+    }).then(function(blob){
+      if(!(navigator.clipboard && window.ClipboardItem)) throw new Error('미지원');
+      return navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);
+    }).then(function(){ toast('복사했습니다 — '+label(it)); })
+      .catch(function(err){ toast('복사하지 못했습니다 ('+(err.message||err)+'). 저장 버튼을 이용해 주세요.',true); });
+  }
+
+  /* ================= 인쇄 =================
+     A4를 반으로 나눈 2단.
+     학습지: 4점은 한 단을 다 쓰고, 2·3점은 반 단씩 두 개가 들어간다.
+     오답노트: 한 장에 한 문항, 왼쪽에 문항 오른쪽에 두 가지 질문. */
+  function selectedItems(){
+    return IT.filter(function(it){ return SEL[it[2]]; }).sort(byDifficulty);
+  }
+  /* 문항 한 칸: 제목 → 네모칸 3개 → 문항 그림 */
+  /* 풀이 횟수 표시 칸 — 문항 맨 위. 1·2·3회에 O를 치도록 옅은 글씨를 넣어 둔다 */
+  var BOX3='<div class="sbox"><span>1회</span><span>2회</span><span>3회</span></div>';
+  function labelHeld(it){ var h=heldAt(EX[it[0]]); return label(it)+(h?' ('+h+')':''); }
+  function slotBox(it,units){
+    var d=document.createElement('div'); d.className='sslot'; d.style.flex=units;
+    d.innerHTML=BOX3+'<div class="slab">'+esc(labelHeld(it))+'</div>'+
+                '<img src="'+imgSrc(it)+'">';
+    return d;
+  }
+  /* 시트 하나를 만들고 아래에 쪽 번호를 붙인다 */
+  function makeSheet(){
+    var sh=document.createElement('div'); sh.className='sheet';
+    var body=document.createElement('div'); body.className='sbody';
+    sh.appendChild(body);
+    return {sheet:sh, body:body};
+  }
+  function numberSheets(P){
+    var all=P.querySelectorAll('.sheet');
+    for(var i=0;i<all.length;i++){
+      var n=document.createElement('div'); n.className='pgn';
+      n.textContent=(i+1)+' / '+all.length;
+      all[i].appendChild(n);
+    }
+  }
+  function printWork(){
+    var list=selectedItems();
+    if(!list.length){ toast('먼저 문항을 선택해 주세요',true); return; }
+    var P=$('printArea'); P.innerHTML='';
+    var cols=[],cur=[],used=0;
+    list.forEach(function(it){
+      var u=(ptsOf(it)===4)?2:1;
+      if(used+u>2){ cols.push(cur); cur=[]; used=0; }
+      cur.push({it:it,u:u}); used+=u;
+    });
+    if(cur.length) cols.push(cur);
+    for(var i=0;i<cols.length;i+=2){
+      var m=makeSheet();
+      [cols[i],cols[i+1]].forEach(function(col,k){
+        var c=document.createElement('div'); c.className='scol'+(k===0?' divider':'');
+        (col||[]).forEach(function(o){ c.appendChild(slotBox(o.it,o.u)); });
+        m.body.appendChild(c);
+      });
+      P.appendChild(m.sheet);
+    }
+    numberSheets(P);
+    setTimeout(function(){ window.print(); },300);
+  }
+  function printNote(){
+    var list=selectedItems();
+    if(!list.length){ toast('먼저 문항을 선택해 주세요',true); return; }
+    var P=$('printArea'); P.innerHTML='';
+    var lines=function(n){ var s=''; for(var i=0;i<n;i++) s+='<div></div>'; return s; };
+    list.forEach(function(it){
+      var m=makeSheet();
+      var L=document.createElement('div'); L.className='scol divider';
+      L.innerHTML='<div class="sslot" style="flex:1">'+BOX3+
+                  '<div class="slab">'+esc(labelHeld(it))+'</div>'+
+                  '<img src="'+imgSrc(it)+'"></div>';
+      var R=document.createElement('div'); R.className='scol';
+      R.innerHTML='<div class="sslot" style="flex:1">'+
+        '<div class="nq" style="margin-top:0">어느 지점에서 막혔고, 그때 무엇을 시도했는가</div>'+
+        '<div class="nlines">'+lines(7)+'</div>'+
+        '<div class="nq">다음에 같은 유형을 만나면 무엇부터 할 것인가</div>'+
+        '<div class="nlines">'+lines(8)+'</div></div>';
+      m.body.appendChild(L); m.body.appendChild(R); P.appendChild(m.sheet);
+    });
+    numberSheets(P);
+    setTimeout(function(){ window.print(); },300);
+  }
+
+  /* ================= 창(모달) ================= */
+  function modal(html,onOpen){ $('mbox').innerHTML=html; $('modal').classList.add('open'); if(onOpen) onOpen(); }
+  function closeModal(){ $('modal').classList.remove('open'); $('mbox').classList.remove('wide'); }
+  $('modal').onclick=function(e){ if(e.target===this) closeModal(); };
+
+  /* ================= 오답노트 팁 =================
+     내용을 고치시려면 아래 TIPS 안의 글만 바꾸시면 됩니다. */
+  var TIPS=[
+   ['틀린 번호만 쉼표로 한 번에 부르세요',
+    '시험지를 보며 틀린 번호를 그대로 옮겨 적으면 그 문항만 모입니다. 하나씩 찾을 필요가 없습니다.',
+    'ex', '25 고3 3월 1,2,3,7,10,30'],
+   ['여러 시험이면 검색을 나눠 하고 탭에 쌓으세요',
+    '한 번 검색할 때마다 위쪽에 탭으로 남습니다. 시험별로 검색해 두고 탭을 오가며 고르면, '+
+    '고른 문항은 탭이 바뀌어도 그대로 남아 있습니다.',
+    'ex', '25 고3 3월 3,11,21   →   25 고3 7월 6,14,22'],
+   ['학습 모드에서는 문항 그림을 누르면 선택됩니다',
+    '작은 체크상자를 겨냥하지 않아도 됩니다. 쪽을 넘겨도 고른 것은 그대로이니, '+
+    '여러 쪽을 돌며 고른 뒤 한꺼번에 인쇄하세요.', '', ''],
+   ['인쇄 창에서 «배경 그래픽»을 꼭 켜세요',
+    '이걸 켜지 않으면 가운데 구분선과 필기 줄이 나오지 않아 빈 종이처럼 보입니다. '+
+    '크롬은 인쇄 창에서 «설정 더보기» → «배경 그래픽»에 체크하시면 됩니다.',
+    'warn', '한 번만 켜 두면 다음 인쇄부터는 기억합니다.'],
+   ['종이 대신 «PDF로 저장»을 고르면 두고두고 씁니다',
+    '인쇄 창의 대상을 «PDF로 저장»으로 바꾸면 파일로 남습니다. '+
+    '반 전체에 나눠 주거나, 다음 해에 다시 뽑을 때 그대로 씁니다.', '', ''],
+   ['문항 위 1회·2회·3회 칸은 «다시 푼 날»을 적는 자리입니다',
+    '처음 풀 때 1회에 날짜를 적고, 일주일 뒤 다시 풀어 맞으면 2회에 ○, 또 틀리면 ✗를 칩니다. '+
+    '세 칸이 다 차기 전에 맞히는 것이 목표라고 일러 주면 학생이 스스로 관리합니다.', '', ''],
+   ['오른쪽 두 질문은 «답»이 아니라 «과정»을 적는 칸입니다',
+    '다시 푼 풀이를 옮겨 적게 하면 오답노트가 아니라 답지 베끼기가 됩니다. '+
+    '첫 질문에는 어디서 손이 멈췄는지와 그때 해 본 시도를, '+
+    '둘째 질문에는 다음에 같은 유형을 만나면 가장 먼저 할 일 한 줄을 적게 하세요.',
+    'ex', '"삼각함수 그래프의 주기를 못 구해서 멈췄고, 그래프를 그려 보려다 포기했다"'],
+   ['«비슷한 문항»으로 재도전용 학습지를 짝지어 만드세요',
+    '오답노트를 뽑은 뒤, 같은 문항의 «비슷한 문항» 단추를 눌러 새 탭에서 난이도 순으로 고르고 '+
+    '«학습지 인쇄»로 뽑으면 됩니다. 오답노트는 되돌아보기용, 학습지는 확인용입니다.', '', ''],
+   ['한 번에 너무 많이 담지 마세요',
+    '오답노트는 한 장에 한 문항이라 20개를 고르면 20장이 됩니다. '+
+    '한 회 분량은 대여섯 문항이 적당하고, 그래야 학생도 끝까지 씁니다.', '', '']
+  ];
+  function openTips(){
+    var h='<h3>오답노트 쉽게 만드는 법</h3>'+
+      '<p class="sub">순서대로 따라 하시면 됩니다. 아홉 가지 중 앞의 다섯이 만드는 요령, '+
+      '뒤의 넷이 쓰게 하는 요령입니다.</p><div class="tip">';
+    TIPS.forEach(function(t,i){
+      h+='<h4><i>'+(i+1)+'</i>'+esc(t[0])+'</h4><p>'+esc(t[1])+'</p>';
+      if(t[2]==='ex')   h+='<div class="ex">'+esc(t[3])+'</div>';
+      if(t[2]==='warn') h+='<div class="warn2">'+esc(t[3])+'</div>';
+    });
+    h+='</div><div class="mb"><button class="primary" id="tipOk">알겠습니다</button></div>';
+    modal(h, function(){
+      $('mbox').classList.add('wide');
+      $('tipOk').onclick=function(){ $('mbox').classList.remove('wide'); closeModal(); };
+    });
+  }
+  $('tipBtn').onclick=openTips;
+
+  /* ================= 오류제보 ================= */
+  function openReport(it){
+    modal('<h3>오류 제보</h3>'+
+      '<p class="sub">'+esc(label(it))+' &nbsp;<span style="font-family:Consolas,monospace;color:#9aa1ab">'+esc(it[2])+'</span></p>'+
+      '<label>어떤 문제인가요?</label><select id="rpKind">'+
+      '<option value="잘려 있음">문항이 잘려 있음</option>'+
+      '<option value="다른 문항 섞임">다른 문항·글자가 섞여 들어감</option>'+
+      '<option value="그림 빠짐">그림·표·보기가 빠짐</option>'+
+      '<option value="번호 틀림">문항 번호나 시험 이름이 틀림</option>'+
+      '<option value="기타">기타</option></select>'+
+      '<label>메모 (선택)</label><textarea id="rpMemo" placeholder="예) 아래쪽 선택지가 잘려 있습니다"></textarea>'+
+      '<div class="mb"><button id="rpCancel">취소</button>'+
+      '<button class="primary" id="rpOk">제보 보내기</button></div>',
+      function(){
+        $('rpCancel').onclick=closeModal;
+        $('rpOk').onclick=function(){
+          REPORTS.unshift({path:it[2],label:label(it),kind:$('rpKind').value,who:UID,
+                           memo:$('rpMemo').value.trim(),at:nowStr(),done:false});
+          repSave(); closeModal(); refreshCards();
+          toast('제보했습니다. 관리자 메뉴에서 확인할 수 있습니다.');
+        };
+        $('rpKind').focus();
+      });
+  }
+
+  /* ================= 유사문항 비교 ================= */
+  var cur=null;
+  function seenKey(a,x,y){ return a+'|'+[x,y].sort().join('|'); }
+
+  /* 무작위로만 물으면 24만 쌍 중에서 두 사람이 같은 쌍을 만날 일이 없다.
+     그래서 모두가 동일하게 만들어내는 고정 세트를 두고 그 안에서 일부를 반복해 묻는다.
+     (NEG 같은 개인 기록에 좌우되지 않도록 원본 유사도만 써서 만든다) */
+  var CHECK_SET=null;
+  function rawScore(i,j,base){
+    var it=IT[i], jt=IT[j], e=EX[it[0]], je=EX[jt[0]], p=ptsOf(it), sc=W.text*base;
+    if(je.s===e.s && e.s) sc+=W.subj;
+    if(ptsOf(jt)===p && p) sc+=W.pts;
+    sc+=W.num*Math.max(0,1-Math.abs(jt[1]-it[1])/10);
+    if(jt[0]===it[0]) sc+=W.samexam;
+    return sc;
+  }
+  function checkSet(){
+    if(CHECK_SET) return CHECK_SET;
+    var out=[];
+    for(var i=0;i<IT.length;i+=CHECK_STEP){
+      var cand=SIM[i];
+      if(!cand || cand.length<2) continue;
+      var x={j:cand[0][0], base:cand[0][1]/1000},
+          y={j:cand[1][0], base:cand[1][1]/1000};
+      x.sc=rawScore(i,x.j,x.base); y.sc=rawScore(i,y.j,y.base);
+      out.push({i:i,x:x,y:y});
+    }
+    CHECK_SET=out; return out;
+  }
+  function nextTriple(){
+    if(!SIM) return null;
+    var seen={}; PAIRS.forEach(function(r){ seen[seenKey(r.a,r.x,r.y)]=1; });
+    var cnt={}; PAIRS.forEach(function(r){ cnt[r.a]=(cnt[r.a]||0)+1; });
+
+    // 검증 세트에서 아직 내가 답하지 않은 쌍을 우선 꺼낸다
+    if(Math.random()<CHECK_RATIO){
+      var cs=checkSet(), left=[];
+      for(var k=0;k<cs.length;k++){
+        var c=cs[k];
+        if(!seen[seenKey(IT[c.i][2],IT[c.x.j][2],IT[c.y.j][2])]) left.push(c);
+      }
+      if(left.length){
+        var pick=left[Math.floor(Math.random()*left.length)];
+        var a=pick.x, b=pick.y;
+        if(Math.random()<0.5){ var sw=a; a=b; b=sw; }
+        return {i:pick.i, x:a, y:b, chk:true};
+      }
+    }
+
+    for(var t=0;t<400;t++){
+      var i=Math.floor(Math.random()*IT.length);
+      if(!SIM[i]||SIM[i].length<4) continue;
+      if((cnt[IT[i][2]]||0)>2 && Math.random()<0.8) continue;
+      var rec=recommend(i,10); if(rec.length<2) continue;
+      var cands=[];
+      for(var a=0;a<rec.length-1;a++) for(var b=a+1;b<rec.length;b++)
+        cands.push({a:a,b:b,d:Math.abs(rec[a].sc-rec[b].sc)});
+      cands.sort(function(p,q){ return p.d-q.d; });
+      cands=cands.slice(0,Math.max(3,Math.floor(cands.length*0.3)));
+      var pk=cands[Math.floor(Math.random()*cands.length)];
+      var x=rec[pk.a],y=rec[pk.b];
+      if(Math.random()<0.5){ var tt=x; x=y; y=tt; }
+      if(seen[seenKey(IT[i][2],IT[x.j][2],IT[y.j][2])]) continue;   // 내가 이미 답한 쌍은 건너뛴다
+      return {i:i,x:x,y:y};
+    }
+    return null;
+  }
+  /* ================= 성취기준 =================
+     사용자가 문항에 성취기준을 달면
+      · 같은 코드가 여러 명에게서 나오면 «확정»
+      · 확정된 두 문항의 코드가 다르면 그 둘의 유사도를 깎는다
+      · 아직 아무도 답하지 않은 문항은, 유사한 확정 문항의 코드를 초안으로 먼저 보여 준다 */
+
+  function stdSave(){ lsSet('gich_std', STDV.slice(-4000)); STDMAP=null; }
+  function stdIndexOf(code){
+    if(!STD) return -1;
+    if(!STD._byCode){ STD._byCode={}; STD.items.forEach(function(it,i){ STD._byCode[it[0]]=i; }); }
+    var v=STD._byCode[code]; return v===undefined?-1:v;
+  }
+  function stdArea(code){ var m=/^(.+?)(\d{2})-\d{2}$/.exec(code); return m?m[1]+m[2]:code; }
+  function stdSubj(code){ var m=/^(\d{1,2}[가-힣ⅠⅡ]{1,4}\d?)/.exec(code); return m?m[1]:code; }
+  /* 옛 기록({c:'코드'})도 읽을 수 있게 항상 배열로 본다 */
+  function stdCodes(r){
+    if(r.cs && r.cs.length) return r.cs;
+    return r.c ? [r.c] : [];
+  }
+
+  /* --- 어떤 성취기준을 보여 줄 수 있는 문항인가 ---
+     고1 3월(중학 범위) 문항 → 중학교 성취기준만
+     그 밖의 모든 문항      → 고등학교 성취기준만 */
+  function stdLevelOf(it){ return scopeOf(EX[it[0]])==='중학' ? '중학교' : '고등학교'; }
+  function stdAllows(it, si){
+    return STD.subjects[si][1] === stdLevelOf(it);
+  }
+  function stdAllowsCode(it, code){
+    var i=stdIndexOf(code); return i>=0 && stdAllows(it, STD.items[i][1]);
+  }
+
+  /* 문항별 집계: 경로 → {codes:{코드:표수}, conf:[확정된 코드…], tot:응답 수} */
+  function stdMap(){
+    if(STDMAP) return STDMAP;
+    var byPath={};
+    STDV.forEach(function(r){
+      var cs=stdCodes(r); if(!cs.length) return;   // 잘 모르겠음·해당 없음은 세지 않는다
+      var m=byPath[r.p]||(byPath[r.p]={codes:{},users:{}});
+      m.users[r.who||'?']=1;
+      cs.forEach(function(c){
+        var u=m.codes[c]||(m.codes[c]={}); u[r.who||'?']=1;
+      });
+    });
+    var out={};
+    Object.keys(byPath).forEach(function(p){
+      var m=byPath[p], n={}, conf=[];
+      Object.keys(m.codes).forEach(function(c){
+        var k=Object.keys(m.codes[c]).length; n[c]=k;
+        if(k>=STD_CONFIRM) conf.push(c);
+      });
+      conf.sort(function(a,b){ return n[b]-n[a]; });
+      out[p]={codes:n, conf:conf, tot:Object.keys(m.users).length};
+    });
+    STDMAP=out; return out;
+  }
+  function stdOf(path){ return stdMap()[path]||null; }
+  function stdConfirmed(path){ var m=stdOf(path); return (m&&m.conf.length)?m.conf:[]; }
+
+  /* 확정된 성취기준 «묶음»끼리 견주어 유사도에 더할 값 */
+  function stdAdjust(pa,pb){
+    var A=stdConfirmed(pa), B=stdConfirmed(pb);
+    if(!A.length||!B.length) return 0;          // 한쪽이라도 미확정이면 건드리지 않는다
+    var i,j;
+    for(i=0;i<A.length;i++) for(j=0;j<B.length;j++) if(A[i]===B[j]) return WSTD.same;
+    for(i=0;i<A.length;i++) for(j=0;j<B.length;j++)
+      if(stdArea(A[i])===stdArea(B[j])) return WSTD.area;
+    for(i=0;i<A.length;i++) for(j=0;j<B.length;j++)
+      if(stdSubj(A[i])===stdSubj(B[j])) return WSTD.subj;
+    return WSTD.diff;
+  }
+
+  /* 낱말로 성취기준 점수 매기기 — 그 문항이 고를 수 있는 것만 */
+  function stdScore(it){
+    var txt=it[5], out=[];
+    for(var i=0;i<STD.items.length;i++){
+      var st=STD.items[i];
+      if(!stdAllows(it, st[1])) continue;
+      var kw=st[4], ns=st[5]||0, sc=0, hit=[];
+      for(var k=0;k<kw.length;k++){
+        if(txt.indexOf(kw[k])>=0){
+          sc += (k<ns?1.0:0.45)*Math.min(3,kw[k].length)/3;
+          if(hit.length<3) hit.push(kw[k]);
+        }
+      }
+      if(sc>0) out.push({i:i, sc:sc/Math.sqrt(kw.length||1), hit:hit});
+    }
+    out.sort(function(a,b){ return b.sc-a.sc; });
+    return out;
+  }
+
+  /* 초안 후보 — 비슷한 문항에서 물려받은 것을 앞에, 낱말로 찾은 것을 뒤에 */
+  function stdDraft(idx, k){
+    if(!STD) return [];
+    var it=IT[idx], out=[], has={};
+    if(SIM && SIM[idx]){
+      var votes={};
+      for(var q=0;q<SIM[idx].length && q<12;q++){
+        stdConfirmed(IT[SIM[idx][q][0]][2]).forEach(function(c){
+          if(stdAllowsCode(it,c)) votes[c]=(votes[c]||0)+1;
+        });
+      }
+      Object.keys(votes).sort(function(a,b){ return votes[b]-votes[a]; }).slice(0,3)
+        .forEach(function(c){
+          var i=stdIndexOf(c); if(i<0||has[c]) return;
+          has[c]=1; out.push({i:i, prop:votes[c], hit:[]});
+        });
+    }
+    stdScore(it).forEach(function(r){
+      var c=STD.items[r.i][0];
+      if(has[c]||out.length>=(k||4)) return;
+      has[c]=1; out.push({i:r.i, prop:0, hit:r.hit});
+    });
+    /* 문항에 글자가 거의 없어 아무것도 못 찾으면, 비슷한 문항의 말을 빌려 본다 */
+    if(!out.length && SIM && SIM[idx]){
+      for(var z=0; z<SIM[idx].length && z<6 && out.length<(k||6); z++){
+        var nb=IT[SIM[idx][z][0]];
+        if(stdLevelOf(nb)!==stdLevelOf(it)) continue;
+        stdScore(nb).slice(0,2).forEach(function(r){
+          var c2=STD.items[r.i][0];
+          if(has[c2]||out.length>=(k||4)) return;
+          has[c2]=1; out.push({i:r.i, prop:0, hit:r.hit, borrow:label(nb)});
+        });
+      }
+    }
+    return out.slice(0,k||4);
+  }
+
+  /* 다음에 물어볼 문항 — 아직 답이 적은 것을, 확정 문항 주변을 먼저 */
+  function nextStd(){
+    if(!STD) return null;
+    var mine={}; STDV.forEach(function(r){ if(r.who===UID) mine[r.p]=1; });
+    var M=stdMap();
+    if(SIM && Math.random()<0.45){
+      var conf=Object.keys(M).filter(function(p){ return M[p].conf.length; });
+      for(var t=0;t<60 && conf.length;t++){
+        var p=conf[Math.floor(Math.random()*conf.length)];
+        var a=BY_PATH[p]; if(!a) continue;
+        var ai=IT.indexOf(a); if(ai<0||!SIM[ai]) continue;
+        var cand=SIM[ai];
+        var pick=cand[Math.floor(Math.random()*Math.min(8,cand.length))];
+        var jp=IT[pick[0]][2];
+        if(mine[jp]) continue;
+        return {i:pick[0], near:p};
+      }
+    }
+    for(var u=0;u<400;u++){
+      var i=Math.floor(Math.random()*IT.length);
+      var pp=IT[i][2];
+      if(mine[pp]) continue;
+      var m=M[pp];
+      if(m && m.conf.length && Math.random()<0.85) continue;
+      return {i:i, near:''};
+    }
+    return null;
+  }
+
+  /* --- 화면 --- */
+  function stdSelIdx(code){ return stdSel.indexOf(code); }
+  function stdToggle(code){
+    var k=stdSelIdx(code);
+    if(k>=0) stdSel.splice(k,1); else stdSel.push(code);
+    stdPaint();
+  }
+  function stdCandRow(o, n){
+    var st=STD.items[o.i];
+    var b=document.createElement('button');
+    b.className='scand'+(o.prop?' prop':''); b.setAttribute('data-code',st[0]);
+    b.innerHTML='<span class="k">'+(n||'·')+'</span><span class="tx">'+
+      '<span class="cd">'+esc(st[0])+'</span>'+
+      '<span class="sj">'+esc(STD.subjects[st[1]][0])+' · '+esc(st[2])+'</span>'+
+      '<div class="bd">'+esc(st[3])+'</div>'+
+      (o.prop?'<div class="why">비슷한 문항 '+o.prop+'개가 이 성취기준입니다</div>'
+       :o.borrow?'<div class="why">이 문항엔 단서가 없어, 비슷한 «'+esc(o.borrow)+'»에서 빌려 왔습니다</div>'
+       :(o.hit&&o.hit.length?'<div class="why" style="color:#6b7280">문항에 나온 말 — '+esc(o.hit.join(', '))+'</div>':''))+
+      '</span><span class="ck">✓</span>';
+    b.onclick=function(){ stdToggle(st[0]); };
+    return b;
+  }
+  /* 고른 것 표시 · 저장 단추 상태 */
+  function stdPaint(){
+    Array.prototype.forEach.call(document.querySelectorAll('#std .scand'),function(b){
+      b.classList.toggle('on', stdSelIdx(b.getAttribute('data-code'))>=0);
+    });
+    var box=$('stdSel'); box.innerHTML='';
+    if(!stdSel.length){
+      box.innerHTML='<span class="none">아직 고르지 않았습니다</span>';
+    }else{
+      stdSel.forEach(function(c){
+        var t=document.createElement('span'); t.className='stag';
+        t.innerHTML=esc(c)+'<i>×</i>';
+        t.querySelector('i').onclick=function(ev){ ev.stopPropagation(); stdToggle(c); };
+        box.appendChild(t);
+      });
+    }
+    $('stdOk').disabled = stdSel.length===0;
+    $('stdOk').textContent = stdSel.length ? ('이 '+stdSel.length+'개로 저장') : '고른 것 저장';
+  }
+
+  function drawStd(){
+    var pick=null, draft=[];
+    for(var t=0;t<8;t++){
+      var c=nextStd(); if(!c) break;
+      var dd=stdDraft(c.i,4);
+      if(!pick){ pick=c; draft=dd; }
+      if(dd.length){ pick=c; draft=dd; break; }
+    }
+    stdCur=pick;
+    if(!stdCur){ toast('더 낼 문항이 없습니다',true); return; }
+    var it=IT[stdCur.i];
+    stdSel=[];
+    $('stdLab').textContent=label(it)+(heldAt(EX[it[0]])?'  ('+heldAt(EX[it[0]])+')':'');
+    $('stdImg').innerHTML='<img src="'+imgSrc(it)+'" alt="">';
+    $('stdImg').scrollTop=0;
+    $('stdScope').textContent = stdLevelOf(it)==='중학교'
+      ? '고1 3월 문항이라 중학교 성취기준에서 고릅니다'
+      : '고등학교 성취기준에서 고릅니다';
+    stdPick=draft;
+    var L=$('stdCands'); L.innerHTML='';
+    if(!stdPick.length){
+      L.innerHTML='<div class="shead">고를 만한 후보를 못 찾았습니다. 아래 검색창에서 찾거나 '+
+        '«잘 모르겠음»(0)을 눌러 주세요.</div>';
+    }else{
+      stdPick.forEach(function(o,n){ L.appendChild(stdCandRow(o,n+1)); });
+    }
+    $('stdQ').value=''; $('stdHits').innerHTML='';
+    var M=stdMap();
+    $('stdCount').textContent='지금까지 '+STDV.length+'건 응답 · 확정된 문항 '+
+      Object.keys(M).filter(function(p){ return M[p].conf.length; }).length+'개';
+    stdPaint();
+  }
+
+  function stdAnswer(kind){
+    if(!stdCur) return;
+    var cs = kind ? [] : stdSel.slice();
+    if(!kind && !cs.length){ toast('성취기준을 하나 이상 골라 주세요',true); return; }
+    var rec={p:IT[stdCur.i][2], cs:cs, k:kind||'', near:stdCur.near||'', who:UID, at:nowStr()};
+    rec.t='std'; rec.id=newId();
+    STDV.push(rec); stdSave(); sendCollect(rec);
+    stdSel=[];
+    if(gateLeft>0){ gateAnswered(kind!=='unsure'); return; }
+    drawStd();
+  }
+
+  function stdSearch(q){
+    var H=$('stdHits'); H.innerHTML='';
+    q=(q||'').replace(/\s+/g,'');
+    if(q.length<1) return;
+    var it=stdCur?IT[stdCur.i]:null, out=[];
+    for(var i=0;i<STD.items.length && out.length<40;i++){
+      var st=STD.items[i];
+      if(it && !stdAllows(it, st[1])) continue;
+      var hay=(st[0]+STD.subjects[st[1]][0]+st[2]+st[3]+st[4].join('')).replace(/\s+/g,'');
+      if(hay.indexOf(q)>=0) out.push({i:i,prop:0,hit:[]});
+    }
+    if(!out.length){ H.innerHTML='<div class="shead">찾는 성취기준이 없습니다.</div>'; return; }
+    out.forEach(function(o){ H.appendChild(stdCandRow(o,'')); });
+    stdPaint();
+  }
+
+  var cmpSel={x:false,y:false};
+  function cmpPaint(){
+    $('cmpP1').classList.toggle('on',cmpSel.x);
+    $('cmpP2').classList.toggle('on',cmpSel.y);
+    var t = (cmpSel.x&&cmpSel.y) ? '둘 다 비슷으로 확정'
+          : (cmpSel.x||cmpSel.y) ? '이것으로 확정'
+          : '둘 다 다름으로 확정';
+    $('cmpOk').textContent=t;
+  }
+  function cmpToggle(which){
+    cmpSel[which]=!cmpSel[which];
+    cmpPaint();
+  }
+  function cmpConfirm(){
+    answer(cmpSel.x&&cmpSel.y ? 'both' : cmpSel.x ? 'x' : cmpSel.y ? 'y' : 'none');
+  }
+  function drawTriple(){
+    cur=nextTriple();
+    if(!cur){ toast('더 낼 문제가 없습니다',true); return; }
+    cmpSel={x:false,y:false}; cmpPaint();
+    [[IT[cur.i],'cmpL0','cmpI0'],[IT[cur.x.j],'cmpL1','cmpI1'],[IT[cur.y.j],'cmpL2','cmpI2']]
+    .forEach(function(t){
+      $(t[1]).textContent=label(t[0])+(heldAt(EX[t[0][0]])?'  ('+heldAt(EX[t[0][0]])+')':'');
+      $(t[2]).innerHTML='<img src="'+imgSrc(t[0])+'" alt="">';
+      $(t[2]).scrollTop=0;
+    });
+    $('cmpCount').textContent='지금까지 '+PAIRS.length+'건 응답';
+  }
+  function answer(choice){
+    if(!cur) return;
+    var rec={a:IT[cur.i][2],x:IT[cur.x.j][2],y:IT[cur.y.j][2],c:choice,
+             sx:+cur.x.sc.toFixed(3),sy:+cur.y.sc.toFixed(3),
+             bx:+cur.x.base.toFixed(3),by:+cur.y.base.toFixed(3),
+             chk:cur.chk?1:0, who:UID, at:nowStr()};
+    rec.t='cmp'; rec.id=newId();
+    PAIRS.push(rec); pairSave(); sendCollect(rec);
+    if(gateLeft>0){ gateAnswered(choice!=='unsure'); return; }
+    drawTriple();
+  }
+
+  var gateTries=0, gateUnsure=false;
+  /* 제대로 답했으면 통과, «잘 모르겠음»이면 다른 것으로 한 번 더 묻는다 */
+  function gateAnswered(real){
+    gateTries++;
+    if(real || gateTries>=GATE_MAX){ gateLeft--; }
+    gateUnsure=!real;
+    gateStep();
+  }
+  function updateGate(){
+    var msg = gateLeft<=0 ? ''
+      : gateUnsure ? '잘 모르겠으면 다른 것으로 하나만 더 부탁드립니다'
+      : '시작하기 전에 딱 한 문제만 답해 주세요';
+    var pct = gateLeft<=0 ? '100%' : (gateTries?Math.min(90,gateTries*25)+'%':'0');
+    $('cmpGateMsg').textContent=msg; $('gateFill').style.width=pct;
+    $('stdGateMsg').textContent=msg; $('stdGateFill').style.width=pct;
+  }
+  /* 의무 응답은 «유사문항 비교»와 «성취기준 달기»를 번갈아 낸다 */
+  function gateStep(){
+    if(gateLeft<=0){ closeGate(); return; }
+    updateGate();
+    var wantStd = STD && (gateTries%2===1);
+    if(wantStd){
+      $('cmp').classList.remove('open','gate');
+      $('std').classList.add('open','gate'); drawStd();
+      if(!stdCur){ $('std').classList.remove('open','gate');
+                   $('cmp').classList.add('open','gate'); drawTriple(); }
+    }else{
+      $('std').classList.remove('open','gate');
+      $('cmp').classList.add('open','gate'); drawTriple();
+    }
+  }
+  function openGate(){ gateLeft=GATE_QUOTA; gateTries=0; gateUnsure=false; gateStep(); }
+  function closeGate(){
+    gateLeft=0;
+    try{ sessionStorage.setItem('gich_gate','1'); }catch(e){}
+    $('cmp').classList.remove('open','gate');
+    $('std').classList.remove('open','gate');
+    $('gateFill').style.width='0'; $('stdGateFill').style.width='0';
+    toast('고맙습니다. 덕분에 추천이 좋아집니다.');
+  }
+  /* ---------- 구글 시트로 보내기 ----------
+     · 보낸 것이 확인될 때까지 대기열에 남겨 두므로, 인터넷이 끊겼거나 창을 닫아도 잃지 않습니다.
+     · 다음에 앱을 열면 대기열을 다시 보냅니다. */
+  var QUEUE=[], SENDING=false, SENT_OK=0, SENT_BLIND=0, LAST_ERR='';
+  function qSave(){ lsSet('gich_queue', QUEUE.slice(-3000)); }
+  function newId(){ return UID+'-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,6); }
+
+  function sendCollect(rec){
+    if(!rec.id) rec.id=newId();
+    if(!COLLECT_URL) return;
+    QUEUE.push(rec); qSave();
+    flushQueue();
+  }
+  function canSend(){ return !!COLLECT_URL && typeof fetch==='function'; }
+  function flushQueue(quiet){
+    if(!canSend() || SENDING || !QUEUE.length) return;
+    SENDING=true;
+    try{
+    var batch=QUEUE.slice(0,200);
+    fetch(COLLECT_URL,{method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({records:batch})})
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        if(!j || !j.ok) throw new Error(j&&j.error?j.error:'서버가 거절했습니다');
+        var ids={}; batch.forEach(function(r){ ids[r.id]=1; });
+        QUEUE=QUEUE.filter(function(r){ return !ids[r.id]; });
+        qSave(); SENT_OK+=batch.length; LAST_ERR='';
+        SENDING=false;
+        if(QUEUE.length) setTimeout(flushQueue,400);
+        else if(!quiet && isAdmin) drawAdmin();
+      })
+      .catch(function(err){
+        /* 브라우저가 응답을 못 읽는 경우(CORS 등)에도 자료는 넣을 수 있게 한 번 더 시도한다.
+           보냈는지 확인은 못 하므로 «확인 없이 보냄»으로 센다. 시트가 id로 걸러 주므로
+           나중에 «전부 다시 보내기»를 해도 겹치지 않는다. */
+        fetch(COLLECT_URL,{method:'POST',mode:'no-cors',
+          headers:{'Content-Type':'text/plain;charset=utf-8'},
+          body:JSON.stringify({records:batch})})
+          .then(function(){
+            var ids={}; batch.forEach(function(r){ ids[r.id]=1; });
+            QUEUE=QUEUE.filter(function(r){ return !ids[r.id]; });
+            qSave(); SENT_BLIND+=batch.length;
+            LAST_ERR='응답을 읽지 못해 확인 없이 보냈습니다 ('+(err.message||err)+')';
+            SENDING=false;
+            if(QUEUE.length) setTimeout(function(){ flushQueue(quiet); },400);
+            else if(!quiet && isAdmin) drawAdmin();
+          })
+          .catch(function(e2){
+            LAST_ERR=err.message||String(err); SENDING=false;
+            if(!quiet && isAdmin) drawAdmin();
+          });
+      });
+    }catch(e){ SENDING=false; LAST_ERR=e.message||String(e); }
+  }
+
+  /* 응답 하나를 지운다 — 이 브라우저에서 지우고, 시트에도 «지웠다»고 알린다 */
+  function dropRecord(id, kind){
+    if(!id) return;
+    DEL[id]=1; delSave();
+    sendCollect({t:'del', id:newId(), target:id, kind:kind||'cmp', who:UID, at:nowStr()});
+  }
+  /* 지운 것은 시트에서 되받아 와도 다시 살아나지 않는다 */
+  function applyDeletions(){
+    var n=0;
+    function sift(arr){
+      for(var i=arr.length-1;i>=0;i--) if(arr[i].id && DEL[arr[i].id]){ arr.splice(i,1); n++; }
+    }
+    sift(PAIRS); sift(STDV); sift(NEGV);
+    if(n){ pairSave(); stdSave(); negSave(); prefClear(); STDMAP=null; }
+    return n;
+  }
+
+  /* ---------- 구글 시트에서 받아오기 (다른 사람 응답까지 합치기) ---------- */
+  function pullCollect(cb){
+    if(COLLECT_URL && typeof fetch!=='function'){
+      L.innerHTML='<div class="rrow"><div class="rt">이 브라우저는 자동 수집을 지원하지 않습니다</div>'+
+        '<div class="rm">주소는 넣으셨지만 브라우저가 너무 오래되어 보낼 수 없습니다. '+
+        '응답은 브라우저에 그대로 쌓이니, 아래 «파일로 받아 두기»로 받아 두세요.</div></div>';
+      var bb=document.createElement('button'); bb.textContent='파일로 받아 두기';
+      bb.style.flex='1'; bb.onclick=backupAll; Fo.appendChild(bb);
+      return;
+    }
+    if(!COLLECT_URL){ if(cb) cb('주소가 비어 있습니다'); return; }
+    if(typeof fetch!=='function'){ if(cb) cb('이 브라우저는 자동 수집을 지원하지 않습니다'); return; }
+    try{
+    fetch(COLLECT_URL,{method:'GET'})
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        if(!j || !j.ok) throw new Error(j&&j.error?j.error:'받아오지 못했습니다');
+        /* 시트에서 «지웠다»고 알려 준 것부터 반영한다 */
+        (j.del||[]).forEach(function(id){ if(id) DEL[id]=1; });
+        if((j.del||[]).length) delSave();
+        var np=mergeById(PAIRS, j.pairs||[]);
+        var ns=mergeById(STDV,  j.std  ||[]);
+        var nn=mergeById(NEGV,  j.neg  ||[]);
+        applyDeletions();
+        if(np){ pairSave(); prefClear(); }
+        if(ns){ stdSave(); }
+        if(nn){ negRebuild(); negSave(); }
+        try{ localStorage.setItem('gich_pulled', nowStr()); }catch(e){}
+        if(cb) cb('', np, ns, nn);
+      })
+      .catch(function(err){ if(cb) cb(err.message||String(err)); });
+    }catch(e){ if(cb) cb(e.message||String(e)); }
+  }
+  /* id가 겹치지 않는 것만 보탠다 */
+  function mergeById(dst, src){
+    var has={}, n=0;
+    dst.forEach(function(r){ if(r.id) has[r.id]=1; });
+    src.forEach(function(r){
+      if(!r.id || has[r.id]) return;
+      has[r.id]=1; dst.push(r); n++;
+    });
+    return n;
+  }
+  $('cmpBtn').onclick=function(){
+    if(!SIM){ toast('유사도 자료(data/sim.js)가 없습니다',true); return; }
+    gateLeft=0; $('cmpGateMsg').textContent='';
+    $('cmp').classList.add('open'); $('cmp').classList.remove('gate'); drawTriple();
+  };
+  $('cmpClose').onclick=function(){ $('cmp').classList.remove('open'); };
+  $('stdBtn').onclick=function(){
+    if(!STD){ toast('성취기준 자료(data/std.js)가 없습니다',true); return; }
+    gateLeft=0; $('stdGateMsg').textContent='';
+    $('std').classList.add('open'); $('std').classList.remove('gate'); drawStd();
+  };
+  $('stdClose').onclick=function(){ $('std').classList.remove('open'); };
+  $('stdSkip').onclick=drawStd;
+  $('stdOk').onclick=function(){ stdAnswer(''); };
+  $('stdUnsure').onclick=function(){ stdAnswer('unsure'); };
+  $('stdNone').onclick=function(){ stdAnswer('none'); };
+  $('stdQ').oninput=function(){ stdSearch(this.value); };
+  $('stdQ').onkeydown=function(e){ if(e.key==='Enter' && stdSel.length){ e.preventDefault(); stdAnswer(''); } };
+  $('cmpSkip').onclick=drawTriple;
+  $('cmpP1').onclick=function(){ cmpToggle('x'); };
+  $('cmpP2').onclick=function(){ cmpToggle('y'); };
+  $('cmpOk').onclick=cmpConfirm;
+  $('cmpUnsure').onclick=function(){ answer('unsure'); };
+
+  /* ================= 관리자 ================= */
+  var titleClicks=0,titleTimer=null;
+  $('title').onclick=function(e){
+    if(isAdmin || e.target.tagName==='BUTTON') return;
+    titleClicks++; clearTimeout(titleTimer);
+    titleTimer=setTimeout(function(){ titleClicks=0; },1200);
+    if(titleClicks>=3){ titleClicks=0; askPassword(); }
+  };
+  function askPassword(){
+    modal('<h3>관리자 모드</h3><p class="sub">비밀번호를 입력하세요.</p>'+
+      '<input type="password" id="pwIn" placeholder="비밀번호">'+
+      '<div class="mb"><button id="pwCancel">취소</button>'+
+      '<button class="primary" id="pwOk">들어가기</button></div>',
+      function(){
+        var go=function(){
+          if($('pwIn').value===ADMIN_PW){
+            isAdmin=true; closeModal(); $('adminBtn').style.display='inline-block';
+            updateAdminBadge(); refreshCards(); openAdmin(); toast('관리자 모드로 들어왔습니다');
+          } else toast('비밀번호가 다릅니다',true);
+        };
+        $('pwOk').onclick=go; $('pwCancel').onclick=closeModal;
+        $('pwIn').onkeydown=function(e){ if(e.key==='Enter') go(); };
+        $('pwIn').focus();
+      });
+  }
+  function openAdmin(){ $('admin').classList.add('open'); drawAdmin(); }
+  $('adminClose').onclick=function(){ $('admin').classList.remove('open'); };
+  $('adminBtn').onclick=openAdmin;
+  $('atabRep').onclick=function(){ adminTab='rep'; drawAdmin(); };
+  $('atabOv').onclick=function(){ adminTab='ov'; drawAdmin(); };
+  $('atabCmp').onclick=function(){ adminTab='cmp'; drawAdmin(); };
+  $('atabStd').onclick=function(){ adminTab='std'; drawAdmin(); };
+  $('atabSync').onclick=function(){ adminTab='sync'; drawAdmin(); };
+
+  function drawAdmin(){
+    $('atabRep').className=adminTab==='rep'?'on':'';
+    $('atabOv').className =adminTab==='ov' ?'on':'';
+    $('atabCmp').className=adminTab==='cmp'?'on':'';
+    $('atabStd').className=adminTab==='std'?'on':'';
+    $('atabSync').className=adminTab==='sync'?'on':'';
+    var L=$('adminList'),Fo=$('adminFoot'); L.innerHTML=''; Fo.innerHTML='';
+
+    if(adminTab==='rep'){
+      if(!REPORTS.length) L.innerHTML='<div style="padding:20px;color:#6b7280;font-size:13px">접수된 제보가 없습니다.</div>';
+      REPORTS.forEach(function(r,i){
+        var d=document.createElement('div'); d.className='rrow'+(r.done?' done':'');
+        d.innerHTML='<div class="rt">'+esc(r.label)+' — '+esc(r.kind)+'</div>'+
+          '<div class="rf">'+esc(r.path)+'</div>'+(r.memo?'<div class="rm">'+esc(r.memo)+'</div>':'')+
+          '<div class="rm" style="font-size:11.5px">'+esc(r.who)+' · '+esc(r.at)+(r.done?' · <b>처리완료</b>':'')+'</div>';
+        var bar=document.createElement('div'); bar.className='rb';
+        function mkb(t,fn,cls){ var b=document.createElement('button'); b.textContent=t;
+          if(cls)b.className=cls; b.onclick=fn; bar.appendChild(b); }
+        mkb('문항 보기',function(){
+          $('q').value=''; clearFilters();
+          hits=[BY_PATH[r.path]].filter(Boolean); page=0; shown=0; render(true);
+          $('status').innerHTML='제보된 문항 <b>'+esc(r.label)+'</b> 만 보고 있습니다.';
+          $('admin').classList.remove('open');
+        });
+        mkb('이미지 교체',function(){ var it=BY_PATH[r.path]; if(it) pickImage(it); });
+        mkb(r.done?'미처리로':'처리완료',function(){ r.done=!r.done; repSave(); drawAdmin(); refreshCards(); });
+        mkb('삭제',function(){ REPORTS.splice(i,1); repSave(); drawAdmin(); refreshCards(); },'warn');
+        d.appendChild(bar); L.appendChild(d);
+      });
+      var b1=document.createElement('button'); b1.textContent='제보 목록 CSV로 저장';
+      b1.style.flex='1'; b1.onclick=exportReports; Fo.appendChild(b1);
+      var b2=document.createElement('button'); b2.textContent='처리완료 지우기'; b2.className='warn';
+      b2.onclick=function(){ REPORTS=REPORTS.filter(function(r){return !r.done;}); repSave(); drawAdmin(); refreshCards(); };
+      Fo.appendChild(b2);
+
+    } else if(adminTab==='sync'){
+      drawSync(L,Fo);
+    } else if(adminTab==='std'){
+      drawStdStats(L,Fo);
+    } else if(adminTab==='cmp'){
+      drawCmpStats(L,Fo);
+
+    } else {
+      var keys=Object.keys(OV);
+      if(!keys.length) L.innerHTML='<div style="padding:20px;color:#6b7280;font-size:13px;line-height:1.8">'+
+        '교체한 이미지가 없습니다.<br><br>문항 카드의 <b>이미지 교체</b> 버튼을 누르면 직접 캡처한 그림으로 바꿀 수 있습니다.</div>';
+      keys.sort().forEach(function(p){
+        var it=BY_PATH[p];
+        var d=document.createElement('div'); d.className='rrow';
+        d.innerHTML='<div class="rt">'+esc(it?label(it):p)+'</div><div class="rf">'+esc(p)+'</div>'+
+          '<img src="'+OV[p]+'" style="width:100%;margin-top:7px;border:1px solid #e2e5ea;border-radius:6px">';
+        var bar=document.createElement('div'); bar.className='rb';
+        var b=document.createElement('button'); b.textContent='PNG 저장 (폴더에 영구 반영용)';
+        b.onclick=function(){ var a=document.createElement('a'); a.href=OV[p];
+          a.download=p.split('/').pop(); a.click();
+          toast('img 폴더의 '+p+' 에 덮어쓰신 뒤 "이미지 바꾼 뒤 실행.bat" 을 실행하세요'); };
+        bar.appendChild(b);
+        var b3=document.createElement('button'); b3.textContent='원래대로'; b3.className='warn';
+        b3.onclick=function(){ ovDel(p,function(){ drawAdmin(); refreshCards(); toast('되돌렸습니다'); }); };
+        bar.appendChild(b3); d.appendChild(bar); L.appendChild(d);
+      });
+      var note=document.createElement('div');
+      note.style.cssText='font-size:11.5px;color:#6b7280;line-height:1.7;flex:1';
+      note.innerHTML='교체한 그림은 <b>이 브라우저에만</b> 저장됩니다. 다른 컴퓨터에서도 쓰시려면 PNG로 저장해 img 폴더에 덮어쓰세요.';
+      Fo.appendChild(note);
+    }
+  }
+
+  function drawCmpStats(L,Fo){
+    var real=PAIRS.filter(function(r){ return r.c!=='notsim'; });
+    var neg=PAIRS.length-real.length;
+    if(!PAIRS.length){
+      L.innerHTML='<div style="padding:20px;color:#6b7280;font-size:13px;line-height:1.8">'+
+        '모인 응답이 없습니다.<br><br>상단 <b>유사문항 비교</b> 버튼을 눌러 시작하세요.</div>';
+    } else {
+      var byWho={},byC={},seen={},dup=0,agree=0;
+      real.forEach(function(r){
+        var w=r.who||'(익명)';
+        byWho[w]=(byWho[w]||0)+1; byC[r.c]=(byC[r.c]||0)+1;
+        var k=seenKey(r.a,r.x,r.y);
+        if(seen[k]!==undefined){ dup++; if(seen[k]===r.c) agree++; } else seen[k]=r.c;
+      });
+      var name={x:'왼쪽',y:'오른쪽',both:'둘 다 비슷',none:'둘 다 다름',unsure:'잘 모르겠음'};
+      var h='<div class="rrow"><div class="rt">비교 응답 '+real.length+'건'+
+            (neg?' · 유사하지 않아요 '+neg+'건':'')+'</div>';
+      h+='<div class="rm">응답자 '+Object.keys(byWho).length+'명 (익명) — '+
+          Object.keys(byWho).map(function(w){return esc(w)+' '+byWho[w]+'건';}).join(' · ')+'</div>';
+      h+='<div class="rm">고른 답 — '+Object.keys(byC).map(function(c){return (name[c]||c)+' '+byC[c]+'건';}).join(' · ')+'</div>';
+      h+='<div class="rm">같은 쌍이 다시 나온 경우 '+dup+'건'+(dup?', 그중 답이 일치한 것 '+agree+'건 ('+Math.round(agree/dup*100)+'%)':'')+'</div>';
+      var nchk=real.filter(function(r){ return r.chk; }).length;
+      h+='<div class="rm">그중 공통 검증 세트 '+nchk+'건 — 여러 사람이 같은 쌍을 답하도록 섞어 내는 문제입니다</div></div>';
+      var need=Math.max(0,300-real.length);
+      h+='<div class="rrow"><div class="rt">진행 정도</div><div class="rm">'+
+         (need?'가중치를 조정하려면 '+need+'건쯤 더 모으면 좋습니다 (300건 목표).'
+              :'가중치 조정에 쓸 만큼 모였습니다. CSV로 받아 알려 주세요.')+'</div></div>';
+      L.innerHTML=h;
+      var head=document.createElement('div');
+      head.style.cssText='font-size:12px;color:#6b7280;margin:4px 2px 6px';
+      head.textContent='최근 응답 — 기준·왼쪽·오른쪽을 나란히 놓았습니다. 고른 쪽에 파란 테두리가 있습니다.';
+      L.appendChild(head);
+      PAIRS.slice(-20).reverse().forEach(function(r){
+        var d=document.createElement('div'); d.className='cmprow';
+        var pick=(r.c==='notsim')?'유사하지 않음':(name[r.c]||r.c);
+
+        var top=document.createElement('div'); top.className='ctop';
+        top.innerHTML='<span class="pick">'+esc(pick)+'</span>'+
+          (r.chk?'<span class="badge sc">검증쌍</span>':'')+
+          '<span class="meta">'+esc(r.who)+' · '+esc(r.at)+'</span><span class="sp"></span>';
+        var bDel=document.createElement('button'); bDel.textContent='이 응답 삭제'; bDel.className='warn';
+        bDel.onclick=function(){
+          var idx=PAIRS.indexOf(r); if(idx<0) return;
+          PAIRS.splice(idx,1); pairSave(); prefClear();
+          dropRecord(r.id,'cmp');
+          drawAdmin();
+          toast('응답 1건을 지웠습니다'+(COLLECT_URL?' (시트에서도 지웁니다)':''));
+        };
+        top.appendChild(bDel);
+        d.appendChild(top);
+
+        var g=document.createElement('div'); g.className='cmpimgs';
+        [[r.a,'기준','a'],[r.x,'왼쪽','x'],[r.y,'오른쪽','y']].forEach(function(pr){
+          var f=document.createElement('figure');
+          if(pr[2]==='a') f.className='anchor';
+          else if(r.c===pr[2]) f.className='picked';
+          if(!pr[0]){ f.innerHTML='<figcaption>'+pr[1]+' — 없음</figcaption>'; g.appendChild(f); return; }
+          var it=BY_PATH[pr[0]];
+          f.innerHTML='<figcaption>'+pr[1]+(r.c===pr[2]?' ← 고른 쪽':'')+' · '+
+            esc(it?label(it):pr[0])+'</figcaption>'+
+            '<img loading="lazy" src="'+(it?imgSrc(it):('img/'+pr[0]))+'" alt="'+esc(pr[1])+'">';
+          g.appendChild(f);
+        });
+        d.appendChild(g); L.appendChild(d);
+      });
+    }
+    var b1=document.createElement('button'); b1.textContent='비교 응답 CSV로 저장';
+    b1.style.flex='1'; b1.onclick=exportPairs; Fo.appendChild(b1);
+    var b2=document.createElement('button'); b2.textContent='이 브라우저에서 비우기'; b2.className='warn';
+    b2.title='시트에 있는 응답은 그대로 남고, 앱을 다시 열면 되받아 옵니다. 완전히 지우시려면 한 줄씩 «이 응답 삭제»를 쓰거나 구글 시트에서 지우세요.';
+    b2.onclick=function(){
+      PAIRS=[]; NEG={}; NEGV=[]; pairSave(); negSave(); prefClear(); drawAdmin();
+      toast(COLLECT_URL?'이 브라우저에서만 비웠습니다 — 시트에는 그대로 있습니다':'비웠습니다');
+    };
+    Fo.appendChild(b2);
+  }
+
+  function drawSync(L,Fo){
+    var h='';
+    if(!COLLECT_URL){
+      h+='<div class="rrow"><div class="rt">지금은 이 브라우저에만 쌓입니다</div>'+
+        '<div class="rm">응답을 한곳에 모으려면 구글 시트 주소를 넣어야 합니다. '+
+        '앱 폴더의 <b>_수집서버 \\ 설치 방법.md</b> 를 따라 하시면 10분이면 됩니다.</div>'+
+        '<div class="rm">주소를 받으신 뒤 <b>index.html</b> 을 메모장으로 열어 위쪽의<br>'+
+        '<span style="font-family:Consolas,monospace">var COLLECT_URL = \'\';</span><br>'+
+        '따옴표 안에 붙여 넣고 저장하시면 됩니다.</div></div>';
+      h+='<div class="rrow"><div class="rt">지금 브라우저에 있는 응답</div>'+
+        '<div class="rm">유사문항 비교 '+PAIRS.length+'건 · 성취기준 '+STDV.length+'건</div>'+
+        '<div class="rm">주소를 넣으면 이 응답들도 다음에 열 때 함께 올라갑니다.</div></div>';
+      L.innerHTML=h;
+      var bq=document.createElement('button'); bq.textContent='지금 응답을 파일로 받아 두기';
+      bq.style.flex='1'; bq.onclick=backupAll; Fo.appendChild(bq);
+      return;
+    }
+    h+='<div class="rrow"><div class="rt">구글 시트로 모으는 중</div>'+
+      '<div class="rf">'+esc(COLLECT_URL)+'</div>'+
+      '<div class="rm">이 브라우저에서 보낸 응답 '+SENT_OK+'건'+
+      (SENT_BLIND?' · 확인 없이 보낸 응답 '+SENT_BLIND+'건':'')+
+      ' · <b>못 보낸 응답 '+QUEUE.length+'건</b></div>';
+    var pulled=''; try{ pulled=localStorage.getItem('gich_pulled')||''; }catch(e){}
+    h+='<div class="rm">마지막으로 받아온 때 — '+(pulled?esc(pulled):'아직 없음')+'</div>';
+    if(LAST_ERR) h+='<div class="rm" style="color:var(--danger)">마지막 오류 — '+esc(LAST_ERR)+'</div>';
+    h+='</div>';
+    var nd=Object.keys(DEL).length;
+    h+='<div class="rrow"><div class="rt">합쳐진 응답</div>'+
+      '<div class="rm">유사문항 비교 '+PAIRS.length+'건 · 성취기준 '+STDV.length+'건 · 유사하지않음 '+NEGV.length+'건</div>'+
+      (nd?'<div class="rm">지운 응답 '+nd+'건 — 시트에도 알렸으므로 다시 받아와도 되살아나지 않습니다</div>':'')+
+      '<div class="rm">시트에서 받아온 다른 분들의 응답까지 함께 셉니다. '+
+      '못 보낸 것이 있어도 사라지지 않고, 다음에 앱을 열면 다시 보냅니다.</div></div>';
+    L.innerHTML=h;
+
+    var b1=document.createElement('button'); b1.textContent='지금 보내기'; b1.className='primary';
+    b1.onclick=function(){
+      if(!QUEUE.length){ toast('보낼 것이 없습니다'); return; }
+      toast('보내는 중…'); flushQueue();
+    };
+    Fo.appendChild(b1);
+    var b2=document.createElement('button'); b2.textContent='시트에서 받아오기';
+    b2.onclick=function(){
+      toast('받아오는 중…');
+      pullCollect(function(err,np,ns,nn){
+        if(err){ toast('받아오지 못했습니다 — '+err,true); return; }
+        STDMAP=null; prefClear(); drawAdmin(); run(false,true);
+        toast('새 응답 '+((np||0)+(ns||0)+(nn||0))+'건을 합쳤습니다');
+      });
+    };
+    Fo.appendChild(b2);
+    var b3=document.createElement('button'); b3.textContent='파일로 받아 두기';
+    b3.onclick=backupAll; Fo.appendChild(b3);
+    var b4=document.createElement('button'); b4.textContent='전부 다시 보내기';
+    b4.title='이 브라우저에 있는 응답을 모두 한 번 더 보냅니다. 시트가 겹치는 것을 걸러 줍니다.';
+    b4.onclick=function(){
+      var has={}; QUEUE.forEach(function(r){ has[r.id]=1; });
+      var n=0;
+      PAIRS.concat(STDV).concat(NEGV).forEach(function(r){
+        if(!r.id || has[r.id]) return;
+        has[r.id]=1; QUEUE.push(r); n++;
+      });
+      qSave(); toast(n+'건을 다시 보냅니다'); flushQueue();
+    };
+    Fo.appendChild(b4);
+  }
+  /* 만일을 대비한 통째 백업 */
+  function backupAll(){
+    var data={앱:'기출문제 검색기', 만든때:nowStr(), 익명번호:UID,
+              pairs:PAIRS, std:STDV, queue:QUEUE};
+    var blob=new Blob([JSON.stringify(data)],{type:'application/json'});
+    var a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='기출검색기_응답백업_'+nowStr().replace(/[^0-9]/g,'').slice(0,12)+'.json';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(a.href); },1000);
+    toast('백업 파일을 내려받았습니다');
+  }
+
+  function drawStdStats(L,Fo){
+    if(!STD){ L.innerHTML='<div style="padding:20px;color:#6b7280;font-size:13px">성취기준 자료(data/std.js)가 없습니다.</div>'; return; }
+    var M=stdMap(), paths=Object.keys(M);
+    var conf=paths.filter(function(p){ return M[p].conf.length; });
+    var h='<div class="rrow"><div class="rt">성취기준 응답 '+STDV.length+'건</div>';
+    var who={}; STDV.forEach(function(r){ who[r.who||'?']=(who[r.who||'?']||0)+1; });
+    h+='<div class="rm">응답자 '+Object.keys(who).length+'명 (익명) — '+
+       Object.keys(who).map(function(k){ return esc(k)+' '+who[k]+'건'; }).join(' · ')+'</div>';
+    h+='<div class="rm">답이 하나라도 달린 문항 '+paths.length+'개 · 그중 <b>확정</b>('+STD_CONFIRM+
+       '명 이상 일치) <b>'+conf.length+'</b>개 / 전체 '+IT.length.toLocaleString()+'문항</div>';
+    var un=STDV.filter(function(r){ return !stdCodes(r).length; }).length;
+    var multi=STDV.filter(function(r){ return stdCodes(r).length>1; }).length;
+    h+='<div class="rm">성취기준을 <b>둘 이상</b> 고른 응답 '+multi+'건 · 확정 성취기준이 둘 이상인 문항 '+
+       conf.filter(function(p){ return M[p].conf.length>1; }).length+'개</div>';
+    h+='<div class="rm">«잘 모르겠음·해당 없음» '+un+'건</div></div>';
+
+    // 확정된 문항의 과목별 분포
+    if(conf.length){
+      var bysub={};
+      conf.forEach(function(p){
+        M[p].conf.forEach(function(c){
+          var i=stdIndexOf(c); if(i<0) return;
+          var nm=STD.subjects[STD.items[i][1]][0];
+          bysub[nm]=(bysub[nm]||0)+1;
+        });
+      });
+      h+='<div class="rrow"><div class="rt">확정된 문항의 과목</div><div class="rm">'+
+         Object.keys(bysub).sort(function(a,b){ return bysub[b]-bysub[a]; })
+           .map(function(k){ return esc(k)+' '+bysub[k]+'개'; }).join(' · ')+'</div></div>';
+    }
+    // 유사도에 실제로 반영된 쌍
+    var adj=0;
+    if(SIM){
+      conf.forEach(function(p){
+        var a=BY_PATH[p]; if(!a) return;
+        var ai=IT.indexOf(a); if(ai<0||!SIM[ai]) return;
+        SIM[ai].forEach(function(pr){
+          if(stdAdjust(p, IT[pr[0]][2])<0) adj++;
+        });
+      });
+    }
+    var pm=prefMap(), pn=0, pp=0, pmm=0;
+    Object.keys(pm).forEach(function(a){ Object.keys(pm[a]).forEach(function(b){
+      if(a<b){ pn++; if(pm[a][b]>0) pp++; else if(pm[a][b]<0) pmm++; } }); });
+    h+='<div class="rrow"><div class="rt">비교 응답이 추천에 준 영향</div>'+
+       '<div class="rm">점수가 움직인 문항 쌍 <b>'+pn+'</b>개 — 올라간 쌍 '+pp+'개 · 내려간 쌍 '+pmm+'개</div>'+
+       '<div class="rm" style="font-size:11.5px">한 표당 ±'+WPREF+' · 아무리 쌓여도 ±'+PREF_CAP+'을 넘지 않습니다 '+
+       '(난이도 순서를 크게 흔들지 않으려는 것입니다)</div></div>';
+    var nu=0; Object.keys(NEG).forEach(function(a){ Object.keys(NEG[a]).forEach(function(){ nu++; }); });
+    var nb=0; Object.keys(NEG).forEach(function(a){ Object.keys(NEG[a]).forEach(function(x){
+      if(negVotes(a,x)>=NEG_THRESHOLD) nb++; }); });
+    h+='<div class="rrow"><div class="rt">«유사하지 않아요»</div>'+
+       '<div class="rm">제보 '+NEGV.length+'건 · 지목된 쌍 '+nu+'개 · 그중 '+NEG_THRESHOLD+
+       '명 이상 모여 <b>추천에서 빠진 쌍 '+nb+'개</b></div>'+
+       (COLLECT_URL?'<div class="rm" style="font-size:11.5px">시트로 함께 모이므로 다른 분 제보도 같이 셉니다</div>':'')+
+       '</div>';
+    h+='<div class="rrow"><div class="rt">유사도 조정</div><div class="rm">성취기준이 서로 다른 것으로 확정되어 '+
+       '추천 점수가 깎인 쌍 <b>'+adj+'</b>개 — 확정이 쌓일수록 늘어납니다.</div>'+
+       '<div class="rm" style="font-size:11.5px">같은 성취기준 +'+WSTD.same+' · 같은 영역 +'+WSTD.area+
+       ' · 같은 과목 '+WSTD.subj+' · 아주 다름 '+WSTD.diff+'</div></div>';
+    L.innerHTML=h;
+
+    var head=document.createElement('div');
+    head.style.cssText='font-size:12px;color:#6b7280;margin:4px 2px 6px';
+    head.textContent='최근 응답 — 문항 그림과 고른 성취기준을 나란히 놓았습니다.';
+    L.appendChild(head);
+    STDV.slice(-20).reverse().forEach(function(r){
+      var d=document.createElement('div'); d.className='cmprow';
+      var cs=stdCodes(r);
+      var top=document.createElement('div'); top.className='ctop';
+      top.innerHTML='<span class="pick">'+(cs.length?esc(cs.join(' · ')):(r.k==='none'?'해당 없음':'잘 모르겠음'))+'</span>'+
+        (r.near?'<span class="badge sc">이웃 확인</span>':'')+
+        '<span class="meta">'+esc(r.who)+' · '+esc(r.at)+'</span><span class="sp"></span>';
+      var bDel=document.createElement('button'); bDel.textContent='이 응답 삭제'; bDel.className='warn';
+      bDel.onclick=function(){
+        var k=STDV.indexOf(r); if(k<0) return;
+        STDV.splice(k,1); stdSave();
+        dropRecord(r.id,'std');
+        drawAdmin(); toast('응답 1건을 지웠습니다'+(COLLECT_URL?' (시트에서도 지웁니다)':''));
+      };
+      top.appendChild(bDel); d.appendChild(top);
+
+      var g=document.createElement('div'); g.className='cmpimgs';
+      g.style.gridTemplateColumns='1fr 1fr';
+      var it=BY_PATH[r.p];
+      var f1=document.createElement('figure'); f1.className='anchor';
+      f1.innerHTML='<figcaption>문항 · '+esc(it?label(it):r.p)+'</figcaption>'+
+        '<img loading="lazy" src="'+(it?imgSrc(it):('img/'+r.p))+'" alt="">';
+      g.appendChild(f1);
+      var f2=document.createElement('figure');
+      var body='';
+      cs.forEach(function(c){
+        var i=stdIndexOf(c);
+        body += '<div style="padding:9px 12px;font-size:13px;line-height:1.5;border-top:1px solid #f0f2f5">'+
+          '<div style="font-family:Consolas,monospace;color:#2563eb;font-weight:600">'+esc(c)+'</div>'+
+          (i>=0?'<div style="font-size:11.5px;color:#6b7280;margin:2px 0 5px">'+
+             esc(STD.subjects[STD.items[i][1]][0])+' · '+esc(STD.items[i][2])+'</div>'+esc(STD.items[i][3]):'')+
+          '</div>';
+      });
+      if(!cs.length) body='<div style="padding:14px;font-size:13px;color:#6b7280">성취기준을 고르지 않았습니다.</div>';
+      f2.innerHTML='<figcaption>고른 성취기준'+(cs.length>1?' '+cs.length+'개':'')+'</figcaption>'+body;
+      g.appendChild(f2);
+      d.appendChild(g); L.appendChild(d);
+    });
+
+    var b1=document.createElement('button'); b1.textContent='성취기준 응답 CSV로 저장';
+    b1.style.flex='1'; b1.onclick=exportStd; Fo.appendChild(b1);
+    var b2=document.createElement('button'); b2.textContent='확정 목록 CSV로 저장';
+    b2.onclick=exportStdConf; Fo.appendChild(b2);
+    var b3=document.createElement('button'); b3.textContent='이 브라우저에서 비우기'; b3.className='warn';
+    b3.title='시트에 있는 응답은 그대로 남습니다.';
+    b3.onclick=function(){
+      STDV=[]; stdSave(); drawAdmin();
+      toast(COLLECT_URL?'이 브라우저에서만 비웠습니다 — 시트에는 그대로 있습니다':'비웠습니다');
+    };
+    Fo.appendChild(b3);
+  }
+  /* 한 응답에서 여러 개를 고를 수 있으므로 성취기준마다 한 줄씩 낸다 */
+  function exportStd(){
+    var rows=[['문항파일','시험','문항','성취기준','과목','영역','같이 고른 수','기타','이웃확인','익명번호','시각']];
+    STDV.forEach(function(r){
+      var it=BY_PATH[r.p], cs=stdCodes(r);
+      if(!cs.length){
+        rows.push([r.p, it?EX[it[0]].n:'', it?it[1]+'번':'', '', '', '', 0,
+                   (r.k==='none'?'해당 없음':'잘 모르겠음'), r.near||'', r.who, r.at]);
+        return;
+      }
+      cs.forEach(function(c){
+        var i=stdIndexOf(c);
+        rows.push([r.p, it?EX[it[0]].n:'', it?it[1]+'번':'', c,
+                   i>=0?STD.subjects[STD.items[i][1]][0]:'', i>=0?STD.items[i][2]:'',
+                   cs.length, '', r.near||'', r.who, r.at]);
+      });
+    });
+    csvDown(rows,'성취기준_응답');
+  }
+  function exportStdConf(){
+    var M=stdMap();
+    var rows=[['문항파일','시험','문항','확정 성취기준','과목','영역','성취기준 문장','표수','응답자 수','그 문항의 확정 개수']];
+    Object.keys(M).forEach(function(p){
+      if(!M[p].conf.length) return;
+      var it=BY_PATH[p];
+      M[p].conf.forEach(function(c){
+        var i=stdIndexOf(c);
+        rows.push([p, it?EX[it[0]].n:'', it?it[1]+'번':'', c,
+                   i>=0?STD.subjects[STD.items[i][1]][0]:'', i>=0?STD.items[i][2]:'',
+                   i>=0?STD.items[i][3]:'', M[p].codes[c], M[p].tot, M[p].conf.length]);
+      });
+    });
+    csvDown(rows,'성취기준_확정');
+  }
+
+  function csvDown(rows,name){
+    var csv='﻿'+rows.map(function(r){
+      return r.map(function(v){ return '"'+String(v).replace(/"/g,'""')+'"'; }).join(',');
+    }).join('\r\n');
+    var a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+    a.download=name+'_'+nowStr().replace(/[^0-9]/g,'').slice(0,8)+'.csv'; a.click();
+  }
+  function exportReports(){
+    var rows=[['시험','문항','파일','유형','제보자(익명번호)','메모','시각','상태']];
+    REPORTS.forEach(function(r){
+      var it=BY_PATH[r.path];
+      rows.push([it?EX[it[0]].n:'',it?it[1]+'번':'',r.path,r.kind,r.who,
+                 (r.memo||'').replace(/\n/g,' '),r.at,r.done?'처리완료':'미처리']);
+    });
+    csvDown(rows,'오류제보');
+  }
+  function exportPairs(){
+    var rows=[['기준시험','기준문항','기준파일','후보1시험','후보1문항','후보1파일',
+               '후보2시험','후보2문항','후보2파일','선택','검증쌍','점수1','점수2','글자유사도1','글자유사도2','익명번호','시각']];
+    function info(p){ var it=BY_PATH[p]; return it?[EX[it[0]].n,it[1]+'번',p]:['','',p||'']; }
+    PAIRS.forEach(function(r){
+      rows.push([].concat(info(r.a),info(r.x),info(r.y),
+        [{x:'후보1',y:'후보2',both:'둘다비슷',none:'둘다다름',unsure:'잘모르겠음',notsim:'유사하지않음'}[r.c]||r.c,
+         r.chk?'예':'', r.sx,r.sy,r.bx,r.by,r.who,r.at]));
+    });
+    csvDown(rows,'유사도비교');
+  }
+
+  /* ================= 이미지 교체 ================= */
+  var pickTarget=null;
+  function pickImage(it){ pickTarget=it; var f=$('filePick'); f.value=''; f.click(); }
+  $('filePick').onchange=function(){
+    var file=this.files&&this.files[0];
+    if(!file||!pickTarget) return;
+    var it=pickTarget; pickTarget=null;
+    var fr=new FileReader();
+    fr.onload=function(){
+      var im=new Image();
+      im.onload=function(){
+        var cv=document.createElement('canvas');
+        cv.width=im.naturalWidth; cv.height=im.naturalHeight;
+        var cx=cv.getContext('2d');
+        cx.fillStyle='#fff'; cx.fillRect(0,0,cv.width,cv.height);
+        cx.drawImage(im,0,0);
+        ovPut(it[2],cv.toDataURL('image/png'),function(ok,msg){
+          if(!ok){ toast(msg||'저장하지 못했습니다',true); return; }
+          var n=0;
+          REPORTS.forEach(function(r){ if(r.path===it[2]&&!r.done){ r.done=true; n++; } });
+          if(n) repSave();
+          refreshCards(); if($('admin').classList.contains('open')) drawAdmin();
+          toast('이미지를 교체했습니다 — '+label(it)+(n?' (제보 '+n+'건 처리완료)':''));
+        });
+      };
+      im.onerror=function(){ toast('이미지 파일을 읽지 못했습니다',true); };
+      im.src=fr.result;
+    };
+    fr.onerror=function(){ toast('파일을 읽지 못했습니다',true); };
+    fr.readAsDataURL(file);
+  };
+
+  /* ================= 실행 ================= */
+  function describe(plan){
+    var b=plan.base, out='';
+    if(b.years.length)    out+='<span class="pill">'+b.years.join(', ')+'년</span>';
+    if(b.rounds.length)   out+='<span class="pill">'+b.rounds.join(', ')+'</span>';
+    if(b.grades.length)   out+='<span class="pill">'+b.grades.join(', ')+
+      (b.grades.indexOf('고3')>=0 && b.rounds.some(function(r){ return r==='수능'||r==='6월'||r==='9월'; })
+        ? ' → 수능·모평':'')+'</span>';
+    if(b.subjects.length) out+='<span class="pill">'+b.subjects.join(', ')+'</span>';
+    if(b.nums.length)     out+='<span class="pill">'+b.nums.join(', ')+'번</span>';
+    /* 숫자를 어떻게 읽었는지 — 갈래가 여럿이면 각각 몇 개인지 보여 주고, 누르면 그 갈래만 남긴다 */
+    var ways=plan.specs.filter(function(sp){ return sp.why; });
+    if(ways.length===1) out+='<span class="pill">'+esc(ways[0].why)+'</span>';
+    else if(ways.length>1){
+      out+='<span class="pill alt">숫자를 '+ways.length+'가지로 읽었습니다 — 누르면 그것만 봅니다</span>';
+      ways.forEach(function(sp,i){
+        var n=IT.filter(function(it){ return passFilter(EX[it[0]]) && matchOne(it,sp); }).length;
+        out+='<span class="pill way'+(WAY_PIN===i?' on':'')+'" data-pin="'+i+'">'+esc(sp.why)+' '+n+'개</span>';
+      });
+    }
+    if(plan.text.length)  out+='<span class="pill">문구: '+esc(plan.text.join(' '))+'</span>';
+    return out;
+  }
+  var LAST_RAW=null;
+  function run(record,keepTab){
+    var raw=$('q').value;
+    if(raw!==LAST_RAW){ WAY_PIN=-1; LAST_RAW=raw; }   /* 검색어가 바뀌면 고정 해제 */
+    var r=search(raw);
+    hits=sortHits(r.list); page=0; shown=0;
+    var msg='';
+    if(!raw.trim()){
+      msg='';
+    }else{
+      msg=describe(r.spec)+' → ';
+      if(!hits.length) msg+='결과 없음';
+      else if(r.mode==='and') msg+='문구 그대로는 없어서 <b>낱말을 모두 포함</b>하는 <b>'+hits.length+'</b>문항';
+      else msg+='<b>'+hits.length.toLocaleString()+'</b>문항';
+    }
+    $('status').innerHTML=msg;
+    $('status').style.display=msg?'':'none';
+    Array.prototype.forEach.call($('status').querySelectorAll('.pill.way'),function(el){
+      el.onclick=function(){
+        var i=+el.getAttribute('data-pin');
+        WAY_PIN=(WAY_PIN===i)?-1:i;
+        run(false,true);
+      };
+    });
+    render(true);
+    if(record && raw.trim()) pushTab({t:'q',k:raw,label:raw,n:hits.length});
+  }
+
+  var timer=null;
+  $('q').addEventListener('input',function(){
+    activeTab=-1; drawTabs();
+    clearTimeout(timer); timer=setTimeout(function(){ run(false,true); },130);
+  });
+  $('q').addEventListener('keydown',function(e){
+    if(e.key==='Enter'){ clearTimeout(timer); run(true); }
+  });
+  $('more').onclick=function(){ render(false); };
+  $('clear').onclick=function(){ $('q').value=''; clearFilters(); activeTab=-1; run(false); drawTabs(); $('q').focus(); };
+  $('fclear').onclick=function(){ clearFilters(); run(false,true); };
+  $('ftoggle').onclick=function(){
+    var box=$('filters'), open=!box.classList.contains('open');
+    box.classList.toggle('open',open); this.classList.toggle('open',open);
+    this.childNodes[0].nodeValue = open?'필터 접기':'필터 열기';
+    fitCards();
+    try{ localStorage.setItem('gich_filters_open',open?'1':'0'); }catch(e){}
+  };
+  function goPage(d){
+    page+=d; render(true);
+    // 페이지를 넘긴 뒤에는 화살표 키가 바로 듣도록 검색창에서 커서를 뗀다
+    try{ if(document.activeElement===$('q')) $('q').blur(); }catch(e){}
+  }
+  $('navPrev').onclick=function(){ goPage(-1); };
+  $('navNext').onclick=function(){ goPage(1); };
+  $('pagePrev').onclick=function(){ goPage(-1); };
+  $('pageNext').onclick=function(){ goPage(1); };
+  $('selAll').onclick=function(){
+    hits.forEach(function(it){ SEL[it[2]]=true; }); updateSel(); refreshCards();
+    toast('지금 걸러진 '+hits.length+'문항을 모두 선택했습니다');
+  };
+  $('selNone').onclick=function(){ SEL={}; updateSel(); refreshCards(); };
+  $('printWork').onclick=printWork;
+  $('printNote').onclick=printNote;
+
+  document.addEventListener('keydown',function(e){
+    if($('cmp').classList.contains('open')){
+      if(e.key==='Escape' && !$('cmp').classList.contains('gate')){ $('cmp').classList.remove('open'); return; }
+      if(e.key==='1') cmpToggle('x');
+      else if(e.key==='2') cmpToggle('y');
+      else if(e.key==='Enter') cmpConfirm();
+      else if(e.key==='0'||e.key==='5') answer('unsure');
+      else if(e.key===' '){ e.preventDefault(); drawTriple(); }
+      return;
+    }
+    if($('std').classList.contains('open')){
+      if(e.key==='Escape' && !$('std').classList.contains('gate')){ $('std').classList.remove('open'); return; }
+      if(document.activeElement===$('stdQ')) return;
+      var n=parseInt(e.key,10);
+      if(n>=1 && n<=stdPick.length){ stdToggle(STD.items[stdPick[n-1].i][0]); }
+      else if(e.key==='0'){ stdAnswer('unsure'); }
+      else if(e.key==='Enter'){ if(stdSel.length) stdAnswer(''); }
+      else if(e.key===' '){ e.preventDefault(); drawStd(); }
+      return;
+    }
+    if(e.key==='Escape'){ closeModal(); $('admin').classList.remove('open'); return; }
+    if(document.activeElement===$('q')) return;
+    if(hits.length>PAGE4){
+      if(e.key==='ArrowLeft') goPage(-1);
+      else if(e.key==='ArrowRight') goPage(1);
+    }
+  });
+
+  /* ================= 시작 ================= */
+  QUEUE=lsGet('gich_queue',[]);
+  REPORTS=lsGet('gich_reports',[]);
+  PAIRS=lsGet('gich_pairs',[]);
+  STDV=lsGet('gich_std',[]);
+  NEG=lsGet('gich_neg',{});
+  NEGV=lsGet('gich_negv',[]);
+  DEL=lsGet('gich_del',{});
+  if(!NEGV.length && NEG && Object.keys(NEG).length){
+    /* 예전 방식으로 쌓인 «유사하지 않아요»를 기록 형태로 옮긴다 */
+    Object.keys(NEG).forEach(function(a){
+      Object.keys(NEG[a]).forEach(function(x){
+        var u=NEG[a][x] && NEG[a][x].u ? Object.keys(NEG[a][x].u) : ['?'];
+        u.forEach(function(who){ NEGV.push({t:'neg',id:'old-'+a+'-'+x+'-'+who,a:a,x:x,who:who,at:''}); });
+      });
+    });
+    if(NEGV.length) negSave();
+  }
+  applyDeletions();
+  TABS=lsGet('gich_tabs',[]);
+  updateAdminBadge(); updateSel();
+  ovLoad(function(){
+    buildFilters(); fsummary();
+    try{
+      if(localStorage.getItem('gich_filters_open')==='1'){
+        $('filters').classList.add('open'); $('ftoggle').classList.add('open');
+        $('ftoggle').childNodes[0].nodeValue='필터 접기';
+      }
+      if(localStorage.getItem('gich_mode')==='study'){
+        MODE='study'; $('modeStudy').className='on'; $('modeSearch').className='';
+        $('studybar').classList.add('on');
+      }
+    }catch(e){}
+    drawTabs(); run(false); fitCards();
+    /* 못 보낸 응답을 다시 보내고, 다른 사람이 답한 것도 받아 온다 */
+    if(canSend()){
+      try{
+        flushQueue(true);
+        pullCollect(function(err,np,ns){
+          if(err) return;
+          if(np||ns||nn){ STDMAP=null; prefClear(); run(false,true);
+            toast('다른 분 응답 '+((np||0)+(ns||0)+(nn||0))+'건을 받아왔습니다'); }
+        });
+        setInterval(function(){ flushQueue(true); }, 60000);
+      }catch(e){}      /* 수집이 안 되더라도 앱은 정상 동작해야 한다 */
+    }
+    var gateDone=true;
+    try{ gateDone = sessionStorage.getItem('gich_gate')==='1'; }catch(e){}
+    if(SIM && GATE_QUOTA>0 && !gateDone){ openGate(); }
+    else $('q').focus();
+  });
+})();
+</script>
+</body>
+</html>
