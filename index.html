@@ -918,18 +918,28 @@
   var F={grade:new Set(),round:new Set(),subject:new Set(),year:new Set(),scope:new Set()};
   function uniq(fn){ var out=[],has={};
     EX.forEach(function(e){ var v=fn(e); if(v&&!has[v]){has[v]=1;out.push(v);} }); return out; }
-  var GRADE_LABEL={'수능·모평':'수능모평','고1':'고1전국연합','고2':'고2전국연합','고3':'고3전국연합'};
+  /* 구분 — 평가원 시험은 수능·9월모평·6월모평으로 갈라 본다 */
+  function divOf(e){
+    if(e.g==='수능·모평') return e.r==='수능' ? '수능' : (e.r+'모평');
+    return e.g+'전국';
+  }
+  var DIV_ORDER=['수능','9월모평','6월모평','고1전국','고2전국','고3전국'];
+  /* 시행 — 3월부터 차례대로. 수능·모평은 구분에서 고르므로 여기엔 두지 않는다 */
+  var ROUND_ORDER=['3월','4월','5월','6월','7월','9월','10월','11월'];
   function buildFilters(){
     var box=$('filters');
-    [['구분','grade',uniq(function(e){return e.g})],
-     ['시행','round',uniq(function(e){return e.r})],
+    var divs=uniq(divOf);
+    divs.sort(function(a,b){ return DIV_ORDER.indexOf(a)-DIV_ORDER.indexOf(b); });
+    var rounds=uniq(function(e){return e.r}).filter(function(r){ return ROUND_ORDER.indexOf(r)>=0; });
+    rounds.sort(function(a,b){ return ROUND_ORDER.indexOf(a)-ROUND_ORDER.indexOf(b); });
+    [['구분','grade',divs],
+     ['시행','round',rounds],
      ['과목','subject',uniq(function(e){return e.s})],
      ['연도','year',uniq(function(e){return e.y}).sort().reverse()]].forEach(function(d){
       var g=document.createElement('div'); g.className='fgroup';
       var b=document.createElement('b'); b.textContent=d[0]; g.appendChild(b);
       d[2].forEach(function(v){
-        var c=document.createElement('span'); c.className='chip';
-        c.textContent = d[1]==='grade' ? GRADE_LABEL[v]||v : v;
+        var c=document.createElement('span'); c.className='chip'; c.textContent=v;
         c.onclick=function(){
           var S=F[d[1]];
           if(S.has(v)){S.delete(v);c.classList.remove('on');} else {S.add(v);c.classList.add('on');}
@@ -955,12 +965,12 @@
   function fsummary(){
     var on=[];
     ['scope','grade','round','subject','year'].forEach(function(k){
-      F[k].forEach(function(v){ on.push(k==='grade'?(GRADE_LABEL[v]||v):v); }); });
+      F[k].forEach(function(v){ on.push(v); }); });
     $('fsummary').textContent=on.length?on.join(' · '):'';
     $('fclear').style.display=on.length?'':'none';
   }
   function passFilter(e){
-    return (!F.grade.size||F.grade.has(e.g)) && (!F.round.size||F.round.has(e.r))
+    return (!F.grade.size||F.grade.has(divOf(e))) && (!F.round.size||F.round.has(e.r))
         && (!F.subject.size||F.subject.has(e.s)) && (!F.year.size||F.year.has(e.y))
         && (!F.scope.size||F.scope.has(scopeOf(e)));
   }

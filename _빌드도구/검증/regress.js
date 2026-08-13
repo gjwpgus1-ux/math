@@ -52,7 +52,11 @@ const lab=q=>T().search(q).list.map(it=>T().label(it));
   ok('필터 접기/열기 문구', $('ftoggle').childNodes[0].nodeValue==='필터 열기');
   click($('ftoggle')); await wait(40);
   const g0=$('filters').querySelector('.fgroup');
-  ok('구분 문구', [...g0.querySelectorAll('.chip')].map(c=>c.textContent).join()==='수능모평,고1전국연합,고2전국연합,고3전국연합');
+  ok('구분 문구', [...g0.querySelectorAll('.chip')].map(c=>c.textContent).join()==='수능,9월모평,6월모평,고1전국,고2전국,고3전국',
+     [...g0.querySelectorAll('.chip')].map(c=>c.textContent).join());
+  const g1=$('filters').querySelectorAll('.fgroup')[1];
+  ok('시행은 3월부터 차례대로', [...g1.querySelectorAll('.chip')].map(c=>c.textContent).join()==='3월,4월,5월,6월,7월,9월,10월,11월',
+     [...g1.querySelectorAll('.chip')].map(c=>c.textContent).join());
   click($('ftoggle')); await wait(40);
   ok('화살표 안내', /키로/.test($('keyhint').textContent));
 
