@@ -66,9 +66,13 @@ const css=re=>re.test(html);
   ok('저장 뒤 다시 잠김', $('stdOk').disabled);
 
   console.log('\n[5] 검색은 그대로');
-  $('stdQ').value='등차수열'; $('stdQ').dispatchEvent(new w.Event('input')); await wait(80);
+  /* 뽑힌 문항이 중학 범위면 «등차수열»은 나오지 않는 게 맞다 (중학 성취기준엔 없음).
+     그래서 그 문항이 고를 수 있는 범위에 맞는 말로 찾는다. */
+  const isMid=/중학교 성취기준/.test($('stdScope').textContent);
+  const word=isMid?'소인수분해':'등차수열';
+  $('stdQ').value=word; $('stdQ').dispatchEvent(new w.Event('input')); await wait(80);
   const hits=[...$('stdHits').querySelectorAll('.scand')];
-  ok('검색 결과', hits.length>0, hits.length);
+  ok('검색 결과 ('+word+')', hits.length>0, hits.length);
   ok('검색 결과도 큰 글씨', css(/\.scand \.bd\{[^}]*font-size:15px/));
   click(hits[0]); await wait(40);
   ok('검색 결과 고르기', $('stdSel').querySelectorAll('.stag').length>=1);
