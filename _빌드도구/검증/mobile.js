@@ -3,6 +3,7 @@ const fs=require('fs'), path=require('path');
 const {boot,scorer,APP}=require('./harness.js');
 const S=scorer();
 const {w,doc,$}=boot('fitCards:fitCards,setMode:setMode,perPage:perPage,render:render,'+
+  'page:function(){return page;},setPage:function(n){page=n;render(true);},'+
   'hits:function(){return hits;},pick:function(n){SEL={};hits.slice(0,n).forEach(function(it){SEL[it[2]]=true;});updateSel();}');
 const CSS=fs.readFileSync(path.join(APP,'index.html'),'utf8').replace(/\s+/g,' ');
 const RAW=fs.readFileSync(path.join(APP,'index.html'),'utf8');
@@ -96,4 +97,22 @@ S.ok('좁은 화면에서 카드가 2장', doc.querySelectorAll('#grid .card').l
      doc.querySelectorAll('#grid .card').length);
 S.ok('쪽 수도 2문항 기준으로 센다',
      $('pageAll').textContent===String(Math.ceil(T2.hits().length/2)), $('pageAll').textContent);
+
+/* ---- 주소창이 접혀 세로만 바뀔 때 보던 쪽이 유지되는가 ---- */
+(function(){
+  const RS=fs.readFileSync(path.join(APP,'index.html'),'utf8');
+  S.ok('세로만 바뀌면 다시 그리지 않는다', /window\.innerWidth===lastW\) return;/.test(RS));
+  S.ok('한 쪽 문항 수가 그대로면 다시 그리지 않는다', /if\(pp===lastPP\) return;/.test(RS));
+
+  setW(390); T2.setMode('search');
+  T2.setPage(3);
+  S.ok('4쪽을 보고 있다', T2.page()===3, T2.page());
+  /* 주소창이 접혀 세로 길이만 줄어든 상황 */
+  Object.defineProperty(w,'innerHeight',{value:560,configurable:true});
+  w.dispatchEvent(new w.Event('resize'));
+  S.ok('세로만 바뀌어도 보던 쪽 그대로', T2.page()===3, T2.page());
+  Object.defineProperty(w,'innerHeight',{value:760,configurable:true});
+  w.dispatchEvent(new w.Event('resize'));
+  S.ok('주소창이 다시 펴져도 그대로', T2.page()===3, T2.page());
+})();
 S.done();
