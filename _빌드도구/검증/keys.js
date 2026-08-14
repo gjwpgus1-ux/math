@@ -15,6 +15,10 @@ S.ok('필터 단추에 f 표시', !!$('ftoggle').querySelector('.kb') &&
      $('ftoggle').querySelector('.kb').textContent==='f');
 S.ok('도움말 단추에 ? 표시', !!$('helpBtn').querySelector('.kb') &&
      $('helpBtn').querySelector('.kb').textContent==='?');
+S.ok('단축키 단추가 따로 있다', !!$('keysBtn'));
+S.ok('단축키 단추가 도움말 오른쪽에', $('helpBtn').nextElementSibling===$('keysBtn'));
+S.ok('단축키 단추에 k 표시', !!$('keysBtn').querySelector('.kb') &&
+     $('keysBtn').querySelector('.kb').textContent==='k');
 S.ok('필터 단추 글씨는 그대로', /필터 열기/.test($('ftoggle').textContent));
 
 /* ---- 자리 번호 ---- */
@@ -44,11 +48,31 @@ key('Escape');
 /* ---- ? 로 도움말 ---- */
 key('?');
 S.ok('? 로 도움말이 열린다', $('modal').classList.contains('open'));
-S.ok('도움말에 / 설명이 있다', $('mbox').textContent.indexOf('검색창으로 커서')>=0);
-S.ok('도움말에 숫자키 설명이 있다', $('mbox').textContent.indexOf('학습모드는 선택/해제')>=0);
-S.ok('도움말에 f 설명이 있다', $('mbox').textContent.indexOf('필터 열기·접기')>=0);
+S.ok('도움말은 이제 단축키를 안 담는다', $('mbox').textContent.indexOf('학습모드는 선택/해제')<0);
+S.ok('도움말이 단축키 단추를 가리킨다', $('mbox').textContent.indexOf('단축키')>=0);
 $('helpOk').click();
 S.ok('도움말이 닫힌다', !$('modal').classList.contains('open'));
+
+/* ---- 단축키 창 ---- */
+$('keysBtn').click();
+S.ok('단축키 창이 열린다', $('modal').classList.contains('open'));
+S.ok('넓은 창으로 뜬다', $('mbox').classList.contains('wide'));
+['검색창으로 커서','학습모드는 선택/해제','필터 열기·접기','앞·뒤 탭으로 이동',
+ '지금 보고 있는 탭 닫기','한글 자판'].forEach(t=>{
+  S.ok('단축키 창에 «'+t.slice(0,12)+'» 이 있다', $('mbox').textContent.indexOf(t)>=0);
+});
+S.ok('키 표시가 그려졌다', $('mbox').querySelectorAll('kbd').length>=12,
+     $('mbox').querySelectorAll('kbd').length);
+S.ok('Ctrl 과 화살표가 따로 그려진다',
+     [...$('mbox').querySelectorAll('kbd')].some(e=>e.textContent==='Ctrl'));
+$('keysOk').click();
+S.ok('단축키 창이 닫힌다', !$('modal').classList.contains('open'));
+key('k');
+S.ok('k 로도 열린다', $('modal').classList.contains('open'));
+$('keysOk').click();
+key('Process',{code:'KeyK'});
+S.ok('한글 자판에서도 k 가 듣는다', $('modal').classList.contains('open'));
+$('keysOk').click();
 /* Shift+/ 로도 */
 key('/',{code:'Slash',shiftKey:true});
 S.ok('Shift+/ 로도 도움말이 열린다', $('modal').classList.contains('open'));

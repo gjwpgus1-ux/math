@@ -14,15 +14,16 @@ S.ok('셋 다 검색줄 안에 있다',
      $('q').parentNode===$('clear').parentNode && $('clear').parentNode===$('helpBtn').parentNode);
 
 /* ---- 도움말 내용 ---- */
-S.ok('도움말이 여덟 꼭지', T.HELP.length===8, T.HELP.length);
+S.ok('도움말이 일곱 꼭지', T.HELP.length===7, T.HELP.length);
 click($('helpBtn'));
 const box=$('mbox'), txt=box.textContent;
 S.ok('팝업이 열린다', $('modal').classList.contains('open'));
 S.ok('넓은 창으로 뜬다', box.classList.contains('wide'));
-['수식','쉼표','단축키','대문자','sqrt','Σ','lim, x^2','a_n','x^2'].forEach(k=>{
+['수식','쉼표','대문자','sqrt','Σ','lim, x^2','a_n','x^2'].forEach(k=>{
   S.ok('«'+k+'» 설명이 있다', txt.indexOf(k)>=0);
 });
-S.ok('단축키 표시가 그려졌다', box.querySelectorAll('kbd').length>=4, box.querySelectorAll('kbd').length);
+S.ok('단축키는 도움말에서 빠졌다', box.querySelectorAll('kbd').length===0, box.querySelectorAll('kbd').length);
+S.ok('대신 단축키 단추를 가리킨다', txt.indexOf('단축키')>=0);
 S.ok('표가 그려졌다', box.querySelectorAll('table td').length>=40, box.querySelectorAll('table td').length);
 S.ok('닫기 단추가 있다', !!$('helpOk'));
 click($('helpOk'));

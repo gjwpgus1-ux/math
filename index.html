@@ -101,13 +101,17 @@
   #tipBtn:hover{background:#fff4e5}
 
   #tabs{display:flex;gap:5px;overflow-x:auto;align-items:flex-end;min-height:34px}
+  /* 탭은 글자 길이와 상관없이 폭이 같아야 줄이 흔들리지 않는다.
+     이름이 길면 … 으로 줄이고, 전체 이름은 갖다 대면 나온다. */
   .tab{display:flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--line);
        border-bottom:none;border-radius:8px 8px 0 0;background:#f1f3f6;font-size:12.5px;
-       cursor:pointer;white-space:nowrap;color:var(--dim)}
+       cursor:pointer;white-space:nowrap;color:var(--dim);
+       width:186px;flex:none;overflow:hidden}
+  .tab .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .tab:hover{background:#e9ecf1}
   .tab.on{background:var(--card);color:var(--ink);font-weight:600;box-shadow:0 1px 0 0 var(--card)}
   .tab.sim{background:#eef7f0;color:var(--ok)}
-  .tab .x{opacity:.45;font-size:14px;line-height:1}
+  .tab .x{opacity:.45;font-size:14px;line-height:1;flex:none}
   .tab .x:hover{opacity:1;color:var(--danger)}
   .tab .cnt{color:var(--dim);font-weight:400;font-size:11.5px}
   #tabsEmpty{color:var(--dim);font-size:12px;padding:8px 2px}
@@ -472,7 +476,8 @@
   <div class="searchbar">
     <input id="q" placeholder="검색어를 입력하세요          /  키를 누르면 여기로 옵니다" autocomplete="off">
     <button id="clear">초기화</button>
-    <button id="helpBtn" title="수식·쉼표·단축키로 찾는 법">❓ 검색 도움말<i class="kb">?</i></button>
+    <button id="helpBtn" title="수식·쉼표로 찾는 법">❓ 검색 도움말<i class="kb">?</i></button>
+    <button id="keysBtn" title="키보드 단축키">⌨ 단축키<i class="kb">k</i></button>
   </div>
   <div id="fbar">
     <button id="ftoggle">필터 열기<i class="kb">f</i><span class="arrow">▾</span></button>
@@ -1396,15 +1401,27 @@
     TABS.forEach(function(t,i){
       var d=document.createElement('div');
       d.className='tab'+(t.t==='sim'?' sim':'')+(i===activeTab?' on':'');
-      var s=document.createElement('span'); s.textContent=(t.t==='sim'?'유사 · ':'')+t.label;
+      var s=document.createElement('span'); s.className='nm';
+      s.textContent=(t.t==='sim'?'유사 · ':'')+t.label;
+      s.title=(t.t==='sim'?'비슷한 문항 — ':'')+t.label+' ('+t.n+'문항)';
       var c=document.createElement('span'); c.className='cnt'; c.textContent=t.n;
       var x=document.createElement('span'); x.className='x'; x.textContent='×';
-      x.onclick=function(ev){ ev.stopPropagation(); TABS.splice(i,1);
-        if(activeTab===i) activeTab=-1; else if(activeTab>i) activeTab--;
-        tabsSave(); drawTabs(); };
+      x.title='이 탭 닫기 (Delete)';
+      x.onclick=function(ev){ ev.stopPropagation(); closeTab(i); };
       d.onclick=function(){ openTab(i); };
       d.appendChild(s); d.appendChild(c); d.appendChild(x); box.appendChild(d);
     });
+  }
+  /* 탭 하나 닫기 — 마지막 탭까지 닫으면 검색 결과도 처음으로 되돌린다 */
+  function closeTab(i){
+    if(i<0 || i>=TABS.length) return;
+    TABS.splice(i,1);
+    if(activeTab===i) activeTab=-1; else if(activeTab>i) activeTab--;
+    tabsSave(); drawTabs();
+    if(!TABS.length){
+      /* 남은 탭이 없으면 검색어를 비우고 처음 화면으로 — 지운 검색이 남아 있으면 헷갈린다 */
+      $('q').value=''; activeTab=-1; run(false);
+    }
   }
   /* Ctrl+화살표로 옆 탭 — 끝에 닿으면 반대쪽 끝으로 돌아간다 */
   function goTab(d){
@@ -1859,24 +1876,13 @@
     '점·선분 이름은 대문자, 변수는 소문자로 적으시면 서로 섞이지 않습니다. 한글은 가릴 것이 없습니다.',
     [['AB','선분 AB — 659문항'],
      ['ab','a 곱하기 b — 910문항']]],
-   ['단축키',
-    '검색창에 커서가 없을 때 듣습니다. 검색창에서 빠져나오려면 Esc 를 누르시면 됩니다. '+
-    '한글 자판이어도 그대로 듣습니다.',
-    [['<kbd>/</kbd>','검색창으로 커서 (치던 것은 모두 선택됩니다)'],
-     ['<kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd>',
-      '그 자리 문항 — 학습모드는 선택/해제, 검색모드는 복사'],
-     ['<kbd>←</kbd> <kbd>→</kbd>','다음·이전 4문항'],
-     ['<kbd>Ctrl</kbd>+<kbd>←</kbd> <kbd>→</kbd>','앞·뒤 탭으로 이동'],
-     ['<kbd>f</kbd>','필터 열기·접기'],
-     ['<kbd>?</kbd>','이 도움말'],
-     ['<kbd>Esc</kbd>','창 닫기 · 검색창에서 나오기']]],
    ['찾는 것이 안 나오면',
     '수식은 시험지에 찍힌 모양 그대로 찾습니다. 분수는 아직 못 읽으니 «n(n+1)/2» 같은 것은 걸리지 않습니다. '+
     '문구로 바꿔 적거나, 쉼표로 조건을 나눠 좁혀 보시면 대개 나옵니다.', []]
   ];
   function openHelp(){
     var h='<h3>검색하는 법</h3>'+
-      '<p class="sub">여덟 가지입니다. 앞의 여섯이 찾는 요령, 뒤의 둘이 단축키와 막혔을 때입니다.</p><div class="tip">';
+      '<p class="sub">일곱 가지입니다. 키보드 단축키는 옆의 «⌨ 단축키» 단추에 따로 모아 두었습니다.</p><div class="tip">';
     HELP.forEach(function(t,i){
       h+='<h4><i>'+(i+1)+'</i>'+esc(t[0])+'</h4><p>'+esc(t[1])+'</p>';
       if(t[2] && t[2].length){
@@ -1896,6 +1902,45 @@
     });
   }
   $('helpBtn').onclick=openHelp;
+
+  /* ================= 단축키 =================
+     키를 늘리거나 고치실 때는 아래 KEYS 와 실제 처리하는 곳을 함께 보셔야 합니다. */
+  var KEYS=[
+   ['찾기',
+    [['/','검색창으로 커서 — 치고 있던 말은 모두 선택됩니다'],
+     ['?','검색 도움말 열기'],
+     ['f','필터 열기·접기'],
+     ['Esc','창 닫기 · 검색창에서 커서 빼기']]],
+   ['문항 넘기기',
+    [['← →','다음·이전 4문항'],
+     ['1 2 3 4','그 자리 문항 — 학습모드는 선택/해제, 검색모드는 복사']]],
+   ['탭',
+    [['Ctrl + ← →','앞·뒤 탭으로 이동 (끝에 닿으면 반대쪽 끝으로)'],
+     ['Delete','지금 보고 있는 탭 닫기 — 마지막 탭을 닫으면 처음 화면으로 돌아갑니다']]],
+   ['이 창',
+    [['k','단축키 목록 열기'],
+     ['Esc','닫기']]]
+  ];
+  function openKeys(){
+    var h='<h3>키보드 단축키</h3>'+
+      '<p class="sub">검색창에 커서가 없을 때 듣습니다. 커서를 빼려면 <b>Esc</b>, '+
+      '다시 넣으려면 <b>/</b> 를 누르시면 됩니다. 한글 자판이어도 그대로 듣습니다.</p><div class="tip">';
+    KEYS.forEach(function(g,i){
+      h+='<h4><i>'+(i+1)+'</i>'+esc(g[0])+'</h4><table>';
+      g[1].forEach(function(r){
+        var k=r[0].split(/\s*\+\s*|\s+/).map(function(x){ return '<kbd>'+esc(x)+'</kbd>'; })
+               .join(r[0].indexOf('+')>=0?' + ':' ');
+        h+='<tr><td>'+k+'</td><td>'+esc(r[1])+'</td></tr>';
+      });
+      h+='</table>';
+    });
+    h+='</div><div class="mb"><button class="primary" id="keysOk">알겠습니다</button></div>';
+    modal(h, function(){
+      $('mbox').classList.add('wide');
+      $('keysOk').onclick=function(){ $('mbox').classList.remove('wide'); closeModal(); };
+    });
+  }
+  $('keysBtn').onclick=openKeys;
 
   /* ================= 오류제보 ================= */
   function openReport(it){
@@ -3462,6 +3507,14 @@
       }
       if(e.key==='f' || e.key==='F' || e.code==='KeyF'){
         e.preventDefault(); $('ftoggle').onclick.call($('ftoggle')); return;
+      }
+      if(e.key==='k' || e.key==='K' || e.code==='KeyK'){
+        e.preventDefault(); openKeys(); return;
+      }
+      if(e.key==='Delete'){
+        /* 지금 보고 있는 탭을 닫는다. 고른 탭이 없으면 맨 앞 탭 */
+        if(TABS.length){ e.preventDefault(); closeTab(activeTab>=0?activeTab:0); }
+        return;
       }
       var kc=e.code && /^Digit([1-4])$/.exec(e.code);
       var kd=kc ? +kc[1] : (/^[1-4]$/.test(e.key) ? +e.key : 0);
