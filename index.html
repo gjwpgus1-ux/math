@@ -425,7 +425,7 @@
     <button id="stdBtn">성취기준 달기</button>
   </h1>
   <div class="searchbar">
-    <input id="q" placeholder="문구·수식·연도·문항번호·과목·학년을 섞어 입력하세요   예) 고2 6월 14번 · 확통 정규분포 · x^2 · sqrt2 · lim x->0" autocomplete="off">
+    <input id="q" placeholder="문구·수식·연도·번호를 섞어 입력   예) 고2 6월 14번 · 확통 정규분포 · x^2 · sqrt2 · 쉼표로 묶으면 둘 다: lim, x^2" autocomplete="off">
     <button id="clear">초기화</button>
   </div>
   <div id="fbar">
@@ -929,8 +929,16 @@
       if(re.test(s)){ if(base.rounds.indexOf(r)<0) base.rounds.push(r); s=s.replace(re,' '); }
     });
 
-    s.replace(/,/g,' ').trim();
+    /* 쉼표로 나눈 여러 조건 — «lim, x^2» 은 둘 다 든 문항만.
+       «1,2,3» 처럼 번호를 늘어놓은 것은 예전대로 한 덩어리로 둔다. */
+    var cut=false, toks=[];
     s.trim().split(/\s+/).filter(Boolean).forEach(function(t){
+      if(t.indexOf(',')>=0 && !numGroup(t)){
+        t.split(',').filter(Boolean).forEach(function(p){ toks.push(p); });
+        cut=true;
+      }else toks.push(t);
+    });
+    toks.forEach(function(t){
       var m, g;
       /* 뜻이 분명한 것부터 */
       if((m=t.match(/^(\d{2,4})학년도$/))){
@@ -999,7 +1007,7 @@
         specs.push(sp);
       });
     }
-    return {specs:specs, text:text, base:base};
+    return {specs:specs, text:text, base:base, andMode:(cut && text.length>1)};
   }
 
   /* 고3에는 6·9월 전국연합이 없다 — «고3 6월»은 평가원 모의평가를 뜻한다 */
@@ -1026,9 +1034,24 @@
     for(var i=0;i<plan.specs.length;i++) if(matchOne(it,plan.specs[i])) return true;
     return false;
   }
+  /* 조건 하나가 이 문항에 들어 있는가 — 수식이면 수식글로, 아니면 예전 글로 */
+  function termMatch(it,term){
+    var f=fconv(term);
+    if(isF(f)){
+      var ph=norm(term);
+      return it[6] ? it[6].indexOf(f)>=0 : (f===ph && it[5].indexOf(ph)>=0);
+    }
+    return it[5].indexOf(norm(term))>=0;
+  }
   function search(raw){
     var plan=parseQuery(raw);
     var pool=IT.filter(function(it){ return passFilter(EX[it[0]]) && matchSpec(it,plan); });
+    if(plan.andMode){
+      /* 쉼표로 나눈 조건은 «모두» 든 문항만 */
+      return {list:pool.filter(function(it){
+        return plan.text.every(function(t){ return termMatch(it,t); });
+      }), mode:'comma', spec:plan};
+    }
     var joined=plan.text.join('');
     var phrase=norm(joined);
     var fq=fconv(joined);
@@ -2955,7 +2978,8 @@
         out+='<span class="pill way'+(WAY_PIN===i?' on':'')+'" data-pin="'+i+'">'+esc(sp.why)+' '+n+'개</span>';
       });
     }
-    if(plan.text.length)  out+='<span class="pill">문구: '+esc(plan.text.join(' '))+'</span>';
+    if(plan.text.length)  out+='<span class="pill">문구: '+
+      esc(plan.text.join(plan.andMode?' + ':' '))+'</span>';
     return out;
   }
   var LAST_RAW=null;
@@ -2972,6 +2996,7 @@
       if(!hits.length) msg+='결과 없음';
       else if(r.mode==='and') msg+='문구 그대로는 없어서 <b>낱말을 모두 포함</b>하는 <b>'+hits.length+'</b>문항';
       else if(r.mode==='formula') msg+='<b>'+hits.length.toLocaleString()+'</b>문항 <span class="dim">(수식으로 찾음 · 대소문자 구분)</span>';
+      else if(r.mode==='comma') msg+='<b>'+hits.length.toLocaleString()+'</b>문항 <span class="dim">('+esc(r.spec.text.join(' 와 '))+' 를 모두 포함)</span>';
       else msg+='<b>'+hits.length.toLocaleString()+'</b>문항';
     }
     $('status').innerHTML=msg;
