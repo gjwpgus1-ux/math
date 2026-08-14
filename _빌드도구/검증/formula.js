@@ -60,13 +60,15 @@ S.ok('정규분포 결과가 그대로 나온다', n('정규분포')>0, n('정�
 S.ok('필터·번호 검색이 그대로', T.search('고3 6월 22').list.length>0);
 S.ok('빈 검색은 전체', T.search('').list.length===T.IT.length);
 
-/* ---- 기호를 떼면 숫자만 남는 검색어는 옛 글로 새지 않는가 ---- */
-S.ok('2^3 은 수식글 있는 문항에서만',
-     T.search('2^3').list.every(it=>it[6]), T.search('2^3').list.filter(it=>!it[6]).length);
-S.ok('x^2 도 수식글 있는 문항에서만',
-     T.search('x^2').list.every(it=>it[6]));
-S.ok('2^3 이 x^2 보다 헐렁하지 않다',
-     T.search('2^3').list.length < T.search('f(x)').list.length);
+/* ---- 기호가 든 검색어가 옛 글로 새지 않는가 ----
+   a_n 을 옛 글에서 찾으면 «an» 이 되어 아무 문항에나 걸린다. */
+['2^3','x^2','a_n','sqrt2','pi','AB','f(x)','절댓값'].forEach(q=>{
+  S.ok('«'+q+'» 은 수식글 있는 문항에서만',
+       T.search(q).list.every(it=>it[6]), T.search(q).list.filter(it=>!it[6]).length);
+});
+S.ok('a_n 이 온통 다 걸리지는 않는다', T.search('a_n').list.length<160, T.search('a_n').list.length);
+S.ok('a_n 은 죄다 수열 문항이다',
+     T.search('a_n').list.every(it=>/a_/.test(it[6])));
 
 /* ---- 수식글 없는 문항도 안 사라지는가 ---- */
 const r=T.search('sin');
