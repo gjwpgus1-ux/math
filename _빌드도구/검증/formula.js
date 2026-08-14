@@ -6,11 +6,17 @@ const T=w.__T, S=scorer();
 /* ---- 색인에 수식글이 제대로 붙었는가 ---- */
 const withF=T.IT.filter(it=>it[6]);
 const sm=T.IT.filter(it=>T.EX[it[0]].g==='수능·모평');
-S.ok('수식글이 붙은 문항이 1,500개 이상', withF.length>=1500, withF.length);
-S.ok('수식글은 수능·모평에만 붙었다',
-     withF.every(it=>T.EX[it[0]].g==='수능·모평'), withF.length);
+S.ok('수식글이 붙은 문항이 5,400개 이상', withF.length>=5400, withF.length);
+S.ok('전 문항의 95% 넘게 수식글이 있다',
+     withF.length/T.IT.length>0.95, (withF.length/T.IT.length*100).toFixed(1)+'%');
 S.ok('수능·모평 문항의 9할 넘게 수식글이 있다',
      withF.length/sm.length>0.9, (withF.length/sm.length*100).toFixed(0)+'%');
+/* 수식글이 없는 것은 글자가 아예 없는 스캔본뿐이어야 한다 */
+const noF={};
+T.IT.filter(it=>!it[6]).forEach(it=>{ noF[T.EX[it[0]].n]=1; });
+S.ok('수식글 없는 시험이 10개 이하(스캔본)', Object.keys(noF).length<=10, Object.keys(noF).join(','));
+S.ok('학년별로 고루 붙었다',
+     ['고1','고2','고3','수능·모평'].every(g=>withF.some(it=>T.EX[it[0]].g===g)));
 S.ok('수식글에 띄어쓰기가 없다', withF.every(it=>!/\s/.test(it[6])));
 S.ok('수식글에 그림글자(PUA)가 남아 있지 않다',
      withF.every(it=>!/[-]/.test(it[6])));
@@ -66,9 +72,12 @@ S.ok('빈 검색은 전체', T.search('').list.length===T.IT.length);
   S.ok('«'+q+'» 은 수식글 있는 문항에서만',
        T.search(q).list.every(it=>it[6]), T.search(q).list.filter(it=>!it[6]).length);
 });
-S.ok('a_n 이 온통 다 걸리지는 않는다', T.search('a_n').list.length<160, T.search('a_n').list.length);
-S.ok('a_n 은 죄다 수열 문항이다',
-     T.search('a_n').list.every(it=>/a_/.test(it[6])));
+S.ok('a_n 은 죄다 «a_» 가 실제로 있는 문항이다',
+     T.search('a_n').list.every(it=>it[6].indexOf('a_n')>=0), T.search('a_n').list.length);
+S.ok('a_n 이 전체의 1/10 을 넘지 않는다',
+     T.search('a_n').list.length < T.IT.length/10, T.search('a_n').list.length);
+S.ok('a_n 에 전국연합도 들어 있다',
+     T.search('a_n').list.some(it=>T.EX[it[0]].g!=='수능·모평'));
 
 /* ---- 수식글 없는 문항도 안 사라지는가 ---- */
 const r=T.search('sin');
