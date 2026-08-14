@@ -4,7 +4,9 @@ const {w,doc,$,click,key}=boot('goTab:goTab,TABS:()=>TABS,setTabs:t=>{TABS=t;dra
 const T=w.__T, S=scorer();
 
 /* ---- 검색창 ---- */
-S.ok('검색창 안내글이 짧아졌다', $('q').placeholder==='검색어를 입력하세요', $('q').placeholder);
+S.ok('검색창 안내글이 짧아졌다',
+     /^검색어를 입력하세요/.test($('q').placeholder) && $('q').placeholder.length<40,
+     $('q').placeholder);
 S.ok('도움말 단추가 있다', !!$('helpBtn'));
 S.ok('도움말 단추가 초기화 오른쪽에',
      $('clear').nextElementSibling===$('helpBtn'), $('clear').nextElementSibling&&$('clear').nextElementSibling.id);

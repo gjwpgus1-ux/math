@@ -70,11 +70,25 @@
         padding:1px 7px;margin-right:4px;font-size:12px;font-weight:600}
   .hint{color:var(--dim);font-size:12px}
 
-  #studybar{display:none;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 9px;
+  /* 위쪽 여백은 필터·상태줄과 붙어 보이지 않을 만큼 띄운다.
+     상태줄이 없을 때도 같은 간격이 되도록 위 여백을 넉넉히 준다(여백은 겹쳐 접힌다). */
+  #studybar{display:none;align-items:center;gap:8px;flex-wrap:wrap;margin:15px 0 10px;
             background:var(--accent-soft);border:1px solid #d7e3f7;border-radius:8px;padding:8px 11px}
   #studybar.on{display:flex}
   #studybar .cnt{font-size:13px;font-weight:600;color:var(--accent)}
   #studybar button{padding:6px 11px;font-size:12.5px}
+  /* 단추 안에 넣는 단축키 표시 */
+  .kb{display:inline-block;min-width:15px;margin-left:6px;padding:0 4px;
+      border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;
+      background:#f4f6f8;color:var(--dim);font-family:Consolas,monospace;
+      font-size:10.5px;line-height:15px;vertical-align:1px}
+  button.on .kb,#ftoggle.open .kb{background:#fff;border-color:#cfd8e8}
+  /* 문항 카드 왼쪽 위의 자리 번호 — 숫자키와 짝 */
+  .knum{display:inline-flex;align-items:center;justify-content:center;
+        width:17px;height:17px;flex:none;border-radius:5px;background:#eceff3;
+        border:1px solid var(--line);color:var(--dim);
+        font-family:Consolas,monospace;font-size:11px;line-height:1}
+  .card.sel .knum{background:var(--accent);border-color:var(--accent);color:#fff}
   #helpBtn{border-color:#bcd3f0;color:#1d4ed8;background:#f5f9ff;white-space:nowrap}
   #helpBtn:hover{background:#e9f2ff}
   .tip kbd{display:inline-block;min-width:20px;text-align:center;padding:1px 6px;margin:0 1px;
@@ -456,12 +470,12 @@
     <button id="stdBtn">성취기준 달기</button>
   </h1>
   <div class="searchbar">
-    <input id="q" placeholder="검색어를 입력하세요" autocomplete="off">
+    <input id="q" placeholder="검색어를 입력하세요          /  키를 누르면 여기로 옵니다" autocomplete="off">
     <button id="clear">초기화</button>
-    <button id="helpBtn" title="수식·쉼표·단축키로 찾는 법">❓ 검색 도움말</button>
+    <button id="helpBtn" title="수식·쉼표·단축키로 찾는 법">❓ 검색 도움말<i class="kb">?</i></button>
   </div>
   <div id="fbar">
-    <button id="ftoggle">필터 열기<span class="arrow">▾</span></button>
+    <button id="ftoggle">필터 열기<i class="kb">f</i><span class="arrow">▾</span></button>
     <span id="scopebar"><b>범위</b></span>
     <span id="fsummary"></span>
     <button id="fclear" style="display:none">필터 해제</button>
@@ -1235,7 +1249,7 @@
       if(page>=total) page=total-1;
       if(page<0) page=0;
       grid.innerHTML='';
-      hits.slice(page*PAGE4,(page+1)*PAGE4).forEach(function(it){ grid.appendChild(makeCard(it)); });
+      hits.slice(page*PAGE4,(page+1)*PAGE4).forEach(function(it,i){ grid.appendChild(makeCard(it,i+1)); });
       $('pageNow').textContent=page+1; $('pageAll').textContent=total;
       $('navPrev').disabled=$('pagePrev').disabled=(page===0);
       $('navNext').disabled=$('pageNext').disabled=(page>=total-1);
@@ -1252,6 +1266,22 @@
   }
   function refreshCards(){ shown=0; render(true); }
 
+  /* 숫자키 1~4 — 화면의 그 자리 문항을 학습모드에서는 고르고, 검색모드에서는 복사한다 */
+  function hotCard(n){
+    var it=hits.slice(page*PAGE4,(page+1)*PAGE4)[n-1];
+    if(!it) return;
+    if(MODE!=='study'){ copyImage(it); return; }
+    var on=!SEL[it[2]];
+    if(on) SEL[it[2]]=true; else delete SEL[it[2]];
+    updateSel();
+    var card=$('grid').children[n-1];
+    if(card){
+      card.classList.toggle('sel',on);
+      var box=card.querySelector('.head input[type=checkbox]');
+      if(box) box.checked=on;
+    }
+  }
+
   /* 4문항이 한 화면에 들어오도록 카드 높이를 계산한다 (도구줄이 늘면 그만큼 줄인다) */
   function fitCards(){
     try{
@@ -1262,13 +1292,19 @@
   }
   window.addEventListener('resize', fitCards);
 
-  function makeCard(it){
+  function makeCard(it,ki){
     var c=document.createElement('div'); c.className='card';
     var nrep=repOpen(it[2]);
     if(nrep) c.classList.add('flagged');
     if(MODE==='study' && SEL[it[2]]) c.classList.add('sel');
 
     var h=document.createElement('div'); h.className='head';
+    if(ki){
+      /* 숫자키와 짝지어 주는 자리 표시 */
+      var kn=document.createElement('span'); kn.className='knum'; kn.textContent=ki;
+      kn.title='숫자키 '+ki+' — '+(MODE==='study'?'선택/해제':'복사');
+      h.appendChild(kn);
+    }
     if(MODE==='study'){
       var cb=document.createElement('input'); cb.type='checkbox'; cb.checked=!!SEL[it[2]];
       cb.onclick=function(ev){
@@ -1824,9 +1860,15 @@
     [['AB','선분 AB — 659문항'],
      ['ab','a 곱하기 b — 910문항']]],
    ['단축키',
-    '검색창에 커서가 없을 때 듣습니다. 검색창에서 빠져나오려면 Esc 를 누르시면 됩니다.',
-    [['<kbd>←</kbd> <kbd>→</kbd>','다음·이전 4문항'],
+    '검색창에 커서가 없을 때 듣습니다. 검색창에서 빠져나오려면 Esc 를 누르시면 됩니다. '+
+    '한글 자판이어도 그대로 듣습니다.',
+    [['<kbd>/</kbd>','검색창으로 커서 (치던 것은 모두 선택됩니다)'],
+     ['<kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd>',
+      '그 자리 문항 — 학습모드는 선택/해제, 검색모드는 복사'],
+     ['<kbd>←</kbd> <kbd>→</kbd>','다음·이전 4문항'],
      ['<kbd>Ctrl</kbd>+<kbd>←</kbd> <kbd>→</kbd>','앞·뒤 탭으로 이동'],
+     ['<kbd>f</kbd>','필터 열기·접기'],
+     ['<kbd>?</kbd>','이 도움말'],
      ['<kbd>Esc</kbd>','창 닫기 · 검색창에서 나오기']]],
    ['찾는 것이 안 나오면',
     '수식은 시험지에 찍힌 모양 그대로 찾습니다. 분수는 아직 못 읽으니 «n(n+1)/2» 같은 것은 걸리지 않습니다. '+
@@ -3405,6 +3447,25 @@
       /* 검색창에 커서가 있으면 먼저 거기서 빠져나온다 — 그래야 화살표가 바로 듣는다 */
       if(document.activeElement===$('q')){ $('q').blur(); return; }
       closeModal(); $('admin').classList.remove('open'); return;
+    }
+    /* 글쇠 하나짜리 단축키 — 검색창에 커서가 있을 때는 글자가 되어야 하므로 뺀다.
+       한글 자판일 때도 듣도록 e.code(자판 위치)로도 함께 본다. */
+    if(!e.ctrlKey && !e.altKey && !e.metaKey && document.activeElement!==$('q')){
+      /* Shift 를 짚었으면 ? 로 본다 — 자판에서 둘이 같은 자리다 */
+      if(e.key==='?' || (e.code==='Slash' && e.shiftKey)){
+        e.preventDefault(); openHelp(); return;
+      }
+      if((e.key==='/' && !e.shiftKey) || (e.code==='Slash' && !e.shiftKey)){
+        e.preventDefault(); $('q').focus();
+        try{ $('q').select(); }catch(x){}
+        return;
+      }
+      if(e.key==='f' || e.key==='F' || e.code==='KeyF'){
+        e.preventDefault(); $('ftoggle').onclick.call($('ftoggle')); return;
+      }
+      var kc=e.code && /^Digit([1-4])$/.exec(e.code);
+      var kd=kc ? +kc[1] : (/^[1-4]$/.test(e.key) ? +e.key : 0);
+      if(kd){ e.preventDefault(); hotCard(kd); return; }
     }
     /* Ctrl+화살표 — 탭 옮기기. 검색창에 커서가 있어도 듣는다 */
     if((e.ctrlKey||e.metaKey) && (e.key==='ArrowLeft'||e.key==='ArrowRight')){
