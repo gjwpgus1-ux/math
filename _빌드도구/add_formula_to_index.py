@@ -11,6 +11,10 @@
 """
 import sys, os, json, shutil
 
+# 도함수 프라임은 시험지마다 세 가지로 찍혀 있다. 한 가지(′)로 모아 둔다.
+# 2계도함수는 ″ 대신 ′′ 로 적어야 g''(x) 처럼 두 번 친 것과 맞는다.
+PRIME = [('‴', '′′′'), ('″', '′′'), ('’', '′'), ('´', '′'), ("'", '′')]
+
 
 def main():
     idx = sys.argv[1]
@@ -30,7 +34,10 @@ def main():
             it.pop()                      # 여러 번 돌려도 칸이 늘지 않게
         t = F.get(names[it[0]], {}).get(str(it[1]))
         if t:
-            it.append(''.join(t.split()))  # 띄어쓰기는 어차피 무시하고 찾는다
+            t = ''.join(t.split())         # 띄어쓰기는 어차피 무시하고 찾는다
+            for a, b in PRIME:
+                t = t.replace(a, b)
+            it.append(t)
             hit += 1
             seen.add((names[it[0]], str(it[1])))
         else:

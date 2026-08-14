@@ -745,12 +745,15 @@
     s=(s||'');
     F_KOR.forEach(function(p){ s=s.split(p[0]).join(p[1]); });
     s=s.split('->').join('→');
+    /* 도함수 — 자판의 ' 와 스마트 따옴표를 시험지에 찍힌 프라임(′)으로 맞춘다.
+       2계도함수 ″ 는 색인에서 ′′ 로 펴 두었으므로 두 번 친 것과 그대로 맞는다. */
+    s=s.replace(/[‴]/g,'′′′').replace(/[″]/g,'′′').replace(/['’‘´`]/g,'′');
     /* 로마자는 덩어리째 맞을 때만 바꾼다 — «point» 안의 «int» 는 건드리지 않는다 */
     s=s.replace(/[A-Za-z]+/g,function(w){ return F_ENG[w.toLowerCase()]||w; });
     return s.replace(/\s+/g,'');
   }
   /* 수식으로 볼지 가르는 자국 — 수학기호·대문자·함수이름 중 하나라도 있으면 */
-  var F_MARK=/[\^_|()=+\-\/<>≤≥√Σ∫π∞·∘θαβγ→]|lim|sin|cos|tan|log|[A-Z]/;
+  var F_MARK=/[\^_|()=+\-\/<>≤≥√Σ∫π∞·∘θαβγ→′]|lim|sin|cos|tan|log|[A-Z]/;
   function isF(q){ return F_MARK.test(q); }
   function esc(s){ return String(s).replace(/[&<>"]/g,function(c){
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
@@ -1858,6 +1861,7 @@
     [['x^2','이차식이 든 문항'],
      ['a_n','수열 aₙ 이 든 문항'],
      ['2^3','2의 세제곱'],
+     ["f'(x)  f'(1)  g''(x)",'도함수 — 자판의 작은따옴표를 그냥 치시면 됩니다'],
      ['f(x)  g(x)=','함수 표기 그대로'],
      ['|x|','절댓값']]],
    ['기호는 낱말로 적으셔도 됩니다',
