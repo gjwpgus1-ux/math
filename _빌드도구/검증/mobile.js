@@ -2,7 +2,8 @@
 const fs=require('fs'), path=require('path');
 const {boot,scorer,APP}=require('./harness.js');
 const S=scorer();
-const {w,doc,$}=boot('fitCards:fitCards');
+const {w,doc,$}=boot('fitCards:fitCards,setMode:setMode,perPage:perPage,render:render,'+
+  'hits:function(){return hits;},pick:function(n){SEL={};hits.slice(0,n).forEach(function(it){SEL[it[2]]=true;});updateSel();}');
 const CSS=fs.readFileSync(path.join(APP,'index.html'),'utf8').replace(/\s+/g,' ');
 const RAW=fs.readFileSync(path.join(APP,'index.html'),'utf8');
 
@@ -56,4 +57,43 @@ setW(390); w.__T.fitCards();
 S.ok('좁은 화면에서는 높이를 풀어 준다',
      !doc.documentElement.style.getPropertyValue('--cardh'),
      doc.documentElement.style.getPropertyValue('--cardh'));
+
+/* ---- 아래 고정 막대 ---- */
+S.ok('아래 막대 자리가 있다', !!$('mbar'));
+['mCnt','mWork','mNote','mTop'].forEach(id=>S.ok('«'+id+'» 이 있다', !!$(id)));
+S.ok('아래 막대는 붙박이', /#mbar\{[^}]*position:fixed/.test(CSS.replace(/ /g,'')));
+S.ok('아이폰 아래 여백을 감안한다', /env\(safe-area-inset-bottom/.test(RAW));
+S.ok('넓은 화면에서는 안 나온다',
+     /@media\(min-width:821px\)\{#mbar\{display:none!important\}\}/.test(CSS.replace(/ /g,'')));
+
+const T2=w.__T;
+function setW(px){ Object.defineProperty(w,'innerWidth',{value:px,configurable:true}); }
+setW(390); T2.setMode('study');
+S.ok('좁은 화면 학습모드에서 아래 막대가 나온다', $('mbar').classList.contains('on'));
+S.ok('바닥 여백을 비워 준다', doc.body.classList.contains('mbar'));
+T2.setMode('search');
+S.ok('복붙모드에서는 안 나온다', !$('mbar').classList.contains('on'));
+setW(1400); T2.setMode('study');
+S.ok('넓은 화면 학습모드에서도 안 나온다', !$('mbar').classList.contains('on'));
+
+setW(390); T2.setMode('study');
+S.ok('고른 것이 없으면 단추가 잠긴다', $('mWork').disabled===true && $('mNote').disabled===true);
+S.ok('숫자가 0개', $('mCnt').textContent==='0개', $('mCnt').textContent);
+T2.pick(3);
+S.ok('세 개 고르면 숫자가 따라온다', $('mCnt').textContent==='3개', $('mCnt').textContent);
+S.ok('단추가 열린다', $('mWork').disabled===false && $('mNote').disabled===false);
+S.ok('위쪽 도구줄과 숫자가 같다', $('selCnt').textContent==='선택 3개', $('selCnt').textContent);
+
+/* ---- 한 쪽에 몇 문항 ---- */
+setW(1400); S.ok('넓은 화면은 한 쪽에 4문항', T2.perPage()===4, T2.perPage());
+setW(820);  S.ok('820px 이하는 2문항', T2.perPage()===2, T2.perPage());
+setW(390);  S.ok('휴대전화도 2문항', T2.perPage()===2, T2.perPage());
+setW(1400); T2.setMode('search'); T2.render(true);
+S.ok('넓은 화면에서 카드가 4장', doc.querySelectorAll('#grid .card').length===4,
+     doc.querySelectorAll('#grid .card').length);
+setW(390); T2.render(true);
+S.ok('좁은 화면에서 카드가 2장', doc.querySelectorAll('#grid .card').length===2,
+     doc.querySelectorAll('#grid .card').length);
+S.ok('쪽 수도 2문항 기준으로 센다',
+     $('pageAll').textContent===String(Math.ceil(T2.hits().length/2)), $('pageAll').textContent);
 S.done();

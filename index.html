@@ -467,6 +467,19 @@
   .nq{font-size:10pt;font-weight:bold;margin:3.5mm 0 1.5mm;flex:none}
   .nlines{flex:1;min-height:0;display:flex;flex-direction:column}
   .nlines div{flex:1;min-height:6mm;border-bottom:1px solid #b9c0c9}
+  /* 아래 고정 막대 — 좁은 화면의 학습모드에서만 나온다 */
+  #mbar{display:none;position:fixed;left:0;right:0;bottom:0;z-index:30;
+        align-items:center;gap:8px;padding:9px 12px;
+        padding-bottom:calc(9px + env(safe-area-inset-bottom,0px));
+        background:var(--card);border-top:1px solid var(--line);
+        box-shadow:0 -2px 10px rgba(0,0,0,.07)}
+  #mbar.on{display:flex}
+  #mbar .cnt{font-size:13.5px;font-weight:600;color:var(--accent);
+             min-width:44px;text-align:center}
+  #mbar button{flex:1;padding:11px 8px;font-size:13.5px}
+  #mbar #mTop{flex:none;padding:11px 12px;color:var(--dim)}
+  #mbar button:disabled{opacity:.35}
+
   /* ── 좁은 화면(휴대전화) ──
      여기서는 «윗줄 고정 + 문항칸 따로 스크롤»이 오히려 불편하다.
      화면이 작아 윗줄이 자리를 다 먹고, 문항칸 안에서 또 굴려야 하기 때문이다.
@@ -484,7 +497,12 @@
     .nav{display:none}                          /* 좌우 큰 화살표는 자리만 먹는다 */
     #tabs{min-height:0}
     .tab{width:150px}
+    /* 아래 막대에 가려지지 않도록 바닥을 비워 둔다 */
+    body.mbar main{padding-bottom:82px}
+    body.mbar #foot{margin-bottom:60px}
   }
+  /* 넓은 화면에서는 아래 막대를 쓰지 않는다 — 위쪽 도구줄로 충분하다 */
+  @media (min-width:821px){ #mbar{display:none !important} }
 
   @media print{
     header,main,.drawer,.nav,#pager,#toast,.modal,#cmp,#std,#crs,#foot{display:none !important}
@@ -543,6 +561,15 @@
     <span><b id="pageNow">1</b> / <span id="pageAll">1</span></span>
     <button id="pageNext">다음</button>
   </div>
+  <!-- 좁은 화면에서만 나오는 아래 고정 막대.
+       문항을 다 고르고 나서 맨 위로 되올라가지 않아도 되게 한다. -->
+  <div id="mbar">
+    <span class="cnt" id="mCnt">0개</span>
+    <button id="mWork" class="primary">학습지</button>
+    <button id="mNote">오답노트</button>
+    <button id="mTop" title="맨 위로">▲</button>
+  </div>
+
   <footer id="foot">
     <a href="about.html">소개</a>
     <a href="privacy.html">개인정보 처리방침</a>
@@ -734,7 +761,10 @@
   var BY_PATH = {}, IDX = {};
   IT.forEach(function(it,i){ BY_PATH[it[2]]=it; IDX[it[2]]=i; });
 
-  var MODE='search', PAGE4=4, PAGE=24, shown=0, page=0;
+  var MODE='search', PAGE=24, shown=0, page=0;
+  /* 한 쪽에 몇 문항을 보일지 — 좁은 화면에서는 둘만.
+     휴대전화는 한 줄에 한 문항이라 넷이면 한 쪽에서 너무 많이 굴려야 한다. */
+  function perPage(){ return (window.innerWidth<=820) ? 2 : 4; }
   var hits=[], TABS=[], activeTab=-1, SEL={};
   var OV={}, REPORTS=[], PAIRS=[], NEG={}, NEGV=[], DEL={}, PREF=null;
   var isAdmin=false, adminTab='rep';
@@ -1243,6 +1273,7 @@
     $('modeSearch').className=m==='search'?'on':'';
     $('modeStudy').className =m==='study' ?'on':'';
     $('studybar').classList.toggle('on',m==='study');
+    showMbar();
     try{ localStorage.setItem('gich_mode',m); }catch(e){}
     page=0; shown=0; render(true);
   }
@@ -1250,9 +1281,20 @@
   $('modeStudy').onclick=function(){ setMode('study'); };
   function selCount(){ return Object.keys(SEL).length; }
   function updateSel(){
-    $('selCnt').textContent='선택 '+selCount()+'개';
+    var n=selCount();
+    $('selCnt').textContent='선택 '+n+'개';
     $('selCnt').title='다른 쪽에서 고른 것까지 함께 셉니다';
-    $('printWork').disabled=$('printNote').disabled=(selCount()===0);
+    $('printWork').disabled=$('printNote').disabled=(n===0);
+    /* 아래 고정 막대도 함께 */
+    $('mCnt').textContent=n+'개';
+    $('mWork').disabled=$('mNote').disabled=(n===0);
+    showMbar();
+  }
+  /* 아래 막대는 좁은 화면의 학습모드에서만 */
+  function showMbar(){
+    var on=(MODE==='study' && window.innerWidth<=820);
+    $('mbar').classList.toggle('on',on);
+    document.body.classList.toggle('mbar',on);
   }
 
   /* ================= 결과 그리기 ================= */
@@ -1281,17 +1323,18 @@
       $('pager').classList.remove('on');
       return;
     }
-    var many=pageMode && hits.length>PAGE4;
+    var P4=perPage();
+    var many=pageMode && hits.length>P4;
     $('navPrev').classList.toggle('on',many);
     $('navNext').classList.toggle('on',many);
     $('pager').classList.toggle('on',pageMode);
 
     if(pageMode){
-      var total=Math.max(1,Math.ceil(hits.length/PAGE4));
+      var total=Math.max(1,Math.ceil(hits.length/P4));
       if(page>=total) page=total-1;
       if(page<0) page=0;
       grid.innerHTML='';
-      hits.slice(page*PAGE4,(page+1)*PAGE4).forEach(function(it,i){ grid.appendChild(makeCard(it,i+1)); });
+      hits.slice(page*P4,(page+1)*P4).forEach(function(it,i){ grid.appendChild(makeCard(it,i+1)); });
       $('pageNow').textContent=page+1; $('pageAll').textContent=total;
       $('navPrev').disabled=$('pagePrev').disabled=(page===0);
       $('navNext').disabled=$('pageNext').disabled=(page>=total-1);
@@ -1310,7 +1353,7 @@
 
   /* 숫자키 1~4 — 화면의 그 자리 문항을 학습모드에서는 고르고, 복붙모드에서는 복사한다 */
   function hotCard(n){
-    var it=hits.slice(page*PAGE4,(page+1)*PAGE4)[n-1];
+    var it=hits.slice(page*perPage(),(page+1)*perPage())[n-1];
     if(!it) return;
     if(MODE!=='study'){ copyImage(it); return; }
     var on=!SEL[it[2]];
@@ -1338,7 +1381,13 @@
       document.documentElement.style.setProperty('--cardh', h+'px');
     }catch(e){}
   }
-  window.addEventListener('resize', fitCards);
+  /* 화면 크기가 바뀌면 칸 높이·아래 막대·한 쪽 문항 수를 모두 다시 맞춘다 */
+  var rsT=null;
+  window.addEventListener('resize', function(){
+    fitCards(); showMbar();
+    clearTimeout(rsT);
+    rsT=setTimeout(function(){ page=0; render(true); }, 250);
+  });
 
   function makeCard(it,ki){
     var c=document.createElement('div'); c.className='card';
@@ -3508,6 +3557,10 @@
   $('selNone').onclick=function(){ SEL={}; updateSel(); refreshCards(); };
   $('printWork').onclick=function(){ askOutput('학습지', buildWork); };
   $('printNote').onclick=function(){ askOutput('오답노트', buildNote); };
+  /* 아래 고정 막대 — 위쪽 단추와 똑같이 움직인다 */
+  $('mWork').onclick=function(){ askOutput('학습지', buildWork); };
+  $('mNote').onclick=function(){ askOutput('오답노트', buildNote); };
+  $('mTop').onclick=function(){ try{ window.scrollTo({top:0,behavior:'smooth'}); }catch(e){ window.scrollTo(0,0); } };
 
   document.addEventListener('keydown',function(e){
     if($('cmp').classList.contains('open')){
@@ -3575,7 +3628,7 @@
       return;
     }
     if(document.activeElement===$('q')) return;
-    if(hits.length>PAGE4){
+    if(hits.length>perPage()){
       if(e.key==='ArrowLeft') goPage(-1);
       else if(e.key==='ArrowRight') goPage(1);
     }
