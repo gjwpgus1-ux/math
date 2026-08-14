@@ -2,7 +2,12 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<title>수학 수능/모평/학평 기출문제 검색기</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>줍줍닷컴 — 수능·모평·학평 수학 기출문제 검색기</title>
+<meta name="description" content="줍줍닷컴 — 수능·모의평가·전국연합 학력평가 수학 기출문제 5,694문항을 연도·번호·문구·수식으로 찾아 학습지와 오답노트로 바로 뽑는 무료 도구입니다.">
+<meta property="og:title" content="줍줍닷컴 — 수능·모평·학평 수학 기출문제 검색기">
+<meta property="og:description" content="수학 기출 5,694문항. 필요한 것만 주워 담아 학습지·오답노트로.">
+<meta property="og:type" content="website">
 <style>
   :root{
     --bg:#f6f7f9; --card:#fff; --line:#e2e5ea; --ink:#1d2129; --dim:#6b7280;
@@ -19,6 +24,11 @@
   .modesw{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-left:4px}
   .modesw button{border:none;border-radius:0;padding:6px 14px;font-size:13.5px;background:var(--card)}
   h1 .by{font-size:12.5px;font-weight:500;color:var(--dim);margin-left:6px;vertical-align:middle}
+  /* 이름은 크게, 설명은 옆에 작게 — 검색 노출은 설명이 맡는다 */
+  h1 .brand{font-size:21px;font-weight:800;letter-spacing:-.6px;color:var(--accent)}
+  h1 .tagline{font-size:12.5px;font-weight:400;color:var(--dim);vertical-align:middle;
+              padding-left:9px;margin-left:2px;border-left:1px solid var(--line)}
+  @media (max-width:620px){ h1 .tagline{display:none} }
   h1 #cmpBtn,h1 #stdBtn,h1 #crsBtn{margin-left:9px;padding:6px 14px;font-size:13.5px;border-radius:8px;
              font-weight:500;vertical-align:middle;border-color:#c9d6ea;color:var(--accent);background:#f4f8ff}
   h1 #cmpBtn:hover,h1 #stdBtn:hover,h1 #crsBtn:hover{background:#e8f0ff}
@@ -464,10 +474,10 @@
 <body>
 
 <header>
-  <h1 id="title">수학 수능/모평/학평 기출문제 검색기 <span class="by">제작자 : 허선생</span> <small id="sub"></small>
+  <h1 id="title"><b class="brand">줍줍닷컴</b> <span class="tagline">수능·모평·학평 수학 기출, 필요한 것만 주워 담기</span> <span class="by">제작자 : 허선생</span> <small id="sub"></small>
     <span class="modesw">
-      <button id="modeSearch" class="on">문항검색모드</button>
       <button id="modeStudy">학습모드</button>
+      <button id="modeSearch" class="on">복붙모드</button>
     </span>
     <button id="cmpBtn">유사문항 비교</button>
     <button id="crsBtn">교과목 고르기</button>
@@ -1271,7 +1281,7 @@
   }
   function refreshCards(){ shown=0; render(true); }
 
-  /* 숫자키 1~4 — 화면의 그 자리 문항을 학습모드에서는 고르고, 검색모드에서는 복사한다 */
+  /* 숫자키 1~4 — 화면의 그 자리 문항을 학습모드에서는 고르고, 복붙모드에서는 복사한다 */
   function hotCard(n){
     var it=hits.slice(page*PAGE4,(page+1)*PAGE4)[n-1];
     if(!it) return;
@@ -1913,7 +1923,7 @@
      ['Esc','창 닫기 · 검색창에서 커서 빼기']]],
    ['문항 넘기기',
     [['← →','다음·이전 4문항'],
-     ['1 2 3 4','그 자리 문항 — 학습모드는 선택/해제, 검색모드는 복사']]],
+     ['1 2 3 4','그 자리 문항 — 학습모드는 선택/해제, 복붙모드는 복사']]],
    ['탭',
     [['Ctrl + ← →','앞·뒤 탭으로 이동 (끝에 닿으면 반대쪽 끝으로)'],
      ['Delete','지금 보고 있는 탭 닫기 — 마지막 탭을 닫으면 처음 화면으로 돌아갑니다']]],
