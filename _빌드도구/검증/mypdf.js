@@ -14,8 +14,8 @@ S.ok('한국어 문서', doc.documentElement.lang==='ko');
 S.ok('제목에 줍줍닷컴', /줍줍닷컴/.test(doc.title), doc.title);
 S.ok('설명 메타가 있다', !!doc.querySelector('meta[name=description]'));
 S.ok('검색기로 돌아가는 링크', !!doc.querySelector('a[href="index.html"]'));
-['drop','pages','tools','printArea','busy','pick','file','mSel','mDraw','make','again','helpBtn']
-  .forEach(id=>S.ok('«'+id+'» 자리가 있다', !!doc.getElementById(id)));
+['drop','pages','tools','printArea','busy','pick','file','mSel','mDraw','make','again','helpBtn',
+ 'prev','next','pgpos'].forEach(id=>S.ok('«'+id+'» 자리가 있다', !!doc.getElementById(id)));
 S.ok('단계 표시가 셋', doc.querySelectorAll('.steps .st').length===3);
 S.ok('PDF만 받는다', doc.getElementById('file').accept.indexOf('pdf')>=0);
 
@@ -46,13 +46,54 @@ S.ok('그 단추가 mypdf.html 로 간다', /mypdf\.html/.test(IDX));
 
 /* ---------- 문항 경계 찾기 ---------- */
 let SRC=HTML.match(/<script>\s*\(function\(\)\{([\s\S]*?)\}\)\(\);\s*<\/script>/)[1];
-SRC='(function(){'+SRC+'window.__T={detect:detect,findCols:findCols,toLines:toLines,bestChain:bestChain};})();';
-const ids=['toast','modal','mbox','drop','busy','busyMsg','bar','tools','cnt','pages','printArea','st1','st2','st3'];
-const btns=['pick','mSel','mDraw','allPage','none','again','make','helpBtn'];
+SRC='(function(){'+SRC+'window.__T={detect:detect,findCols:findCols,toLines:toLines,bestChain:bestChain,'+
+  'showPage:showPage,goPage:goPage,cur:function(){return CUR;},'+
+  'setPages:function(n){PAGES=[];for(var i=0;i<n;i++){var w=document.createElement("div");w.className="pg";'+
+  'document.getElementById("pages").appendChild(w);PAGES.push({pno:i+1,wrap:w,boxes:[]});}},'+
+  'labelOf:labelOf};})();';
+const ids=['toast','modal','mbox','drop','busy','busyMsg','bar','tools','cnt','pgpos','pages','printArea','st1','st2','st3'];
+const btns=['pick','mSel','mDraw','allPage','none','again','make','helpBtn','prev','next'];
 const dom2=new JSDOM(ids.map(i=>`<div id="${i}"></div>`).join('')+
   btns.map(i=>`<button id="${i}"></button>`).join('')+'<input id="file">',{runScripts:'outside-only'});
 dom2.window.eval(SRC);
 const T=dom2.window.__T;
+
+/* ---------- 한 쪽씩 넘기기 ---------- */
+S.ok('쪽 높이에 맞춰 보여 준다', /\.pg canvas\{[^}]*height:calc\(100vh/.test(HTML.replace(/\s+/g,' ')));
+S.ok('쪽 하나만 보이게 되어 있다', /\.pg\{[^}]*display:none/.test(HTML.replace(/\s+/g,' ')) &&
+     /\.pg\.on\{display:inline-block\}/.test(HTML.replace(/\s+/g,'')));
+S.ok('가로는 넘치지 않게 막아 둔다', /max-width:100%/.test(HTML));
+
+T.setPages(5);
+T.showPage(0);
+const $2=id=>dom2.window.document.getElementById(id);
+S.ok('첫 쪽부터 보인다', T.cur()===0 && $2('pgpos').textContent==='1 / 5쪽', $2('pgpos').textContent);
+S.ok('첫 쪽에서는 이전이 잠긴다', $2('prev').disabled===true);
+S.ok('첫 쪽에서 다음은 열려 있다', $2('next').disabled===false);
+S.ok('보이는 쪽에만 표시가 붙는다',
+     [...dom2.window.document.querySelectorAll('.pg')].filter(e=>e.classList.contains('on')).length===1);
+T.goPage(1);
+S.ok('다음 쪽으로 넘어간다', T.cur()===1 && $2('pgpos').textContent==='2 / 5쪽', $2('pgpos').textContent);
+T.goPage(-1);
+S.ok('이전 쪽으로 돌아온다', T.cur()===0);
+T.goPage(-1);
+S.ok('첫 쪽에서 더 뒤로 가지 않는다', T.cur()===0);
+T.showPage(4);
+S.ok('마지막 쪽으로 간다', T.cur()===4 && $2('next').disabled===true);
+T.goPage(1);
+S.ok('마지막에서 더 앞으로 가지 않는다', T.cur()===4);
+const key=k=>dom2.window.document.dispatchEvent(new dom2.window.KeyboardEvent('keydown',{key:k,bubbles:true}));
+key('ArrowLeft');  S.ok('← 로 앞 쪽', T.cur()===3, T.cur());
+key('ArrowRight'); S.ok('→ 로 뒤 쪽', T.cur()===4, T.cur());
+key('Home');       S.ok('Home 으로 첫 쪽', T.cur()===0, T.cur());
+key('End');        S.ok('End 로 마지막 쪽', T.cur()===4, T.cur());
+
+/* ---------- 문항 번호는 쓰지 않는다 ---------- */
+S.ok('오답노트 이름표는 쪽 수만 적는다',
+     T.labelOf({rec:{pno:7}, n:23})==='7쪽', T.labelOf({rec:{pno:7}, n:23}));
+S.ok('네모에 번호 딱지를 안 붙인다', HTML.indexOf('class="qn"')<0);
+S.ok('번호 딱지 모양새도 지웠다', !/\.qbox \.qn\{/.test(HTML));
+S.ok('도움말에 ← → 안내가 있다', /← → 키로 넘깁니다/.test(HTML));
 
 S.ok('빈 쪽은 아무것도 안 내놓는다', T.detect([],600,800).length===0);
 S.ok('글자가 몇 개뿐이면 안 내놓는다',

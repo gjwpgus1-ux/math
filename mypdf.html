@@ -65,17 +65,23 @@
          align-items:center;gap:8px;flex-wrap:wrap}
   #tools.on{display:flex}
   #tools .cnt{font-size:13.5px;font-weight:600;color:var(--accent)}
+  #tools .pgpos{font-size:13px;color:var(--ink);min-width:74px;text-align:center;
+                font-variant-numeric:tabular-nums}
+  #tools #prev,#tools #next{padding:5px 11px;font-size:12px}
   #tools button{padding:6px 11px;font-size:12.5px}
   #tools .gap{flex:1}
   #tools .mode{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
   #tools .mode button{border:none;border-radius:0}
   #tools .mode button.on{background:var(--accent);color:#fff;font-weight:600}
 
-  .pg{position:relative;margin:0 auto 26px;background:#fff;border:1px solid var(--line);
-      border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.05);overflow:hidden}
-  .pg canvas{display:block;width:100%;height:auto}
+  /* 한 번에 한 쪽만 보여 준다. 쪽 전체가 화면에 들어오도록 높이에 맞춘다. */
+  #pages{display:flex;justify-content:center}
+  .pg{position:relative;display:none;background:#fff;border:1px solid var(--line);
+      border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.05);overflow:hidden;line-height:0}
+  .pg.on{display:inline-block}
+  .pg canvas{display:block;height:calc(100vh - 186px);width:auto;max-width:100%;min-height:320px}
   .pgnum{position:absolute;left:8px;top:8px;z-index:3;background:rgba(17,24,39,.72);color:#fff;
-         font-size:11.5px;padding:3px 9px;border-radius:99px;pointer-events:none}
+         font-size:11.5px;padding:3px 9px;border-radius:99px;pointer-events:none;line-height:1.4}
   .qbox{position:absolute;border:1.5px solid rgba(37,99,235,.42);border-radius:5px;
         background:rgba(37,99,235,.045);cursor:pointer;transition:background .12s}
   .qbox:hover{background:rgba(37,99,235,.13);border-color:var(--accent)}
@@ -84,8 +90,6 @@
               border:1.5px solid var(--accent);background:#fff;color:#fff;
               display:flex;align-items:center;justify-content:center;font-size:12px;line-height:1}
   .qbox.sel .tick{background:var(--accent)}
-  .qbox .qn{position:absolute;left:29px;top:5px;font-size:11px;color:var(--accent);
-            background:rgba(255,255,255,.85);border-radius:4px;padding:1px 5px}
   .qbox .del{position:absolute;right:4px;top:4px;width:19px;height:19px;border-radius:5px;
              border:1px solid var(--line);background:#fff;color:var(--danger);
              display:none;align-items:center;justify-content:center;font-size:13px;line-height:1}
@@ -191,6 +195,9 @@
   </div>
 
   <div id="tools">
+    <button id="prev" title="이전 쪽 (←)">◀</button>
+    <span class="pgpos" id="pgpos">1 / 1쪽</span>
+    <button id="next" title="다음 쪽 (→)">▶</button>
     <span class="cnt" id="cnt">고른 문항 0개</span>
     <span class="mode">
       <button id="mSel" class="on">고르기</button>
@@ -384,7 +391,19 @@
   }
 
   /* ================= PDF 읽기 ================= */
-  var PDFJS=null, DOC=null, PAGES=[], SEL={}, MODE='sel', SEQ=0;
+  var PDFJS=null, DOC=null, PAGES=[], SEL={}, MODE='sel', SEQ=0, CUR=0;
+
+  /* 한 번에 한 쪽만 보여 준다 */
+  function showPage(i){
+    if(!PAGES.length) return;
+    CUR=Math.max(0, Math.min(i, PAGES.length-1));
+    PAGES.forEach(function(p,k){ p.wrap.classList.toggle('on', k===CUR); });
+    $('pgpos').textContent=(CUR+1)+' / '+PAGES.length+'쪽';
+    $('prev').disabled=(CUR===0);
+    $('next').disabled=(CUR>=PAGES.length-1);
+    try{ window.scrollTo(0,0); }catch(e){}
+  }
+  function goPage(d){ showPage(CUR+d); }
 
   function loadPdfJs(cb){
     if(window.pdfjsLib){ PDFJS=window.pdfjsLib; return cb(); }
@@ -430,25 +449,19 @@
   function render(buf, name){
     busy(true,'PDF를 여는 중…',10);
     PDFJS.getDocument({data:buf}).promise.then(function(doc){
-      DOC=doc; PAGES=[]; SEL={}; SEQ=0;
+      DOC=doc; PAGES=[]; SEL={}; SEQ=0; CUR=0;
       $('pages').innerHTML='';
       var total=doc.numPages, noText=0, done=0;
       var next=function(i){
         if(i>total){
           busy(false); step(2); $('tools').classList.add('on'); updateCnt();
+          showPage(0);
           if(noText===total){
-            $('pages').insertAdjacentHTML('afterbegin',
-              '<div class="warnbox"><b>글자가 없는 PDF입니다 (스캔본).</b> '+
-              '글자가 없으면 문항 경계를 스스로 찾을 수 없습니다. '+
-              '위의 «직접 그리기»를 눌러 문항을 하나씩 네모로 그려 주세요.</div>');
             setMode('draw');
+            toast('글자가 없는 PDF입니다 — «직접 그리기»로 문항을 그려 주세요');
           }else{
-            $('pages').insertAdjacentHTML('afterbegin',
-              '<div class="note">문항을 눌러 고르고, 다시 누르면 해제됩니다. '+
-              '경계가 어긋났으면 <b>네모의 위·아래 선을 끌어</b> 맞추시고, '+
-              '아예 못 찾은 문항은 <b>«직접 그리기»</b>로 그려 넣으시면 됩니다.</div>');
+            toast(total+'쪽에서 문항 '+countBoxes()+'개를 찾았습니다 · ← → 로 쪽을 넘기세요');
           }
-          toast(total+'쪽에서 문항 '+countBoxes()+'개를 찾았습니다');
           return;
         }
         busy(true,'쪽을 그리는 중… ('+i+' / '+total+')', 10+Math.round(i/total*85));
@@ -482,7 +495,7 @@
 
       var boxes=detect(ts, W, H);
       var wrap=document.createElement('div');
-      wrap.className='pg'; wrap.style.maxWidth=Math.round(vp.width/ (window.devicePixelRatio>1?1:1))+'px';
+      wrap.className='pg';
       wrap.appendChild(cv);
       wrap.insertAdjacentHTML('beforeend','<div class="pgnum">'+pno+'쪽</div>');
       var rec={pno:pno, cv:cv, W:W, H:H, sx:cv.width/W, sy:cv.height/H, wrap:wrap, boxes:[]};
@@ -501,8 +514,10 @@
     d.className='qbox'; d.dataset.id=id;
     var box={id:id, rec:rec, el:d, x0:b.x0, x1:b.x1, t0:b.t0, t1:b.t1, n:b.n||0, auto:!!auto};
     rec.boxes.push(box);
+    /* 문항 번호는 화면에도 오답노트에도 쓰지 않는다.
+       자동으로 읽은 번호가 어긋나는 시험지가 있어, 틀린 번호를 보여 주느니 안 보이는 편이 낫다.
+       (번호는 문항 차례를 잡는 데에만 속으로 쓴다.) */
     d.innerHTML='<span class="tick">✓</span>'+
-      (b.n?'<span class="qn">'+b.n+'번</span>':'')+
       '<span class="del" title="이 네모 지우기">×</span>'+
       '<div class="hnd" style="top:-4px" data-e="t"></div>'+
       '<div class="hnd" style="bottom:-4px" data-e="b"></div>';
@@ -675,9 +690,7 @@
     numberSheets(P);
     return P;
   }
-  function labelOf(b){
-    return b.rec.pno+'쪽'+(b.n?' · '+b.n+'번':'');
-  }
+  function labelOf(b){ return b.rec.pno+'쪽'; }
 
   function pdfName(){
     var d=new Date(), p=function(x){ return (x<10?'0':'')+x; };
@@ -754,6 +767,9 @@
    ['PDF를 열면 쪽마다 문항을 찾아 네모로 표시합니다',
     '글자가 들어 있는 PDF라면 «1.» «2.» 같은 문항 번호를 찾아 그 사이를 한 문항으로 봅니다. '+
     '두 단으로 짜인 시험지도 단을 알아서 나눕니다.'],
+   ['한 번에 한 쪽씩, ← → 키로 넘깁니다',
+    '쪽 전체가 화면에 들어오도록 높이에 맞춰 보여 드립니다. '+
+    'Home 은 첫 쪽, End 는 마지막 쪽입니다.'],
    ['네모를 눌러 고르고, 다시 누르면 해제됩니다',
     '고른 것은 파랗게 채워집니다. 여러 쪽을 오가며 골라도 고른 것은 그대로 남습니다.'],
    ['경계가 어긋났으면 위·아래 선을 끌어 맞추세요',
@@ -772,7 +788,7 @@
   ];
   function openHelp(){
     var h='<h3>내 PDF로 오답노트 만들기</h3>'+
-      '<p class="sub">일곱 가지만 아시면 됩니다.</p>'+
+      '<p class="sub">여덟 가지만 아시면 됩니다.</p>'+
       '<div style="font-size:13.5px;line-height:1.7;max-height:60vh;overflow:auto">';
     HELP.forEach(function(t,i){
       h+='<p style="margin:0 0 10px"><b>'+(i+1)+'. '+esc(t[0])+'</b><br>'+
@@ -791,6 +807,8 @@
     e.preventDefault(); this.classList.remove('over');
     openFile(e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]);
   });
+  $('prev').onclick=function(){ goPage(-1); };
+  $('next').onclick=function(){ goPage(1); };
   $('mSel').onclick=function(){ setMode('sel'); };
   $('mDraw').onclick=function(){ setMode('draw'); };
   $('none').onclick=function(){
@@ -798,24 +816,26 @@
     SEL={}; updateCnt();
   };
   $('allPage').onclick=function(){
-    var y=window.scrollY+window.innerHeight/2, best=null, bd=1e9;
-    PAGES.forEach(function(p){
-      var r=p.wrap.getBoundingClientRect(), c=window.scrollY+r.top+r.height/2;
-      if(Math.abs(c-y)<bd){ bd=Math.abs(c-y); best=p; }
-    });
-    if(!best) return;
-    best.boxes.forEach(function(b){ if(!SEL[b.id]) toggle(b); });
-    toast(best.pno+'쪽을 전부 골랐습니다');
+    var p=PAGES[CUR];
+    if(!p || !p.boxes.length){ toast('이 쪽에는 찾은 문항이 없습니다',true); return; }
+    p.boxes.forEach(function(b){ if(!SEL[b.id]) toggle(b); });
+    toast(p.pno+'쪽을 전부 골랐습니다');
   };
   $('again').onclick=function(){
-    DOC=null; PAGES=[]; SEL={}; $('pages').innerHTML='';
+    DOC=null; PAGES=[]; SEL={}; CUR=0; $('pages').innerHTML='';
     $('tools').classList.remove('on'); $('drop').style.display=''; step(1); updateCnt();
   };
   $('make').onclick=askOutput;
   $('helpBtn').onclick=openHelp;
   document.addEventListener('keydown',function(e){
     if($('modal').classList.contains('open')){ if(e.key==='Escape') closeModal(); return; }
-    if(e.key==='?' || (e.code==='Slash'&&e.shiftKey)){ e.preventDefault(); openHelp(); }
+    if(e.ctrlKey||e.altKey||e.metaKey) return;
+    if(e.key==='?' || (e.code==='Slash'&&e.shiftKey)){ e.preventDefault(); openHelp(); return; }
+    if(!PAGES.length) return;
+    if(e.key==='ArrowLeft'){ e.preventDefault(); goPage(-1); }
+    else if(e.key==='ArrowRight'){ e.preventDefault(); goPage(1); }
+    else if(e.key==='Home'){ e.preventDefault(); showPage(0); }
+    else if(e.key==='End'){ e.preventDefault(); showPage(PAGES.length-1); }
   });
   updateCnt();
 })();
