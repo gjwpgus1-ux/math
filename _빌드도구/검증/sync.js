@@ -7,7 +7,7 @@ let pass=0,fail=0;
 const ok=(n,c,e)=>{ if(c){pass++;console.log('  OK   '+n);} else {fail++;console.log('  FAIL '+n+(e!==undefined?'  → '+e:''));} };
 
 /* 가짜 시트 */
-const SHEET={cmp:[],std:[],neg:[],rep:[],del:[]};
+const SHEET={cmp:[],std:[],neg:[],rep:[],crs:[],del:[]};
 let ONLINE=true, POSTS=0, GETS=0;
 function server(url,opt){
   if(!ONLINE) return Promise.reject(new Error('오프라인'));
@@ -15,14 +15,15 @@ function server(url,opt){
     GETS++;
     return Promise.resolve({json:()=>Promise.resolve({ok:true,
       pairs:SHEET.cmp.slice(), std:SHEET.std.slice(),
-      neg:SHEET.neg.slice(), rep:SHEET.rep.slice(), del:SHEET.del.map(d=>d.target)})});
+      neg:SHEET.neg.slice(), rep:SHEET.rep.slice(), crs:SHEET.crs.slice(),
+      del:SHEET.del.map(d=>d.target)})});
   }
   POSTS++;
   const body=JSON.parse(opt.body);
   let saved=0, skipped=0;
   let erased=0;
   (body.records||[]).forEach(r=>{
-    const kind = r.t==='std'?'std' : r.t==='neg'?'neg' : r.t==='rep'?'rep'
+    const kind = r.t==='std'?'std' : r.t==='neg'?'neg' : r.t==='rep'?'rep' : r.t==='crs'?'crs'
                : r.t==='del'?'del' : r.t==='repdone'?'repdone' : 'cmp';
     if(kind==='repdone'){
       const t=SHEET.rep.find(x=>x.id===r.target);
@@ -33,7 +34,8 @@ function server(url,opt){
     if(box.some(x=>x.id===r.id)){ skipped++; return; }
     box.push(JSON.parse(JSON.stringify(r))); saved++;
     if(kind==='del'){
-      const from = SHEET[r.kind==='std'?'std' : r.kind==='neg'?'neg' : r.kind==='rep'?'rep' : 'cmp'];
+      const from = SHEET[r.kind==='std'?'std' : r.kind==='neg'?'neg' : r.kind==='rep'?'rep'
+                       : r.kind==='crs'?'crs' : 'cmp'];
       const i=from.findIndex(x=>x.id===r.target);
       if(i>=0){ from.splice(i,1); erased++; }
     }
@@ -294,6 +296,21 @@ const dump=w=>({q:JSON.parse(w.localStorage.getItem('gich_queue')||'[]'),
   const S3=boot(); await wait(450);
   ok('새 브라우저에서도 안 살아남',
      JSON.parse(S3.w.localStorage.getItem('gich_reports')||'[]').length===SHEET.rep.length);
+
+  console.log('\n[16] 교과목 응답도 시트로');
+  const X=boot(); await wait(420);
+  const nx=SHEET.crs.length;
+  X.key('0'); await wait(120);                       // 비교를 모르겠음 → 교과목
+  ok('교과목 화면', X.$('crs').classList.contains('open'));
+  X.key('3'); await wait(400);
+  ok('시트에 1건', SHEET.crs.length===nx+1, SHEET.crs.length);
+  const clast=SHEET.crs[SHEET.crs.length-1];
+  ok('문항 경로', /\.png$/.test(clast.p||''), clast.p);
+  ok('교과목 값', clast.c==='대수', clast.c);
+  ok('익명번호', /^u[a-z0-9]{6}$/.test(clast.who||''), clast.who);
+  const Y=boot(); await wait(450);
+  ok('다른 브라우저가 받아옴',
+     JSON.parse(Y.w.localStorage.getItem('gich_crs')||'[]').length===SHEET.crs.length);
 
   console.log('\n결과: 통과 '+pass+' · 실패 '+fail);
   process.exit(fail?1:0);

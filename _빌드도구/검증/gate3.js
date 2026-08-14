@@ -32,7 +32,8 @@ function visit(keepSession){
   return {w,doc,$:id=>doc.getElementById(id),
           key:k=>doc.dispatchEvent(new w.KeyboardEvent('keydown',{key:k}))};
 }
-const open=(H)=>H.$('cmp').classList.contains('open')||H.$('std').classList.contains('open');
+const open=(H)=>H.$('cmp').classList.contains('open')||H.$('std').classList.contains('open')
+                ||H.$('crs').classList.contains('open');
 
 (async()=>{
   console.log('\n[1] 첫 접속');
@@ -51,9 +52,9 @@ const open=(H)=>H.$('cmp').classList.contains('open')||H.$('std').classList.cont
   console.log('\n[3] 또 새로고침');
   let C=visit(true); await wait(200);
   ok('세 번째도 뜸', open(C));
-  C.key('0'); await wait(120);
-  ok('잘 모르겠음이면 다른 것으로 한 번 더', open(C));
-  C.key('1'); await wait(60); C.key('Enter'); await wait(140);
+  C.key('0'); await wait(140);
+  ok('잘 모르겠음이면 다른 것으로 한 번 더', open(C), 'crs='+C.$('crs').classList.contains('open'));
+  C.key('3'); await wait(160);
   ok('제대로 답하면 닫힘', !open(C));
 
   console.log('\n[4] 창을 완전히 닫았다 다시 열어도');

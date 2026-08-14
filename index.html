@@ -19,10 +19,10 @@
   .modesw{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-left:4px}
   .modesw button{border:none;border-radius:0;padding:6px 14px;font-size:13.5px;background:var(--card)}
   h1 .by{font-size:12.5px;font-weight:500;color:var(--dim);margin-left:6px;vertical-align:middle}
-  h1 #cmpBtn,h1 #stdBtn{margin-left:9px;padding:6px 14px;font-size:13.5px;border-radius:8px;
+  h1 #cmpBtn,h1 #stdBtn,h1 #crsBtn{margin-left:9px;padding:6px 14px;font-size:13.5px;border-radius:8px;
              font-weight:500;vertical-align:middle;border-color:#c9d6ea;color:var(--accent);background:#f4f8ff}
-  h1 #cmpBtn:hover,h1 #stdBtn:hover{background:#e8f0ff}
-  h1 #stdBtn{margin-left:6px}
+  h1 #cmpBtn:hover,h1 #stdBtn:hover,h1 #crsBtn:hover{background:#e8f0ff}
+  h1 #stdBtn,h1 #crsBtn{margin-left:6px}
   .modesw button.on{background:var(--accent);color:#fff;font-weight:600}
   .searchbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
   #q{flex:1;min-width:280px;padding:11px 14px;font-size:16px;border:1px solid var(--line);
@@ -263,6 +263,50 @@
   #cmp .gatebar i{display:block;height:100%;background:var(--accent);width:0;transition:width .25s}
   #cmpGateMsg,#stdGateMsg{font-size:13px;color:var(--accent);font-weight:600}
 
+  /* 교과목 고르기 — 성취기준 화면과 같은 짜임을 쓴다 */
+  #crs{position:fixed;inset:0;background:var(--bg);z-index:40;display:none;flex-direction:column}
+  #crs.open{display:flex}
+  #crs.gate #crsClose{display:none}
+  #crs .ch{background:var(--card);border-bottom:1px solid var(--line);padding:11px 18px;
+           display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  #crs .ch b{font-size:15px}
+  #crs .ch .sp{flex:1}
+  #crs .sb{flex:1;display:grid;grid-template-columns:40% 1fr;gap:14px;
+           padding:12px 18px 14px;overflow:hidden;min-height:0}
+  #crs .cc{background:var(--card);border:1px solid var(--line);border-radius:10px;
+           display:flex;flex-direction:column;overflow:hidden;min-height:0}
+  #crs .cc.anchor{border-color:var(--accent);border-width:2px}
+  #crs .cl{padding:8px 12px;font-size:13px;font-weight:600;border-bottom:1px solid var(--line);
+           background:#fafbfc;display:flex;align-items:center;gap:7px}
+  #crs .cl .lb{background:var(--accent-soft);color:var(--accent);border-radius:5px;
+               padding:1px 8px;font-size:12px}
+  #crs .ci{flex:1;overflow:auto;padding:10px;background:#fff}
+  #crs .ci img{width:100%;height:auto;display:block}
+  #crs .sp2{display:flex;flex-direction:column;min-height:0;gap:10px;
+            background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  #crs .stop{flex:none}
+  #crs .stop .rq{font-size:19px;font-weight:600;color:var(--accent);line-height:1.35}
+  #crs .stop .rq b{color:var(--ink)}
+  #crs .stop .rtag{font-size:12.5px;color:var(--accent);line-height:1.5;margin-top:4px;
+                   background:var(--accent-soft);border-radius:7px;padding:7px 10px}
+  #crs .stop .rtag span{color:#6b86ad}
+  #crs .shead{font-size:12.5px;color:var(--dim);margin:9px 0 0}
+  #crsBtns{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:7px}
+  #crsBtns button{width:100%;text-align:left;padding:12px 14px;font-size:15.5px;
+                  display:flex;align-items:center;gap:11px}
+  #crsBtns button .k{flex:none;background:#eceff3;border-radius:5px;padding:1px 8px;
+                     font-size:12px;color:var(--dim)}
+  #crsBtns button .sub{margin-left:auto;font-size:12px;color:var(--dim)}
+  #crsBtns button:hover{border-color:var(--accent);background:#f6f9ff}
+  #crsBtns button.none{color:var(--dim)}
+  #crs .sfoot{flex:none;border-top:1px solid var(--line);padding-top:10px}
+  #crs .rhint{font-size:11.5px;color:var(--dim);line-height:1.6}
+  #crs .rhint b{display:inline-block;background:#eceff3;border:1px solid var(--line);
+                border-radius:4px;padding:0 5px;font-size:11px;color:var(--ink);margin:0 1px}
+  #crs .gatebar{width:100%;height:6px;background:#e2e5ea;border-radius:99px;overflow:hidden;margin-top:8px}
+  #crs .gatebar i{display:block;height:100%;background:var(--accent);width:0;transition:width .25s}
+  @media (max-width:900px){ #crs .sb{grid-template-columns:1fr;overflow:auto} }
+
   /* 성취기준 달기 — 왼쪽 문항 40%, 오른쪽 한 단에 목록과 단추까지 */
   #std{position:fixed;inset:0;background:var(--bg);z-index:40;display:none;flex-direction:column}
   #std.open{display:flex}
@@ -375,6 +419,7 @@
       <button id="modeStudy">학습모드</button>
     </span>
     <button id="cmpBtn">유사문항 비교</button>
+    <button id="crsBtn">교과목 고르기</button>
     <button id="stdBtn">성취기준 달기</button>
   </h1>
   <div class="searchbar">
@@ -422,6 +467,7 @@
     <button id="atabRep" class="on">오류제보</button>
     <button id="atabOv">교체한 이미지</button>
     <button id="atabCmp">비교데이터</button>
+    <button id="atabCrs">교과목</button>
     <button id="atabStd">성취기준</button>
     <button id="atabSync">수집 상태</button>
   </div>
@@ -505,6 +551,37 @@
   </div>
 </div>
 
+<div id="crs">
+  <div class="ch">
+    <b>교과목 고르기</b>
+    <span id="crsCount" class="hint"></span>
+    <span class="sp"></span>
+    <span id="crsGateMsg"></span>
+    <button id="crsSkip">건너뛰기</button>
+    <button id="crsClose">닫기</button>
+  </div>
+  <div class="sb">
+    <div class="cc anchor">
+      <div class="cl"><span class="lb">문항</span><span id="crsLab"></span></div>
+      <div class="ci" id="crsImg"></div>
+    </div>
+    <div class="sp2">
+      <div class="stop">
+        <div class="rq">이 문항은 어느 <b>교과목</b>인가요?</div>
+        <div class="rtag">함께 만들어가는 AI 유사문항 추천 시스템 —
+          <span>정확한 응답이 모여 완성도가 올라갑니다</span></div>
+        <div class="shead">2022 개정 교육과정 기준으로 하나만 고르세요</div>
+      </div>
+      <div id="crsBtns"></div>
+      <div class="sfoot">
+        <div class="rhint">숫자키 <b>1</b>~<b>8</b> 로 바로 고를 수 있습니다.
+          <b>0</b> 은 잘 모르겠음, <b>Space</b> 는 건너뛰기입니다. 이름은 묻지 않습니다.</div>
+        <div class="gatebar"><i id="crsGateFill"></i></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="modal" id="modal"><div class="mbox" id="mbox"></div></div>
 <input type="file" id="filePick" accept="image/png,image/jpeg" style="display:none">
 <div id="printArea"></div>
@@ -543,6 +620,9 @@
   var NEG_THRESHOLD = 2;
   /* 성취기준 — 몇 명이 같게 답해야 «확정»으로 볼지 */
   var STD_CONFIRM = 2;
+  /* 교과목 — 몇 명이 같게 답해야 «확정»으로 볼지, 그리고 추천 점수 가감 */
+  var CRS_CONFIRM = 2;
+  var WCRS = { same:0.12, diff:-0.30 };
   /* 확정된 성취기준이 서로 다를 때 유사도에 주는 가감 */
   var WSTD = { same:0.30, area:0.05, subj:-0.10, diff:-0.50 };
   /* 유사문항 비교 응답 한 표가 추천 점수를 얼마나 움직일지.
@@ -735,6 +815,7 @@
       sc+=W.num*Math.max(0,1-Math.abs(jt[1]-it[1])/10);
       if(jt[0]===it[0]) sc+=W.samexam;
       if(STD) sc += stdAdjust(it[2], jt[2]);
+      sc += crsAdjust(it[2], jt[2]);
       sc += prefAdjust(it[2], jt[2]);
       out.push({j:j,sc:sc,base:base,same:scopeOf(je)===sc0});
     });
@@ -1586,6 +1667,92 @@
     }
     return null;
   }
+  /* ================= 교과목 고르기 =================
+     성취기준을 고르는 일이 무거워서, 당분간은 «어느 교과목인가»만 묻는다.
+     성취기준 기능은 그대로 두었고 위쪽 «성취기준 달기» 단추로 언제든 쓸 수 있다.
+
+     고르는 값 — 바꾸시려면 CRS_OPT 의 글만 고치세요. [값, 보이는 이름, 옆에 붙는 설명] */
+  var CRS_OPT=[['중학교',     '중학교',        ''],
+               ['고1',        '고1',           '공통수학1·2'],
+               ['대수',       '대수',          '15개정 수학Ⅰ'],
+               ['미적분I',    '미적분Ⅰ',       '15개정 수학Ⅱ'],
+               ['미적분II',   '미적분Ⅱ',       '15개정 미적분'],
+               ['기하',       '기하',          ''],
+               ['확률과 통계','확률과 통계',    ''],
+               ['해당없음',   '22개정에 해당 없음', '']];
+  var CRSV=[], crsCur=null, CRSMAP=null;
+  function crsSave(){ lsSet('gich_crs', CRSV.slice(-4000)); CRSMAP=null; }
+
+  /* 문항별 집계 — 같은 교과목을 CRS_CONFIRM 명 이상이 고르면 확정 */
+  function crsMap(){
+    if(CRSMAP) return CRSMAP;
+    var by={};
+    CRSV.forEach(function(r){
+      if(!r.c) return;
+      var m=by[r.p]||(by[r.p]={});
+      var u=m[r.c]||(m[r.c]={}); u[r.who||'?']=1;
+    });
+    var out={};
+    Object.keys(by).forEach(function(p){
+      var m=by[p], best='', bn=0, second=0, tot=0;
+      Object.keys(m).forEach(function(c){
+        var n=Object.keys(m[c]).length; tot+=n;
+        if(n>bn){ second=bn; bn=n; best=c; } else if(n>second) second=n;
+      });
+      out[p]={c:best, n:bn, tot:tot, conf:(bn>=CRS_CONFIRM && bn>second)};
+    });
+    CRSMAP=out; return out;
+  }
+  function crsOf(path){ var m=crsMap()[path]; return (m&&m.conf)?m.c:''; }
+  /* 확정된 교과목이 서로 다르면 추천 점수를 조금 깎는다 */
+  function crsAdjust(pa,pb){
+    var a=crsOf(pa), b=crsOf(pb);
+    if(!a||!b||a==='해당없음'||b==='해당없음') return 0;
+    return a===b ? WCRS.same : WCRS.diff;
+  }
+
+  /* 다음에 물어볼 문항 — 아직 답이 없는 것을 고른다 */
+  function nextCrs(){
+    var mine={}; CRSV.forEach(function(r){ if(r.who===UID) mine[r.p]=1; });
+    var M=crsMap();
+    for(var t=0;t<400;t++){
+      var i=Math.floor(Math.random()*IT.length);
+      var p=IT[i][2];
+      if(mine[p]) continue;
+      var m=M[p];
+      if(m && m.conf && Math.random()<0.9) continue;   // 이미 확정된 것은 잘 안 묻는다
+      return {i:i};
+    }
+    return null;
+  }
+  function drawCrs(){
+    crsCur=nextCrs();
+    if(!crsCur){ toast('더 낼 문항이 없습니다',true); return; }
+    var it=IT[crsCur.i];
+    $('crsLab').textContent=label(it)+(heldAt(EX[it[0]])?'  ('+heldAt(EX[it[0]])+')':'');
+    $('crsImg').innerHTML='<img src="'+imgSrc(it)+'" alt="">';
+    $('crsImg').scrollTop=0;
+    var L=$('crsBtns'); L.innerHTML='';
+    CRS_OPT.forEach(function(o,k){
+      var b=document.createElement('button');
+      if(o[0]==='해당없음') b.className='none';
+      b.innerHTML='<span class="k">'+(k+1)+'</span><span>'+esc(o[1])+'</span>'+
+                  (o[2]?'<span class="sub">'+esc(o[2])+'</span>':'');
+      b.onclick=function(){ crsAnswer(o[0]); };
+      L.appendChild(b);
+    });
+    var M=crsMap();
+    $('crsCount').textContent='지금까지 '+CRSV.length+'건 응답 · 확정된 문항 '+
+      Object.keys(M).filter(function(p){ return M[p].conf; }).length+'개';
+  }
+  function crsAnswer(code){
+    if(!crsCur) return;
+    var rec={t:'crs', id:newId(), p:IT[crsCur.i][2], c:code||'', who:UID, at:nowStr()};
+    CRSV.push(rec); crsSave(); sendCollect(rec);
+    if(gateLeft>0){ gateAnswered(!!code); return; }
+    drawCrs();
+  }
+
   /* ================= 성취기준 =================
      사용자가 문항에 성취기준을 달면
       · 같은 코드가 여러 명에게서 나오면 «확정»
@@ -1900,19 +2067,22 @@
     var pct = gateLeft<=0 ? '100%' : (gateTries?Math.min(90,gateTries*25)+'%':'0');
     $('cmpGateMsg').textContent=msg; $('gateFill').style.width=pct;
     $('stdGateMsg').textContent=msg; $('stdGateFill').style.width=pct;
+    $('crsGateMsg').textContent=msg; $('crsGateFill').style.width=pct;
   }
   /* 의무 응답은 «유사문항 비교»와 «성취기준 달기»를 번갈아 낸다 */
   function gateStep(){
     if(gateLeft<=0){ closeGate(); return; }
     updateGate();
-    var wantStd = STD && (gateTries%2===1);
-    if(wantStd){
+    /* 첫 화면에서는 «유사문항 비교»와 «교과목 고르기»를 번갈아 낸다.
+       성취기준은 무거워서 당분간 빼 두었다 (위쪽 단추로는 그대로 쓸 수 있다). */
+    $('std').classList.remove('open','gate');
+    if(gateTries%2===1){
       $('cmp').classList.remove('open','gate');
-      $('std').classList.add('open','gate'); drawStd();
-      if(!stdCur){ $('std').classList.remove('open','gate');
+      $('crs').classList.add('open','gate'); drawCrs();
+      if(!crsCur){ $('crs').classList.remove('open','gate');
                    $('cmp').classList.add('open','gate'); drawTriple(); }
     }else{
-      $('std').classList.remove('open','gate');
+      $('crs').classList.remove('open','gate');
       $('cmp').classList.add('open','gate'); drawTriple();
     }
   }
@@ -1922,7 +2092,9 @@
     try{ sessionStorage.setItem('gich_gate','1'); }catch(e){}
     $('cmp').classList.remove('open','gate');
     $('std').classList.remove('open','gate');
+    $('crs').classList.remove('open','gate');
     $('gateFill').style.width='0'; $('stdGateFill').style.width='0';
+    $('crsGateFill').style.width='0';
     toast('고맙습니다. 덕분에 추천이 좋아집니다.');
   }
   /* ---------- 구글 시트로 보내기 ----------
@@ -1993,8 +2165,8 @@
     function sift(arr){
       for(var i=arr.length-1;i>=0;i--) if(arr[i].id && DEL[arr[i].id]){ arr.splice(i,1); n++; }
     }
-    sift(PAIRS); sift(STDV); sift(NEGV); sift(REPORTS);
-    if(n){ pairSave(); stdSave(); negSave(); repSave(); prefClear(); STDMAP=null; }
+    sift(PAIRS); sift(STDV); sift(NEGV); sift(REPORTS); sift(CRSV);
+    if(n){ pairSave(); stdSave(); negSave(); repSave(); crsSave(); prefClear(); STDMAP=null; }
     return n;
   }
 
@@ -2022,13 +2194,15 @@
         var ns=mergeById(STDV,  j.std  ||[]);
         var nn=mergeById(NEGV,  j.neg  ||[]);
         var nr=mergeById(REPORTS, j.rep||[]);
+        var nc=mergeById(CRSV, j.crs||[]);
         applyDeletions();
         if(np){ pairSave(); prefClear(); }
         if(ns){ stdSave(); }
         if(nn){ negRebuild(); negSave(); }
         if(nr){ REPORTS.sort(function(a,b){ return (b.at||'')<(a.at||'')?-1:1; }); repSave(); }
+        if(nc){ crsSave(); }
         try{ localStorage.setItem('gich_pulled', nowStr()); }catch(e){}
-        if(cb) cb('', np, ns, nn+nr);
+        if(cb) cb('', np, ns, nn+nr+nc);
       })
       .catch(function(err){ if(cb) cb(err.message||String(err)); });
     }catch(e){ if(cb) cb(e.message||String(e)); }
@@ -2055,6 +2229,12 @@
     $('std').classList.add('open'); $('std').classList.remove('gate'); drawStd();
   };
   $('stdClose').onclick=function(){ $('std').classList.remove('open'); };
+  $('crsBtn').onclick=function(){
+    gateLeft=0; $('crsGateMsg').textContent='';
+    $('crs').classList.add('open'); $('crs').classList.remove('gate'); drawCrs();
+  };
+  $('crsClose').onclick=function(){ $('crs').classList.remove('open'); };
+  $('crsSkip').onclick=drawCrs;
   $('stdSkip').onclick=drawStd;
   $('stdOk').onclick=function(){ stdAnswer(''); };
   $('stdUnsure').onclick=function(){ stdAnswer('unsure'); };
@@ -2099,6 +2279,7 @@
   $('atabOv').onclick=function(){ adminTab='ov'; drawAdmin(); };
   $('atabCmp').onclick=function(){ adminTab='cmp'; drawAdmin(); };
   $('atabStd').onclick=function(){ adminTab='std'; drawAdmin(); };
+  $('atabCrs').onclick=function(){ adminTab='crs'; drawAdmin(); };
   $('atabSync').onclick=function(){ adminTab='sync'; drawAdmin(); };
 
   function drawAdmin(){
@@ -2106,6 +2287,7 @@
     $('atabOv').className =adminTab==='ov' ?'on':'';
     $('atabCmp').className=adminTab==='cmp'?'on':'';
     $('atabStd').className=adminTab==='std'?'on':'';
+    $('atabCrs').className=adminTab==='crs'?'on':'';
     $('atabSync').className=adminTab==='sync'?'on':'';
     var L=$('adminList'),Fo=$('adminFoot'); L.innerHTML=''; Fo.innerHTML='';
 
@@ -2144,6 +2326,8 @@
 
     } else if(adminTab==='sync'){
       drawSync(L,Fo);
+    } else if(adminTab==='crs'){
+      drawCrsStats(L,Fo);
     } else if(adminTab==='std'){
       drawStdStats(L,Fo);
     } else if(adminTab==='cmp'){
@@ -2280,7 +2464,8 @@
     h+='</div>';
     var nd=Object.keys(DEL).length;
     h+='<div class="rrow"><div class="rt">합쳐진 응답</div>'+
-      '<div class="rm">유사문항 비교 '+PAIRS.length+'건 · 성취기준 '+STDV.length+'건 · 유사하지않음 '+NEGV.length+'건 · 오류제보 '+REPORTS.length+'건</div>'+
+      '<div class="rm">유사문항 비교 '+PAIRS.length+'건 · 교과목 '+CRSV.length+'건 · 성취기준 '+STDV.length+
+      '건 · 유사하지않음 '+NEGV.length+'건 · 오류제보 '+REPORTS.length+'건</div>'+
       (nd?'<div class="rm">지운 응답 '+nd+'건 — 시트에도 알렸으므로 다시 받아와도 되살아나지 않습니다</div>':'')+
       '<div class="rm">시트에서 받아온 다른 분들의 응답까지 함께 셉니다. '+
       '못 보낸 것이 있어도 사라지지 않고, 다음에 앱을 열면 다시 보냅니다.</div></div>';
@@ -2309,7 +2494,7 @@
     b4.onclick=function(){
       var has={}; QUEUE.forEach(function(r){ has[r.id]=1; });
       var n=0;
-      PAIRS.concat(STDV).concat(NEGV).concat(REPORTS).forEach(function(r){
+      PAIRS.concat(STDV).concat(NEGV).concat(REPORTS).concat(CRSV).forEach(function(r){
         if(!r.id || has[r.id]) return;
         has[r.id]=1; QUEUE.push(r); n++;
       });
@@ -2328,6 +2513,85 @@
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(function(){ URL.revokeObjectURL(a.href); },1000);
     toast('백업 파일을 내려받았습니다');
+  }
+
+  function drawCrsStats(L,Fo){
+    var M=crsMap(), paths=Object.keys(M);
+    var conf=paths.filter(function(p){ return M[p].conf; });
+    var h='<div class="rrow"><div class="rt">교과목 응답 '+CRSV.length+'건</div>';
+    var who={}; CRSV.forEach(function(r){ who[r.who||'?']=(who[r.who||'?']||0)+1; });
+    h+='<div class="rm">응답자 '+Object.keys(who).length+'명 (익명) — '+
+       Object.keys(who).map(function(k){ return esc(k)+' '+who[k]+'건'; }).join(' · ')+'</div>';
+    h+='<div class="rm">답이 달린 문항 '+paths.length+'개 · 그중 <b>확정</b>('+CRS_CONFIRM+
+       '명 이상 일치) <b>'+conf.length+'</b>개 / 전체 '+IT.length.toLocaleString()+'문항</div>';
+    h+='<div class="rm">«잘 모르겠음» '+CRSV.filter(function(r){ return !r.c; }).length+'건</div></div>';
+
+    var cnt={};
+    conf.forEach(function(p){ cnt[M[p].c]=(cnt[M[p].c]||0)+1; });
+    h+='<div class="rrow"><div class="rt">확정된 문항의 교과목</div><div class="rm">'+
+       (Object.keys(cnt).length
+         ? CRS_OPT.filter(function(o){ return cnt[o[0]]; })
+                  .map(function(o){ return esc(o[1])+' '+cnt[o[0]]+'개'; }).join(' · ')
+         : '아직 확정된 것이 없습니다')+'</div></div>';
+    h+='<div class="rrow"><div class="rt">추천에 준 영향</div>'+
+       '<div class="rm">같은 교과목 +'+WCRS.same+' · 다른 교과목 '+WCRS.diff+
+       ' (양쪽 다 확정된 경우에만)</div>'+
+       '<div class="rm" style="font-size:11.5px">«22개정에 해당 없음»은 견주지 않습니다</div></div>';
+    L.innerHTML=h;
+
+    var head=document.createElement('div');
+    head.style.cssText='font-size:12px;color:#6b7280;margin:4px 2px 6px';
+    head.textContent='최근 응답 — 문항 그림과 고른 교과목을 나란히 놓았습니다.';
+    L.appendChild(head);
+    CRSV.slice(-20).reverse().forEach(function(r){
+      var d=document.createElement('div'); d.className='cmprow';
+      var opt=CRS_OPT.filter(function(o){ return o[0]===r.c; })[0];
+      var top=document.createElement('div'); top.className='ctop';
+      top.innerHTML='<span class="pick">'+(r.c?esc(opt?opt[1]:r.c):'잘 모르겠음')+'</span>'+
+        '<span class="meta">'+esc(r.who)+' · '+esc(r.at)+'</span><span class="sp"></span>';
+      var bDel=document.createElement('button'); bDel.textContent='이 응답 삭제'; bDel.className='warn';
+      bDel.onclick=function(){
+        var k=CRSV.indexOf(r); if(k<0) return;
+        CRSV.splice(k,1); crsSave(); dropRecord(r.id,'crs'); drawAdmin();
+        toast('응답 1건을 지웠습니다');
+      };
+      top.appendChild(bDel); d.appendChild(top);
+      var g=document.createElement('div'); g.className='cmpimgs';
+      g.style.gridTemplateColumns='1fr';
+      var it=BY_PATH[r.p];
+      var f=document.createElement('figure'); f.className='anchor';
+      f.innerHTML='<figcaption>'+esc(it?label(it):r.p)+'</figcaption>'+
+        '<img loading="lazy" src="'+(it?imgSrc(it):('img/'+r.p))+'" alt="">';
+      g.appendChild(f); d.appendChild(g); L.appendChild(d);
+    });
+
+    var b1=document.createElement('button'); b1.textContent='교과목 응답 CSV로 저장';
+    b1.style.flex='1'; b1.onclick=exportCrs; Fo.appendChild(b1);
+    var b2=document.createElement('button'); b2.textContent='확정 목록 CSV로 저장';
+    b2.onclick=exportCrsConf; Fo.appendChild(b2);
+    var b3=document.createElement('button'); b3.textContent='이 브라우저에서 비우기'; b3.className='warn';
+    b3.title='시트에 있는 응답은 그대로 남습니다.';
+    b3.onclick=function(){ CRSV=[]; crsSave(); drawAdmin();
+      toast(COLLECT_URL?'이 브라우저에서만 비웠습니다 — 시트에는 그대로 있습니다':'비웠습니다'); };
+    Fo.appendChild(b3);
+  }
+  function exportCrs(){
+    var rows=[['문항파일','시험','문항','교과목','익명번호','시각']];
+    CRSV.forEach(function(r){
+      var it=BY_PATH[r.p];
+      rows.push([r.p, it?EX[it[0]].n:'', it?it[1]+'번':'', r.c||'잘 모르겠음', r.who, r.at]);
+    });
+    csvDown(rows,'교과목_응답');
+  }
+  function exportCrsConf(){
+    var M=crsMap();
+    var rows=[['문항파일','시험','문항','확정 교과목','표수','응답자 수']];
+    Object.keys(M).forEach(function(p){
+      if(!M[p].conf) return;
+      var it=BY_PATH[p];
+      rows.push([p, it?EX[it[0]].n:'', it?it[1]+'번':'', M[p].c, M[p].n, M[p].tot]);
+    });
+    csvDown(rows,'교과목_확정');
   }
 
   function drawStdStats(L,Fo){
@@ -2643,6 +2907,14 @@
       else if(e.key===' '){ e.preventDefault(); drawTriple(); }
       return;
     }
+    if($('crs').classList.contains('open')){
+      if(e.key==='Escape' && !$('crs').classList.contains('gate')){ $('crs').classList.remove('open'); return; }
+      var cn=parseInt(e.key,10);
+      if(cn>=1 && cn<=CRS_OPT.length){ crsAnswer(CRS_OPT[cn-1][0]); }
+      else if(e.key==='0'){ crsAnswer(''); }
+      else if(e.key===' '){ e.preventDefault(); drawCrs(); }
+      return;
+    }
     if($('std').classList.contains('open')){
       if(e.key==='Escape' && !$('std').classList.contains('gate')){ $('std').classList.remove('open'); return; }
       if(document.activeElement===$('stdQ')) return;
@@ -2666,6 +2938,7 @@
   REPORTS=lsGet('gich_reports',[]);
   PAIRS=lsGet('gich_pairs',[]);
   STDV=lsGet('gich_std',[]);
+  CRSV=lsGet('gich_crs',[]);
   NEG=lsGet('gich_neg',{});
   NEGV=lsGet('gich_negv',[]);
   DEL=lsGet('gich_del',{});
