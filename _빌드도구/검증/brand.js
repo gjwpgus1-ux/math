@@ -27,11 +27,13 @@ S.ok('좁은 화면에서는 부제를 숨긴다', /h1\.tagline\{display:none\}/
 /* ---- 모드 단추 ---- */
 const sw=doc.querySelector('.modesw');
 const btns=[...sw.querySelectorAll('button')];
-S.ok('모드 단추가 둘', btns.length===2, btns.length);
-S.ok('왼쪽이 학습모드', btns[0].id==='modeStudy' && btns[0].textContent==='학습모드',
+S.ok('모드 단추가 셋', btns.length===3, btns.length);
+S.ok('첫째가 학습모드', btns[0].id==='modeStudy' && btns[0].textContent==='학습모드',
      btns[0].id+' / '+btns[0].textContent);
-S.ok('오른쪽이 복붙모드', btns[1].id==='modeSearch' && btns[1].textContent==='복붙모드',
+S.ok('둘째가 복붙모드', btns[1].id==='modeSearch' && btns[1].textContent==='복붙모드',
      btns[1].id+' / '+btns[1].textContent);
+S.ok('셋째가 내 PDF모드', btns[2].id==='modeMine' && /내 PDF/.test(btns[2].textContent),
+     btns[2].id+' / '+btns[2].textContent);
 S.ok('처음에는 복붙모드가 켜져 있다', btns[1].className==='on' && btns[0].className!=='on',
      btns[0].className+' / '+btns[1].className);
 S.ok('시작 모드가 search', T_mode()==='search', T_mode());

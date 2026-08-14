@@ -1,0 +1,106 @@
+/* 내 PDF로 오답노트 (mypdf.html)
+   · 문항 경계 찾기를 실제 시험지 글자(시험지표본.json)로 겨루어 본다
+   · 오답노트 양식이 index.html 과 어긋나지 않았는지 본다
+   · 화면 구성과 «파일이 밖으로 안 나간다»는 약속을 확인한다 */
+const fs=require('fs'), path=require('path');
+const {JSDOM}=require('jsdom');
+const {scorer,APP}=require('./harness.js');
+const S=scorer();
+const HTML=fs.readFileSync(path.join(APP,'mypdf.html'),'utf8');
+
+/* ---------- 화면 ---------- */
+const doc=new JSDOM(HTML).window.document;
+S.ok('한국어 문서', doc.documentElement.lang==='ko');
+S.ok('제목에 줍줍닷컴', /줍줍닷컴/.test(doc.title), doc.title);
+S.ok('설명 메타가 있다', !!doc.querySelector('meta[name=description]'));
+S.ok('검색기로 돌아가는 링크', !!doc.querySelector('a[href="index.html"]'));
+['drop','pages','tools','printArea','busy','pick','file','mSel','mDraw','make','again','helpBtn']
+  .forEach(id=>S.ok('«'+id+'» 자리가 있다', !!doc.getElementById(id)));
+S.ok('단계 표시가 셋', doc.querySelectorAll('.steps .st').length===3);
+S.ok('PDF만 받는다', doc.getElementById('file').accept.indexOf('pdf')>=0);
+
+/* 파일이 밖으로 안 나가는지 — 어디로도 보내지 않아야 한다 */
+S.ok('보내는 코드가 없다', !/fetch\s*\(|XMLHttpRequest|navigator\.sendBeacon|new WebSocket/.test(HTML));
+S.ok('바깥에서 받아오는 파일이 없다',
+     ![...doc.querySelectorAll('script[src],link[href]')]
+       .some(e=>/^https?:/.test(e.getAttribute('src')||e.getAttribute('href')||'')));
+S.ok('«기기 밖으로 나가지 않습니다» 라고 적혀 있다',
+     doc.body.textContent.indexOf('기기 밖으로 나가지 않습니다')>=0);
+S.ok('PDF 부품을 처음부터 불러오지 않는다',
+     ![...doc.querySelectorAll('script[src]')].some(e=>/pdf\.min\.js/.test(e.getAttribute('src'))));
+S.ok('PDF 부품 파일이 있다', fs.existsSync(path.join(APP,'lib','pdf.min.js')));
+S.ok('PDF 일꾼 파일이 있다', fs.existsSync(path.join(APP,'lib','pdf.worker.min.js')));
+
+/* ---------- 오답노트 양식이 index.html 과 같은가 ---------- */
+const IDX=fs.readFileSync(path.join(APP,'index.html'),'utf8');
+function grab(src, name){
+  const m=new RegExp('var '+name+'\\s*=\\s*([\\s\\S]*?);\\s*\\n').exec(src);
+  return m? m[1].replace(/\s+/g,'') : null;
+}
+['NOTE_Q','NOTICE','MAKER','BOX3'].forEach(n=>{
+  const a=grab(IDX,n), b=grab(HTML,n);
+  S.ok('오답노트 «'+n+'» 이 두 파일에서 같다', a && b && a===b, (a||'?').slice(0,30));
+});
+S.ok('내 PDF 쪽으로 가는 단추가 검색기에 있다', /id="modeMine"/.test(IDX));
+S.ok('그 단추가 mypdf.html 로 간다', /mypdf\.html/.test(IDX));
+
+/* ---------- 문항 경계 찾기 ---------- */
+let SRC=HTML.match(/<script>\s*\(function\(\)\{([\s\S]*?)\}\)\(\);\s*<\/script>/)[1];
+SRC='(function(){'+SRC+'window.__T={detect:detect,findCols:findCols,toLines:toLines,bestChain:bestChain};})();';
+const ids=['toast','modal','mbox','drop','busy','busyMsg','bar','tools','cnt','pages','printArea','st1','st2','st3'];
+const btns=['pick','mSel','mDraw','allPage','none','again','make','helpBtn'];
+const dom2=new JSDOM(ids.map(i=>`<div id="${i}"></div>`).join('')+
+  btns.map(i=>`<button id="${i}"></button>`).join('')+'<input id="file">',{runScripts:'outside-only'});
+dom2.window.eval(SRC);
+const T=dom2.window.__T;
+
+S.ok('빈 쪽은 아무것도 안 내놓는다', T.detect([],600,800).length===0);
+S.ok('글자가 몇 개뿐이면 안 내놓는다',
+     T.detect([{s:'1.가나다',x:60,top:100,w:40,h:10}],600,800).length===0);
+S.ok('번호가 늘어나는 가장 긴 사슬을 고른다',
+     T.bestChain([{n:5,top:1},{n:23,top:2},{n:24,top:3}]).map(c=>c.n).join(',')==='23,24',
+     T.bestChain([{n:5,top:1},{n:23,top:2},{n:24,top:3}]).map(c=>c.n).join(','));
+S.ok('사슬이 하나뿐이면 그것을 고른다',
+     T.bestChain([{n:7,top:1}]).map(c=>c.n).join(',')==='7');
+S.ok('후보가 없으면 빈 것', T.bestChain([]).length===0);
+
+const F=path.join(__dirname,'시험지표본.json');
+if(!fs.existsSync(F)){
+  S.ok('시험지 표본이 있다 (없으면 경계 찾기는 건너뜁니다)', false, F);
+}else{
+  const data=JSON.parse(fs.readFileSync(F,'utf8'));
+  let tp=0, fn=0, fp=0, pages=0, exact=0;
+  Object.keys(data).forEach(key=>{
+    data[key].forEach(r=>{
+      const got=T.detect(r.ts, r.W, r.H).map(b=>b.n);
+      const g=new Set(got), t=new Set(r.truth);
+      const hit=r.truth.filter(n=>g.has(n)).length;
+      tp+=hit; fn+=r.truth.length-hit; fp+=got.filter(n=>!t.has(n)).length;
+      pages++; if(hit===r.truth.length && got.length===r.truth.length) exact++;
+    });
+  });
+  const rate=tp/(tp+fn)*100, ex=exact/pages*100;
+  S.ok('문항의 9할 넘게 찾는다', rate>=90, rate.toFixed(1)+'% ('+tp+'/'+(tp+fn)+')');
+  S.ok('잘못 잡는 것이 문항 수의 5% 미만', fp < (tp+fn)*0.05, fp+'개');
+  S.ok('쪽의 8할 넘게 통째로 맞힌다', ex>=80, ex.toFixed(1)+'% ('+exact+'/'+pages+')');
+
+  /* 낱낱이 맞아야 하는 시험 셋 — 파이썬 정답과 완전히 같아야 한다 */
+  ['2603g3','2706mp','2606g1'].forEach(key=>{
+    if(!data[key]) return;
+    let ok=true, detail=[];
+    data[key].forEach(r=>{
+      const got=T.detect(r.ts,r.W,r.H).map(b=>b.n).sort((a,b)=>a-b);
+      if(got.join(',')!==r.truth.join(',')){ ok=false; detail.push('['+got+']≠['+r.truth+']'); }
+    });
+    S.ok('«'+key+'» 은 쪽마다 정답과 똑같다', ok, detail.join(' '));
+  });
+
+  /* 한 단짜리·두 단짜리를 모두 가려내는가 */
+  let two=0;
+  Object.keys(data).forEach(key=>data[key].forEach(r=>{
+    const body=r.ts.filter(t=>t.s&&t.s.trim()&&t.top>r.H*0.055&&t.top+t.h<r.H*0.955);
+    if(T.findCols(body,r.W,r.H).length===2) two++;
+  }));
+  S.ok('두 단짜리 시험지를 가려낸다', two>=pages*0.7, two+'/'+pages+'쪽');
+}
+S.done();

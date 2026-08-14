@@ -478,6 +478,7 @@
     <span class="modesw">
       <button id="modeStudy">학습모드</button>
       <button id="modeSearch" class="on">복붙모드</button>
+      <button id="modeMine" title="가지고 계신 PDF에서 문항을 골라 오답노트로">내 PDF모드</button>
     </span>
     <button id="cmpBtn">유사문항 비교</button>
     <button id="crsBtn">교과목 고르기</button>
@@ -1916,6 +1917,11 @@
     });
   }
   $('helpBtn').onclick=openHelp;
+  /* 내 PDF모드는 쪽을 따로 두었다 — PDF 읽는 부품(1.3MB)을 이 쪽에서는 안 불러오려고 */
+  $('modeMine').onclick=function(){
+    statLog('내PDF','열기',1);
+    location.href='mypdf.html';
+  };
 
   /* ================= 단축키 =================
      키를 늘리거나 고치실 때는 아래 KEYS 와 실제 처리하는 곳을 함께 보셔야 합니다. */
