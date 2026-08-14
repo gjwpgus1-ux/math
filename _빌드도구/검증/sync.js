@@ -7,11 +7,15 @@ let pass=0,fail=0;
 const ok=(n,c,e)=>{ if(c){pass++;console.log('  OK   '+n);} else {fail++;console.log('  FAIL '+n+(e!==undefined?'  → '+e:''));} };
 
 /* 가짜 시트 */
-const SHEET={cmp:[],std:[],neg:[],rep:[],crs:[],del:[]};
+const SHEET={cmp:[],std:[],neg:[],rep:[],crs:[],del:[],use:[]};
 let ONLINE=true, POSTS=0, GETS=0;
 function server(url,opt){
   if(!ONLINE) return Promise.reject(new Error('오프라인'));
   if(!opt || opt.method==='GET'){
+    /* 통계는 따로 물어 본다 — 여느 받아오기와 섞이지 않는다 */
+    if(/what=stat/.test(url)) return Promise.resolve({json:()=>Promise.resolve({ok:true,
+      tot:{},days:[],hours:new Array(24).fill(0),dows:[0,0,0,0,0,0,0],dev:{},
+      top:{q:[],zero:[],ex:[],it:[],pr:[]}})});
     GETS++;
     return Promise.resolve({json:()=>Promise.resolve({ok:true,
       pairs:SHEET.cmp.slice(), std:SHEET.std.slice(),
@@ -24,7 +28,8 @@ function server(url,opt){
   let erased=0;
   (body.records||[]).forEach(r=>{
     const kind = r.t==='std'?'std' : r.t==='neg'?'neg' : r.t==='rep'?'rep' : r.t==='crs'?'crs'
-               : r.t==='del'?'del' : r.t==='repdone'?'repdone' : 'cmp';
+               : r.t==='del'?'del' : r.t==='use'?'use'
+               : r.t==='repdone'?'repdone' : 'cmp';
     if(kind==='repdone'){
       const t=SHEET.rep.find(x=>x.id===r.target);
       if(t){ t.done=r.done; saved++; }
@@ -80,6 +85,10 @@ const dump=w=>({q:JSON.parse(w.localStorage.getItem('gich_queue')||'[]'),
   A.key('1'); await wait(40); A.key('Enter'); await wait(250);
   ok('시트에 비교 2건', SHEET.cmp.length===2, SHEET.cmp.length);
   ok('시트에 성취기준 1건', SHEET.std.length===1, SHEET.std.length);
+  ok('사용기록은 따로 쌓인다', SHEET.use.length>0, SHEET.use.length);
+  ok('사용기록이 비교에 섞이지 않았다', SHEET.cmp.every(r=>r.t!=='use'));
+  ok('사용기록에 이름 같은 것이 없다',
+     SHEET.use.every(r=>!('name' in r)&&!('ip' in r)&&!('ua' in r)));
   ok('대기열 비었음', dump(A.w).q.length===0, dump(A.w).q.length);
   ok('응답마다 고유번호', SHEET.cmp.every(r=>/^u[a-z0-9]{6}-/.test(r.id)), SHEET.cmp[0].id);
   ok('종류 표시', SHEET.cmp[0].t==='cmp' && SHEET.std[0].t==='std');

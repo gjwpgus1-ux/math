@@ -177,6 +177,23 @@
   .rrow .rf{font-family:Consolas,monospace;font-size:11px;color:#9aa1ab}
   .rrow .rb{display:flex;gap:5px;margin-top:7px;flex-wrap:wrap}
   .rrow .rb button{padding:3px 9px;font-size:12px;border-radius:6px}
+  /* ---- 방문 통계 ---- */
+  .stcards{display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 14px}
+  .stcard{flex:1 1 110px;border:1px solid var(--line);border-radius:9px;padding:9px 11px;background:var(--card)}
+  .stcard b{display:block;font-size:21px;line-height:1.25;color:var(--accent)}
+  .stcard span{font-size:11.5px;color:var(--dim)}
+  .stsec{margin:0 0 18px}
+  .stsec h4{margin:0 0 7px;font-size:13px;color:var(--ink)}
+  .stsec h4 em{font-style:normal;color:var(--dim);font-weight:400;font-size:11.5px;margin-left:6px}
+  .stwrap{border:1px solid var(--line);border-radius:9px;padding:10px 12px 4px;background:var(--card);overflow-x:auto}
+  .sttab{width:100%;border-collapse:collapse;font-size:12.5px}
+  .sttab td{border-bottom:1px solid var(--line);padding:5px 8px}
+  .sttab td.r{text-align:right;color:var(--dim);white-space:nowrap;width:62px}
+  .sttab td.k{color:var(--dim);width:26px;text-align:right}
+  .sttab tr:last-child td{border-bottom:none}
+  .stcols{display:flex;gap:12px;flex-wrap:wrap}
+  .stcols>div{flex:1 1 300px;min-width:280px}
+  .stnone{padding:16px 4px;color:var(--dim);font-size:12.5px}
   .atab{display:flex;gap:6px;padding:9px 12px 0;flex-wrap:wrap}
   .atab button{border-radius:8px 8px 0 0;padding:6px 11px;font-size:12.5px;border-bottom:none}
   .atab button.on{background:var(--accent-soft);border-color:#cfd8e8;color:var(--accent);font-weight:600}
@@ -476,6 +493,7 @@
   <div class="th"><b>관리자</b><button id="adminClose">닫기</button></div>
   <div class="atab">
     <button id="atabRep" class="on">오류제보</button>
+    <button id="atabUse">방문 통계</button>
     <button id="atabOv">교체한 이미지</button>
     <button id="atabCmp">비교데이터</button>
     <button id="atabCrs">교과목</button>
@@ -1357,6 +1375,7 @@
   function openSimTab(it){
     var rec=recommend(IDX[it[2]],24);
     if(!rec.length){ toast('비슷한 문항을 찾지 못했습니다',true); return; }
+    statLog('유사', label(it), rec.length);
     pushTab({t:'sim',k:it[2],label:label(it),n:rec.length});
     showSim(it[2]);
   }
@@ -1453,7 +1472,7 @@
     }).then(function(blob){
       if(!(navigator.clipboard && window.ClipboardItem)) throw new Error('미지원');
       return navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);
-    }).then(function(){ toast('복사했습니다 — '+label(it)); })
+    }).then(function(){ statLog('복사', label(it), 1); toast('복사했습니다 — '+label(it)); })
       .catch(function(err){
         var m=err.message||err;
         if(m==='복사용 데이터 없음' || m==='데이터 없음')
@@ -1514,6 +1533,14 @@
   function pdfReady(){
     return !!(window.jspdf && window.jspdf.jsPDF && window.html2canvas);
   }
+  /* 내보낸 것 한 줄 + 담긴 문항들(많으면 앞의 30개까지) */
+  function statOut(kind, way, n){
+    statLog('인쇄', kind+'·'+way, n);
+    var k=0;
+    IT.forEach(function(it){
+      if(SEL[it[2]] && k<30){ statLog('담기', label(it), 1); k++; }
+    });
+  }
   function askOutput(kind, build){
     if(!selCount()){ toast('먼저 문항을 선택해 주세요',true); return; }
     var n=selCount();
@@ -1528,9 +1555,9 @@
       function(){
         $('outCancel').onclick=closeModal;
         $('outPdf').disabled=!pdfReady();
-        $('outPdf').onclick=function(){ closeModal(); makePdf(kind, build); };
+        $('outPdf').onclick=function(){ closeModal(); statOut(kind,'PDF',n); makePdf(kind, build); };
         $('outPrint').onclick=function(){
-          closeModal();
+          closeModal(); statOut(kind,'인쇄',n);
           var P=build(); if(P) printWhenReady(P);
         };
       });
@@ -2394,6 +2421,32 @@
     }catch(e){ SENDING=false; LAST_ERR=e.message||String(e); }
   }
 
+  /* ---------- 사용기록 ----------
+     쌓는 것은 «무엇을 했는가»뿐입니다. 누구인지는 담지 않습니다.
+       · 익명번호  — 이 브라우저에 저장된 무작위 번호. 되짚어 사람을 알아낼 수 없습니다.
+       · 기기      — 화면 너비로 «모바일 / PC» 만 봅니다.
+     이름·주소·IP는 보내지 않고, 보낼 방법도 없습니다(구글 앱스스크립트는 IP를 주지 않습니다). */
+  var STAT_ON = true;                 /* 끄시려면 false */
+  var DEVICE  = (function(){
+    try{ return (screen && screen.width && screen.width<820) ? '모바일' : 'PC'; }
+    catch(e){ return 'PC'; }
+  })();
+  function statLog(kind, val, n){
+    if(!STAT_ON || !COLLECT_URL) return;
+    sendCollect({t:'use', id:newId(), kind:kind, val:String(val==null?'':val).slice(0,120),
+                 n:(n==null?1:n), dev:DEVICE, who:UID, at:nowStr()});
+  }
+  /* 첫 방문인지는 이 브라우저에만 남는 표시로 가른다 */
+  function statVisit(){
+    if(!STAT_ON || !COLLECT_URL) return;
+    var first='';
+    try{
+      if(!localStorage.getItem('gich_seen')){ first='예'; localStorage.setItem('gich_seen','1'); }
+    }catch(e){}
+    sendCollect({t:'use', id:newId(), kind:'방문', val:first, n:1,
+                 dev:DEVICE, who:UID, at:nowStr()});
+  }
+
   /* 응답 하나를 지운다 — 이 브라우저에서 지우고, 시트에도 «지웠다»고 알린다 */
   function dropRecord(id, kind){
     if(!id) return;
@@ -2409,6 +2462,73 @@
     sift(PAIRS); sift(STDV); sift(NEGV); sift(REPORTS); sift(CRSV);
     if(n){ pairSave(); stdSave(); negSave(); repSave(); crsSave(); prefClear(); STDMAP=null; }
     return n;
+  }
+
+  /* ---------- 방문 통계 받아오기 ----------
+     줄을 그대로 받아 오지 않고, 시트 쪽에서 다 세어 준 것만 받는다.
+     기록이 수만 줄이 되어도 오가는 자료는 작게 유지된다. */
+  var STAT=null, STAT_AT='', STAT_ERR='', STAT_BUSY=false;
+  function pullStats(cb){
+    if(!COLLECT_URL){ if(cb) cb('주소가 비어 있습니다'); return; }
+    if(typeof fetch!=='function'){ if(cb) cb('이 브라우저는 자동 수집을 지원하지 않습니다'); return; }
+    if(STAT_BUSY) return;
+    STAT_BUSY=true;
+    try{
+    fetch(COLLECT_URL+(COLLECT_URL.indexOf('?')<0?'?':'&')+'what=stat')
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        STAT_BUSY=false;
+        if(!j || !j.ok) throw new Error(j&&j.error?j.error:'받아오지 못했습니다');
+        STAT=j; STAT_AT=nowStr(); STAT_ERR='';
+        if(cb) cb('');
+      })
+      .catch(function(err){ STAT_BUSY=false; STAT_ERR=err.message||String(err); if(cb) cb(STAT_ERR); });
+    }catch(e){ STAT_BUSY=false; STAT_ERR=e.message||String(e); if(cb) cb(STAT_ERR); }
+  }
+
+  /* 막대그래프 하나 — 밖에서 받아오는 것 없이 그림을 직접 그린다 */
+  function barSvg(rows, opt){
+    opt=opt||{};
+    var W=opt.w||560, H=opt.h||130, PL=34, PB=opt.pb||20, PT=8;
+    var n=rows.length; if(!n) return '<div class="stnone">아직 기록이 없습니다.</div>';
+    var max=1;
+    rows.forEach(function(r){ max=Math.max(max, r[1]||0, opt.two?(r[2]||0):0); });
+    var iw=(W-PL-6)/n, bw=Math.max(2, Math.min(opt.bw||26, iw-3));
+    var s='<svg viewBox="0 0 '+W+' '+H+'" width="100%" height="'+H+'" '+
+          'preserveAspectRatio="none" style="display:block">';
+    /* 눈금 세 줄 */
+    [0,0.5,1].forEach(function(f){
+      var y=PT+(H-PT-PB)*(1-f), v=Math.round(max*f);
+      s+='<line x1="'+PL+'" y1="'+y.toFixed(1)+'" x2="'+W+'" y2="'+y.toFixed(1)+
+         '" stroke="#e8ebef" stroke-width="1"/>'+
+         '<text x="'+(PL-5)+'" y="'+(y+3.5).toFixed(1)+'" text-anchor="end" '+
+         'font-size="9" fill="#9aa1ab">'+v+'</text>';
+    });
+    rows.forEach(function(r,i){
+      var x=PL+iw*i+(iw-bw)/2;
+      var hh=(H-PT-PB)*((r[1]||0)/max);
+      s+='<rect x="'+x.toFixed(1)+'" y="'+(H-PB-hh).toFixed(1)+'" width="'+bw.toFixed(1)+
+         '" height="'+hh.toFixed(1)+'" fill="#2563eb" rx="2"><title>'+
+         esc(r[0]+' — '+(r[1]||0)+(opt.two?(' (순 '+(r[2]||0)+')'):''))+'</title></rect>';
+      if(opt.two){
+        var h2=(H-PT-PB)*((r[2]||0)/max);
+        s+='<rect x="'+(x+bw*0.28).toFixed(1)+'" y="'+(H-PB-h2).toFixed(1)+'" width="'+
+           (bw*0.44).toFixed(1)+'" height="'+h2.toFixed(1)+'" fill="#93c5fd" rx="1.5"/>';
+      }
+      if(!opt.every || i%opt.every===0)
+        s+='<text x="'+(x+bw/2).toFixed(1)+'" y="'+(H-6)+'" text-anchor="middle" '+
+           'font-size="9" fill="#6b7280">'+esc(opt.lab?opt.lab(r[0],i):r[0])+'</text>';
+    });
+    return s+'</svg>';
+  }
+  function rankTable(rows, unit){
+    if(!rows || !rows.length) return '<div class="stnone">아직 기록이 없습니다.</div>';
+    var s='<table class="sttab">';
+    rows.forEach(function(r,i){
+      s+='<tr><td class="k">'+(i+1)+'</td><td>'+esc(r[0])+'</td>'+
+         '<td class="r">'+r[1].toLocaleString()+(unit||'')+'</td></tr>';
+    });
+    return s+'</table>';
   }
 
   /* ---------- 구글 시트에서 받아오기 (다른 사람 응답까지 합치기) ---------- */
@@ -2517,20 +2637,116 @@
   $('adminClose').onclick=function(){ $('admin').classList.remove('open'); };
   $('adminBtn').onclick=openAdmin;
   $('atabRep').onclick=function(){ adminTab='rep'; drawAdmin(); };
+  $('atabUse').onclick=function(){ adminTab='use'; drawAdmin(); };
   $('atabOv').onclick=function(){ adminTab='ov'; drawAdmin(); };
   $('atabCmp').onclick=function(){ adminTab='cmp'; drawAdmin(); };
   $('atabStd').onclick=function(){ adminTab='std'; drawAdmin(); };
   $('atabCrs').onclick=function(){ adminTab='crs'; drawAdmin(); };
   $('atabSync').onclick=function(){ adminTab='sync'; drawAdmin(); };
 
+  /* 방문 통계 한 판 그리기 */
+  function drawUse(L,Fo){
+    if(!COLLECT_URL){
+      L.innerHTML='<div class="stnone">수집 주소가 비어 있어 통계를 낼 수 없습니다. '+
+        '«수집 상태» 탭에서 주소를 넣어 주세요.</div>';
+      return;
+    }
+    if(!STAT){
+      L.innerHTML='<div class="stnone">'+(STAT_ERR?esc(STAT_ERR):'불러오는 중입니다…')+'</div>';
+      if(!STAT_ERR && !STAT_BUSY) pullStats(function(){ if(adminTab==='use') drawAdmin(); });
+      if(STAT_ERR){
+        var rb=document.createElement('button'); rb.textContent='다시 시도';
+        rb.style.flex='1'; rb.onclick=function(){ STAT_ERR=''; drawAdmin(); pullStats(function(){ if(adminTab==='use') drawAdmin(); }); };
+        Fo.appendChild(rb);
+      }
+      return;
+    }
+    var S=STAT, T=S.tot||{}, days=S.days||[];
+    var p=function(x){ return (x<10?'0':'')+x; };
+    var dt=new Date(), key=function(d){ return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()); };
+    var byDay={}; days.forEach(function(r){ byDay[r[0]]=r; });
+    var today=key(dt);
+    var yd=new Date(dt.getTime()-86400000), yday=key(yd);
+    var week=0; for(var i=0;i<7;i++){
+      var k=key(new Date(dt.getTime()-i*86400000));
+      if(byDay[k]) week+=byDay[k][1];
+    }
+    var card=function(v,t){ return '<div class="stcard"><b>'+v+'</b><span>'+t+'</span></div>'; };
+    var h='<div class="stcards">'+
+      card((byDay[today]?byDay[today][1]:0).toLocaleString(),'오늘 방문')+
+      card((byDay[yday]?byDay[yday][1]:0).toLocaleString(),'어제 방문')+
+      card(week.toLocaleString(),'최근 7일')+
+      card((T.visit||0).toLocaleString(),'전체 방문')+
+      card((T.uniq||0).toLocaleString(),'다녀간 사람')+
+      card((T.back||0).toLocaleString(),'두 번 이상 온 사람')+
+      '</div>';
+
+    /* 날짜별 — 최근 30일 */
+    var last=days.slice(-30);
+    h+='<div class="stsec"><h4>날짜별 방문<em>진한 막대가 방문, 연한 막대가 그날 다녀간 사람 수 · 최근 '+
+       last.length+'일</em></h4><div class="stwrap">'+
+       barSvg(last,{two:true,h:150,every:Math.max(1,Math.ceil(last.length/10)),
+                    lab:function(d){ return d.slice(5).replace('-','/'); }})+'</div></div>';
+
+    /* 시간대별 */
+    var hrs=(S.hours||[]).map(function(v,i){ return [i, v]; });
+    h+='<div class="stsec"><h4>시간대별 방문<em>0시부터 23시까지</em></h4><div class="stwrap">'+
+       barSvg(hrs,{h:130,every:2,lab:function(x){ return x+'시'; }})+'</div></div>';
+
+    /* 요일별 · 기기 */
+    var WD=['일','월','화','수','목','금','토'];
+    var dws=(S.dows||[]).map(function(v,i){ return [WD[i], v]; });
+    var dev=[]; for(var k2 in (S.dev||{})) if(S.dev.hasOwnProperty(k2)) dev.push([k2,S.dev[k2]]);
+    dev.sort(function(a,b){ return b[1]-a[1]; });
+    h+='<div class="stcols">'+
+       '<div class="stsec"><h4>요일별 방문</h4><div class="stwrap">'+
+         barSvg(dws,{h:120,w:300})+'</div></div>'+
+       '<div class="stsec"><h4>기기<em>화면 너비로만 가릅니다</em></h4><div class="stwrap">'+
+         (dev.length?rankTable(dev,'회'):'<div class="stnone">아직 기록이 없습니다.</div>')+
+       '</div></div></div>';
+
+    var top=S.top||{};
+    var cut=function(a){ return (a||[]).slice(0,20); };
+    h+='<div class="stcols">'+
+      '<div class="stsec"><h4>많이 한 검색<em>앞 20개</em></h4><div class="stwrap">'+
+        rankTable(cut(top.q),'회')+'</div></div>'+
+      '<div class="stsec"><h4>결과가 없던 검색<em>여기 있는 말은 검색기를 고칠 실마리입니다</em></h4>'+
+        '<div class="stwrap">'+rankTable(cut(top.zero),'회')+'</div></div>'+
+      '</div>'+
+      '<div class="stcols">'+
+      '<div class="stsec"><h4>많이 쓴 시험<em>복사·담기·유사문항 기준</em></h4><div class="stwrap">'+
+        rankTable(cut(top.ex),'회')+'</div></div>'+
+      '<div class="stsec"><h4>많이 쓴 문항</h4><div class="stwrap">'+
+        rankTable(cut(top.it),'회')+'</div></div>'+
+      '</div>'+
+      '<div class="stsec"><h4>내보내기<em>학습지·오답노트를 어떻게 뽑았는지</em></h4><div class="stwrap">'+
+        rankTable(top.pr,'번')+'</div></div>'+
+      '<div class="stnone">쌓인 기록 '+(T.rows||0).toLocaleString()+'줄 · '+
+        '검색 '+(T.search||0).toLocaleString()+'회 · 내보내기 '+(T.print||0).toLocaleString()+'회 · '+
+        '복사 '+(T.copy||0).toLocaleString()+'회 · 유사문항 '+(T.sim||0).toLocaleString()+'회'+
+        (STAT_AT?' · '+esc(STAT_AT)+' 기준':'')+'<br>'+
+        '이름·주소·IP는 담기지 않습니다. 익명번호는 브라우저가 만든 무작위 번호입니다.</div>';
+    L.innerHTML=h;
+
+    var b=document.createElement('button'); b.textContent='새로 고침'; b.style.flex='1';
+    b.onclick=function(){ STAT=null; STAT_ERR=''; drawAdmin(); };
+    Fo.appendChild(b);
+    var b2=document.createElement('button'); b2.textContent='시트 열기';
+    b2.onclick=function(){ try{ window.open(COLLECT_URL,'_blank'); }catch(e){} };
+    Fo.appendChild(b2);
+  }
+
   function drawAdmin(){
     $('atabRep').className=adminTab==='rep'?'on':'';
+    $('atabUse').className=adminTab==='use'?'on':'';
     $('atabOv').className =adminTab==='ov' ?'on':'';
     $('atabCmp').className=adminTab==='cmp'?'on':'';
     $('atabStd').className=adminTab==='std'?'on':'';
     $('atabCrs').className=adminTab==='crs'?'on':'';
     $('atabSync').className=adminTab==='sync'?'on':'';
     var L=$('adminList'),Fo=$('adminFoot'); L.innerHTML=''; Fo.innerHTML='';
+
+    if(adminTab==='use'){ drawUse(L,Fo); return; }
 
     if(adminTab==='rep'){
       if(!REPORTS.length) L.innerHTML='<div style="padding:20px;color:#6b7280;font-size:13px">접수된 제보가 없습니다.</div>';
@@ -3103,7 +3319,10 @@
       };
     });
     render(true);
-    if(record && raw.trim()) pushTab({t:'q',k:raw,label:raw,n:hits.length});
+    if(record && raw.trim()){
+      pushTab({t:'q',k:raw,label:raw,n:hits.length});
+      statLog('검색', raw, hits.length);
+    }
   }
 
   var timer=null;
@@ -3207,6 +3426,7 @@
   }
   applyDeletions();
   TABS=lsGet('gich_tabs',[]);
+  statVisit();
   updateAdminBadge(); updateSel();
   ovLoad(function(){
     buildFilters(); fsummary();

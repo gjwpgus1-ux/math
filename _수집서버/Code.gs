@@ -17,7 +17,10 @@ var SHEET_NEG = '유사아님';
 var SHEET_REP = '오류제보';
 var SHEET_CRS = '교과목';
 var SHEET_DEL = '지운응답';
+var SHEET_USE = '사용기록';
 var MAX_BACK  = 20000;          // 앱으로 돌려보낼 최대 줄 수
+var MAX_USE   = 300000;         // 통계를 낼 때 훑는 최대 줄 수
+var TOP_N     = 60;             // 순위표에 넣을 개수
 
 var HEAD_CMP = ['id','기준','왼쪽','오른쪽','선택','검증쌍',
                 '점수L','점수R','글자L','글자R','익명번호','시각','받은시각'];
@@ -26,6 +29,8 @@ var HEAD_NEG = ['id','기준문항','제외할문항','익명번호','시각','�
 var HEAD_REP = ['id','파일','시험·문항','유형','메모','처리','익명번호','시각','받은시각'];
 var HEAD_CRS = ['id','문항','교과목','익명번호','시각','받은시각'];
 var HEAD_DEL = ['id','지운응답id','종류','익명번호','시각','받은시각'];
+/* 사용기록 — 이름·주소·IP는 담지 않는다. 익명번호는 브라우저가 만든 무작위 번호다. */
+var HEAD_USE = ['id','종류','값','수','기기','익명번호','시각','받은시각'];
 
 
 function sheet_(name, head) {
@@ -56,6 +61,7 @@ function kindOf_(r) {
   if (r.t === 'crs') return 'crs';
   if (r.t === 'repdone') return 'repdone';
   if (r.t === 'del') return 'del';
+  if (r.t === 'use') return 'use';
   return 'cmp';
 }
 
@@ -77,6 +83,10 @@ function rowOf_(r, now) {
   }
   if (k === 'del') {
     return [r.id || '', r.target || '', r.kind || '', r.who || '', r.at || '', now];
+  }
+  if (k === 'use') {
+    return [r.id || '', r.kind || '', r.val || '', r.n || 0, r.dev || '',
+            r.who || '', r.at || '', now];
   }
   return [r.id || '', r.a || '', r.x || '', r.y || '', r.c || '', r.chk ? '예' : '',
           r.sx, r.sy, r.bx, r.by, r.who || '', r.at || '', now];
@@ -116,12 +126,15 @@ function doPost(e) {
 
     var sh = { cmp: sheet_(SHEET_CMP, HEAD_CMP), std: sheet_(SHEET_STD, HEAD_STD),
                neg: sheet_(SHEET_NEG, HEAD_NEG), rep: sheet_(SHEET_REP, HEAD_REP),
-               crs: sheet_(SHEET_CRS, HEAD_CRS), del: sheet_(SHEET_DEL, HEAD_DEL) };
+               crs: sheet_(SHEET_CRS, HEAD_CRS), del: sheet_(SHEET_DEL, HEAD_DEL),
+               use: sheet_(SHEET_USE, HEAD_USE) };
     var head = { cmp: HEAD_CMP, std: HEAD_STD, neg: HEAD_NEG, rep: HEAD_REP,
-                 crs: HEAD_CRS, del: HEAD_DEL };
+                 crs: HEAD_CRS, del: HEAD_DEL, use: HEAD_USE };
+    /* 사용기록은 줄이 많아 id를 다 훑으면 느려진다. 새 id로만 만들어 보내므로 겹칠 일이 없다. */
     var seen = { cmp: idSet_(sh.cmp), std: idSet_(sh.std), neg: idSet_(sh.neg),
-                 rep: idSet_(sh.rep), crs: idSet_(sh.crs), del: idSet_(sh.del), repdone: {} };
-    var add = { cmp: [], std: [], neg: [], rep: [], crs: [], del: [], repdone: [] };
+                 rep: idSet_(sh.rep), crs: idSet_(sh.crs), del: idSet_(sh.del),
+                 use: {}, repdone: {} };
+    var add = { cmp: [], std: [], neg: [], rep: [], crs: [], del: [], use: [], repdone: [] };
     var erased = 0;
 
     for (var i = 0; i < list.length; i++) {
@@ -145,7 +158,7 @@ function doPost(e) {
         if (eraseRow_(from, r.target)) erased++;
       }
     }
-    ['cmp', 'std', 'neg', 'rep', 'crs', 'del'].forEach(function (k) {
+    ['cmp', 'std', 'neg', 'rep', 'crs', 'del', 'use'].forEach(function (k) {
       if (add[k].length) {
         sh[k].getRange(sh[k].getLastRow() + 1, 1, add[k].length, head[k].length).setValues(add[k]);
       }
@@ -153,7 +166,7 @@ function doPost(e) {
 
     out.ok = true;
     out.saved = add.cmp.length + add.std.length + add.neg.length + add.rep.length
-              + add.crs.length + add.del.length;
+              + add.crs.length + add.del.length + add.use.length;
     out.erased = erased;
   } catch (err) {
     out.error = String(err);
@@ -162,7 +175,114 @@ function doPost(e) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
+/** 받은시각을 «날짜·시·요일»로 나눈다. 시트가 글자로 두든 날짜로 바꾸든 둘 다 받는다. */
+function when_(v) {
+  var d;
+  if (v instanceof Date) d = v;
+  else {
+    var s = String(v || '');
+    if (s.length < 13) return null;
+    d = new Date(s.replace(' ', 'T'));
+    if (isNaN(d.getTime())) return null;
+  }
+  var p = function (x) { return (x < 10 ? '0' : '') + x; };
+  return { d: d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()),
+           h: d.getHours(), w: d.getDay() };
+}
+
+/** 세어 둔 것을 많은 차례로 줄 세워 앞의 n개만 돌려준다 */
+function top_(map, n) {
+  var out = [];
+  for (var k in map) if (map.hasOwnProperty(k)) out.push([k, map[k]]);
+  out.sort(function (a, b) { return b[1] - a[1]; });
+  return out.slice(0, n);
+}
+
+/** 사용기록을 훑어 통계를 낸다. 줄을 그대로 돌려보내지 않고 여기서 다 세어 보낸다. */
+function stats_() {
+  var sh = sheet_(SHEET_USE, HEAD_USE);
+  var out = { ok: true, days: [], hours: [], dows: [], dev: {}, top: {},
+              tot: { visit: 0, uniq: 0, first: 0, back: 0, search: 0, print: 0,
+                     copy: 0, sim: 0, rows: 0 } };
+  var i, h = [], w = [];
+  for (i = 0; i < 24; i++) h.push(0);
+  for (i = 0; i < 7; i++) w.push(0);
+
+  var n = sh.getLastRow();
+  if (n < 2) { out.hours = h; out.dows = w; return out; }
+  var from = Math.max(2, n - MAX_USE + 1);
+  var v = sh.getRange(from, 1, n - from + 1, HEAD_USE.length).getValues();
+
+  var day = {}, dayU = {}, who = {}, dev = {};
+  var qCnt = {}, qZero = {}, exCnt = {}, itCnt = {}, prCnt = {};
+  out.tot.rows = v.length;
+
+  for (i = 0; i < v.length; i++) {
+    var kind = String(v[i][1] || ''), val = String(v[i][2] || '');
+    var num = Number(v[i][3] || 0), device = String(v[i][4] || '');
+    var uid = String(v[i][5] || '');
+    var t = when_(v[i][7]) || when_(v[i][6]);
+
+    if (kind === '방문') {
+      out.tot.visit++;
+      if (val === '예') out.tot.first++;
+      if (device) dev[device] = (dev[device] || 0) + 1;
+      if (uid) who[uid] = (who[uid] || 0) + 1;
+      if (t) {
+        day[t.d] = (day[t.d] || 0) + 1;
+        if (!dayU[t.d]) dayU[t.d] = {};
+        if (uid) dayU[t.d][uid] = 1;
+        h[t.h]++; w[t.w]++;
+      }
+    } else if (kind === '검색') {
+      out.tot.search++;
+      if (val) {
+        qCnt[val] = (qCnt[val] || 0) + 1;
+        if (!num) qZero[val] = (qZero[val] || 0) + 1;
+      }
+    } else if (kind === '인쇄') {
+      out.tot.print++;
+      if (val) prCnt[val] = (prCnt[val] || 0) + 1;
+    } else if (kind === '복사' || kind === '담기' || kind === '유사') {
+      if (kind === '복사') out.tot.copy++;
+      if (kind === '유사') out.tot.sim++;
+      if (val) {
+        itCnt[val] = (itCnt[val] || 0) + 1;
+        var ex = val.replace(/\s*\d+번\s*$/, '');
+        if (ex) exCnt[ex] = (exCnt[ex] || 0) + 1;
+      }
+    }
+  }
+
+  var keys = [];
+  for (var d in day) if (day.hasOwnProperty(d)) keys.push(d);
+  keys.sort();
+  for (i = 0; i < keys.length; i++) {
+    var u = 0, m = dayU[keys[i]] || {};
+    for (var k in m) if (m.hasOwnProperty(k)) u++;
+    out.days.push([keys[i], day[keys[i]], u]);
+  }
+  var uc = 0, bc = 0;
+  for (var q in who) if (who.hasOwnProperty(q)) { uc++; if (who[q] > 1) bc++; }
+  out.tot.uniq = uc;
+  out.tot.back = bc;
+
+  out.hours = h;
+  out.dows = w;
+  out.dev = dev;
+  out.top = { q: top_(qCnt, TOP_N), zero: top_(qZero, TOP_N),
+              ex: top_(exCnt, TOP_N), it: top_(itCnt, TOP_N), pr: top_(prCnt, 12) };
+  return out;
+}
+
 function doGet(e) {
+  /* ?what=stat 이면 통계만 보낸다 — 여느 받아오기를 느리게 하지 않으려고 나눠 두었다 */
+  if (e && e.parameter && e.parameter.what === 'stat') {
+    var st;
+    try { st = stats_(); } catch (err) { st = { ok: false, error: String(err) }; }
+    return ContentService.createTextOutput(JSON.stringify(st))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
   var out = { ok: false, pairs: [], std: [], neg: [], rep: [], crs: [], del: [] };
   try {
     var shC = sheet_(SHEET_CMP, HEAD_CMP), shS = sheet_(SHEET_STD, HEAD_STD);
