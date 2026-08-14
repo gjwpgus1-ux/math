@@ -77,7 +77,7 @@ async function doPrint(H, id){
   ok('쪽 번호 있음', /1 \/ /.test(pgn.querySelector('.pn').textContent), pgn.querySelector('.pn').textContent);
   const cpr=pgn.querySelector('.cpr');
   ok('안내 문구 있음', !!cpr);
-  ok('문구 내용', cpr.textContent==='공교육을 위해 제작했습니다. 영리적인 목적을 위하여 사용을 금합니다.', cpr.textContent);
+  ok('문구 내용', cpr.textContent==='영리적인 목적을 위하여 사용을 금합니다. · 줍줍닷컴', cpr.textContent);
   ok('모든 장에 들어감', sheets.every(s=>!!s.querySelector('.pgn .cpr')), sheets.length+'장');
   ok('오른쪽에 붙음', /\.pgn \.cpr\{[^}]*right:0/.test(html));
   ok('한 줄로 유지', /\.pgn \.cpr\{[^}]*white-space:nowrap/.test(html));
@@ -96,7 +96,7 @@ async function doPrint(H, id){
   ok('오답노트 인쇄됨', ns.length===22, ns.length);
   ok('모든 장에 문구', ns.every(s=>!!s.querySelector('.pgn .cpr')), ns.length+'장');
   ok('문구 내용 같음',
-     ns[0].querySelector('.pgn .cpr').textContent==='공교육을 위해 제작했습니다. 영리적인 목적을 위하여 사용을 금합니다.',
+     ns[0].querySelector('.pgn .cpr').textContent==='영리적인 목적을 위하여 사용을 금합니다. · 줍줍닷컴',
      ns[0].querySelector('.pgn .cpr').textContent);
   ok('쪽 번호도 그대로', /1 \/ 22/.test(ns[0].querySelector('.pn').textContent));
   ok('오답노트도 그림칸 분리', !!ns[0].querySelector('.sslot .simg'));
@@ -117,13 +117,13 @@ async function doPrint(H, id){
   ok('모든 장에 질문 4개', ns.every(s=>s.querySelectorAll('.nq').length===4));
 
   console.log('\n[8] 맨 위 왼쪽에 만든이');
-  ok('오답노트 머리말', ns[0].querySelector('.shd').textContent==='만든이 : 허선생',
+  ok('오답노트 머리말', ns[0].querySelector('.shd').textContent==='줍줍닷컴 · 만든이 : 허선생',
      ns[0].querySelector('.shd').textContent);
   ok('오답노트 모든 장', ns.every(s=>s.querySelector('.shd')));
   ok('머리말이 맨 위', ns[0].firstElementChild.className==='shd', ns[0].firstElementChild.className);
   await doPrint(H,'printWork');
   const ws=[...doc.querySelectorAll('.sheet')];
-  ok('학습지에도 머리말', ws.every(s=>s.querySelector('.shd')&&s.querySelector('.shd').textContent==='만든이 : 허선생'),
+  ok('학습지에도 머리말', ws.every(s=>s.querySelector('.shd')&&s.querySelector('.shd').textContent==='줍줍닷컴 · 만든이 : 허선생'),
      ws[0].querySelector('.shd').textContent);
   ok('학습지도 맨 위', ws[0].firstElementChild.className==='shd');
   ok('아래 문구는 그대로', ws.every(s=>!!s.querySelector('.pgn .cpr')));
