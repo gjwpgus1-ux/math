@@ -1,0 +1,53 @@
+/* 소개·개인정보 처리방침·문의 세 쪽이 함께 쓰는 모양새.
+   검색기 본문(index.html)과 같은 색·글꼴을 씁니다. 고치실 곳은 여기 한 군데뿐입니다. */
+:root{
+  --bg:#f6f7f9; --card:#fff; --line:#e2e5ea; --ink:#1d2129; --dim:#6b7280;
+  --accent:#2563eb; --accent-soft:#eff4ff; --warn:#b45309;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);line-height:1.75;
+     font-family:"Malgun Gothic","맑은 고딕",-apple-system,"Segoe UI",sans-serif}
+
+header{background:var(--card);border-bottom:1px solid var(--line);padding:13px 20px}
+header .in{max-width:800px;margin:0 auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+header a.home{color:var(--ink);text-decoration:none;font-size:15px;font-weight:600}
+header a.home:hover{color:var(--accent)}
+header .sp{flex:1}
+header nav a{color:var(--dim);text-decoration:none;font-size:13px;margin-left:14px}
+header nav a:hover{color:var(--accent);text-decoration:underline}
+header nav a.on{color:var(--accent);font-weight:600}
+
+main{max-width:800px;margin:0 auto;padding:26px 20px 50px}
+h1{font-size:23px;margin:6px 0 4px;letter-spacing:-.3px}
+.lead{color:var(--dim);font-size:13.5px;margin:0 0 22px}
+h2{font-size:16px;margin:30px 0 8px;padding-top:18px;border-top:1px solid var(--line)}
+h2:first-of-type{border-top:none;padding-top:0}
+h3{font-size:14px;margin:20px 0 6px;color:var(--accent)}
+p{margin:0 0 12px;font-size:14.5px}
+ul{margin:0 0 14px;padding-left:20px;font-size:14.5px}
+li{margin:0 0 6px}
+a{color:var(--accent)}
+strong{font-weight:600}
+
+.box{background:var(--card);border:1px solid var(--line);border-radius:10px;
+     padding:14px 18px;margin:0 0 18px}
+.box.warn{background:#fffaf2;border-color:#e5c9a0}
+.box p:last-child,.box ul:last-child{margin-bottom:0}
+
+table{width:100%;border-collapse:collapse;font-size:13.5px;margin:0 0 18px;
+      background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+th,td{border-bottom:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
+th{background:var(--bg);font-weight:600;white-space:nowrap}
+tr:last-child th,tr:last-child td{border-bottom:none}
+
+.date{color:var(--dim);font-size:13px;margin:0 0 20px}
+footer{border-top:1px solid var(--line);margin-top:34px;padding-top:16px;
+       color:var(--dim);font-size:12.5px}
+footer a{color:var(--dim);margin-right:14px}
+
+@media (max-width:600px){
+  main{padding:20px 16px 40px}
+  h1{font-size:20px}
+  header nav a{margin-left:0;margin-right:14px}
+  header nav{width:100%}
+}
