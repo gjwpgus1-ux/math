@@ -6,6 +6,15 @@ const {ok,done}=scorer();
 const T=()=>w.__T;
 const n=q=>T().search(q).list.length;
 const lab=q=>T().search(q).list.map(it=>T().label(it));
+
+/* 인쇄 단추를 누르면 묻는 창이 뜬다 — «바로 인쇄»까지 눌러 주는 도우미 */
+async function doPrint(H, id){
+  H.click(H.$(id)); await wait(90);
+  const b=H.doc.getElementById('outPrint');
+  if(b) H.click(b);
+  await wait(600);
+}
+
 (async()=>{
   await wait(150);
 
@@ -120,7 +129,7 @@ const lab=q=>T().search(q).list.map(it=>T().label(it));
   $('q').value='25 고3 3월 공통 1~4'; $('q').dispatchEvent(new w.Event('input')); await wait(340);
   click($('selAll')); await wait(80);
   const b=w.__printed||0;
-  click($('printWork')); await wait(400);
+  await doPrint(H,'printWork');
   ok('학습지 인쇄', (w.__printed||0)>b);
   ok('풀이 횟수 칸', doc.querySelectorAll('.sheet .sbox').length>0);
   ok('1회 문구', /1회/.test(doc.querySelector('.sheet').textContent));

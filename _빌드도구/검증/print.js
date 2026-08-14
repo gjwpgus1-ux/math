@@ -3,6 +3,15 @@ const H=boot('IT:IT,EX:EX,packColumns:packColumns,unitOf:unitOf,ptsOf:ptsOf,SELs
 const {w,doc,$,click,key,html}=H;
 const {ok,done}=scorer();
 const T=()=>w.__T;
+
+/* 인쇄 단추를 누르면 묻는 창이 뜬다 — «바로 인쇄»까지 눌러 주는 도우미 */
+async function doPrint(H, id){
+  H.click(H.$(id)); await wait(90);
+  const b=H.doc.getElementById('outPrint');
+  if(b) H.click(b);
+  await wait(600);
+}
+
 (async()=>{
   await wait(180);
   key('1'); key('Enter'); await wait(140);
@@ -43,7 +52,7 @@ const T=()=>w.__T;
   ok('22문항 선택', n===22, n);
   ok('4점 문항이 섞여 있음', T().selectedItems().some(it=>T().unitOf(it)===2));
   const b=w.__printed||0;
-  click($('printWork')); await wait(500);
+  await doPrint(H,'printWork');
   ok('인쇄됨', (w.__printed||0)>b);
   const sheets=[...doc.querySelectorAll('.sheet')];
   ok('장이 만들어짐', sheets.length>0, sheets.length);
@@ -82,7 +91,7 @@ const T=()=>w.__T;
   ok('슬롯마다 .simg', [...doc.querySelectorAll('.sslot')].every(s=>!!s.querySelector('.simg')));
 
   console.log('\n[6] 오답노트에도 같은 문구');
-  click($('printNote')); await wait(600);
+  await doPrint(H,'printNote');
   const ns=[...doc.querySelectorAll('.sheet')];
   ok('오답노트 인쇄됨', ns.length===22, ns.length);
   ok('모든 장에 문구', ns.every(s=>!!s.querySelector('.pgn .cpr')), ns.length+'장');
@@ -112,7 +121,7 @@ const T=()=>w.__T;
      ns[0].querySelector('.shd').textContent);
   ok('오답노트 모든 장', ns.every(s=>s.querySelector('.shd')));
   ok('머리말이 맨 위', ns[0].firstElementChild.className==='shd', ns[0].firstElementChild.className);
-  click($('printWork')); await wait(600);
+  await doPrint(H,'printWork');
   const ws=[...doc.querySelectorAll('.sheet')];
   ok('학습지에도 머리말', ws.every(s=>s.querySelector('.shd')&&s.querySelector('.shd').textContent==='만든이 : 허선생'),
      ws[0].querySelector('.shd').textContent);

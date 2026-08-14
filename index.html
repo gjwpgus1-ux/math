@@ -380,6 +380,8 @@
 
   /* ── 인쇄 양식 ── */
   #printArea{display:none}
+  /* PDF 를 만들 때만 잠깐 화면 밖에 펼쳐 둔다 */
+  #printArea.shoot{display:block;position:fixed;left:-99999px;top:0;background:#fff}
   .sheet{width:190mm;height:277mm;page-break-after:always;overflow:hidden;
          display:flex;flex-direction:column;position:relative}
   .sbody{flex:1;display:flex;min-height:0}
@@ -403,7 +405,7 @@
   .nlines{flex:1;min-height:0;display:flex;flex-direction:column}
   .nlines div{flex:1;min-height:6mm;border-bottom:1px solid #b9c0c9}
   @media print{
-    header,main,.drawer,.nav,#pager,#toast,.modal,#cmp{display:none !important}
+    header,main,.drawer,.nav,#pager,#toast,.modal,#cmp,#std,#crs{display:none !important}
     #printArea{display:block}
     body{background:#fff}
     @page{size:A4;margin:10mm}
@@ -590,6 +592,8 @@
 <script src="data/index.js"></script>
 <script src="data/sim.js"></script>
 <script src="data/std.js"></script>
+<script src="lib/jspdf.umd.min.js"></script>
+<script src="lib/html2canvas.min.js"></script>
 <script>
 (function(){
   /* ===================================================================
@@ -1425,6 +1429,90 @@
                 '<div class="simg"><img src="'+imgSrc(it)+'"></div>';
     return d;
   }
+  /* ================= 내보내기 (인쇄 · PDF) =================
+     브라우저는 «인쇄 대상»을 코드로 정하지 못한다. 그래서 PDF는 직접 만든다.
+       · 각 장을 화면 밖에서 그려 그림으로 뜬 뒤 A4 크기로 PDF에 얹는다
+       · 한글이 그대로 나오도록 브라우저가 그린 결과를 쓴다 (글꼴을 따로 담지 않아도 된다)
+     라이브러리가 없거나 실패하면 인쇄 창으로 넘긴다. */
+  function pdfReady(){
+    return !!(window.jspdf && window.jspdf.jsPDF && window.html2canvas);
+  }
+  function askOutput(kind, build){
+    if(!selCount()){ toast('먼저 문항을 선택해 주세요',true); return; }
+    var n=selCount();
+    modal('<h3>'+esc(kind)+' 내보내기</h3>'+
+      '<p class="sub">고른 '+n+'문항을 어떻게 할까요?</p>'+
+      '<div class="mb" style="justify-content:stretch;flex-direction:column;gap:8px">'+
+        '<button class="primary" id="outPdf" style="width:100%;padding:12px">'+
+          'PDF 파일로 저장'+(pdfReady()?'':' (준비 안 됨)')+'</button>'+
+        '<button id="outPrint" style="width:100%;padding:12px">바로 인쇄</button>'+
+        '<button id="outCancel" style="width:100%">취소</button>'+
+      '</div>',
+      function(){
+        $('outCancel').onclick=closeModal;
+        $('outPdf').disabled=!pdfReady();
+        $('outPdf').onclick=function(){ closeModal(); makePdf(kind, build); };
+        $('outPrint').onclick=function(){
+          closeModal();
+          var P=build(); if(P) printWhenReady(P);
+        };
+      });
+  }
+
+  function pdfName(kind){
+    var d=new Date(), p=function(x){ return (x<10?'0':'')+x; };
+    return kind+'_'+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+'_'+
+           p(d.getHours())+p(d.getMinutes())+'.pdf';
+  }
+
+  function makePdf(kind, build){
+    var P=build();
+    if(!P){ return; }
+    var sheets=P.querySelectorAll('.sheet');
+    if(!sheets.length){ toast('만들 것이 없습니다',true); return; }
+
+    /* 화면 밖에 잠깐 펼쳐 놓아야 그려진다 (숨긴 요소는 그릴 수 없다) */
+    P.classList.add('shoot');
+    toast(kind+' PDF를 만드는 중… ('+sheets.length+'장)');
+
+    var imgs=P.querySelectorAll('img'), left=imgs.length;
+    var go=function(){
+      var pdf=new window.jspdf.jsPDF({unit:'mm', format:'a4', orientation:'portrait'});
+      var i=0;
+      var step=function(){
+        if(i>=sheets.length){
+          try{ pdf.save(pdfName(kind)); toast(kind+' PDF를 내려받았습니다'); }
+          catch(e){ toast('PDF를 만들지 못했습니다 ('+(e.message||e)+')',true); }
+          P.classList.remove('shoot');
+          return;
+        }
+        window.html2canvas(sheets[i], {scale:2, backgroundColor:'#ffffff',
+                                       logging:false, useCORS:true})
+          .then(function(cv){
+            if(i>0) pdf.addPage();
+            /* A4 210×297 에 10mm 여백 → 190×277 */
+            pdf.addImage(cv.toDataURL('image/jpeg', 0.92), 'JPEG', 10, 10, 190, 277);
+            i++;
+            if(i%3===0) toast(kind+' PDF 만드는 중… '+i+' / '+sheets.length);
+            setTimeout(step, 0);
+          })
+          .catch(function(err){
+            P.classList.remove('shoot');
+            toast('PDF를 만들지 못했습니다 ('+(err.message||err)+'). 인쇄 창을 엽니다.',true);
+            setTimeout(function(){ printWhenReady(P); }, 600);
+          });
+      };
+      step();
+    };
+    if(!left){ go(); return; }
+    var one=function(){ if(--left<=0) go(); };
+    Array.prototype.forEach.call(imgs,function(im){
+      if(im.complete && im.naturalWidth){ one(); return; }
+      im.addEventListener('load', one); im.addEventListener('error', one);
+    });
+    setTimeout(function(){ if(left>0){ left=0; go(); } }, 20000);
+  }
+
   /* 그림이 다 실린 뒤에 인쇄한다.
      예전에는 0.3초만 기다리고 인쇄해서, 느리게 실리는 문항은 빈칸으로 나갔다. */
   function printWhenReady(P){
@@ -1471,7 +1559,7 @@
       all[i].appendChild(n);
     }
   }
-  function printWork(){
+  function buildWork(){
     var list=selectedItems();
     if(!list.length){ toast('먼저 문항을 선택해 주세요',true); return; }
     var P=$('printArea'); P.innerHTML='';
@@ -1490,9 +1578,9 @@
       P.appendChild(m.sheet);
     }
     numberSheets(P, true);
-    printWhenReady(P);
+    return P;
   }
-  function printNote(){
+  function buildNote(){
     var list=selectedItems();
     if(!list.length){ toast('먼저 문항을 선택해 주세요',true); return; }
     var P=$('printArea'); P.innerHTML='';
@@ -1514,7 +1602,7 @@
       m.body.appendChild(L); m.body.appendChild(R); P.appendChild(m.sheet);
     });
     numberSheets(P, true);
-    printWhenReady(P);
+    return P;
   }
 
   /* ================= 창(모달) ================= */
@@ -1535,13 +1623,14 @@
    ['학습 모드에서는 문항 그림을 누르면 선택됩니다',
     '작은 체크상자를 겨냥하지 않아도 됩니다. 쪽을 넘겨도 고른 것은 그대로이니, '+
     '여러 쪽을 돌며 고른 뒤 한꺼번에 인쇄하세요.', '', ''],
-   ['인쇄 창에서 «배경 그래픽»을 꼭 켜세요',
+   ['«PDF 파일로 저장»을 고르면 배경 그래픽을 신경 쓸 필요가 없습니다',
+    '인쇄 단추를 누르면 «PDF 파일로 저장»과 «바로 인쇄»를 묻습니다. '+
+    'PDF로 저장하면 구분선과 필기 줄이 그대로 들어간 파일이 바로 내려받아집니다. '+
+    '반 전체에 나눠 주거나 다음 해에 다시 뽑을 때 그대로 씁니다.', '', ''],
+   ['«바로 인쇄»를 고르셨다면 «배경 그래픽»을 켜세요',
     '이걸 켜지 않으면 가운데 구분선과 필기 줄이 나오지 않아 빈 종이처럼 보입니다. '+
     '크롬은 인쇄 창에서 «설정 더보기» → «배경 그래픽»에 체크하시면 됩니다.',
     'warn', '한 번만 켜 두면 다음 인쇄부터는 기억합니다.'],
-   ['종이 대신 «PDF로 저장»을 고르면 두고두고 씁니다',
-    '인쇄 창의 대상을 «PDF로 저장»으로 바꾸면 파일로 남습니다. '+
-    '반 전체에 나눠 주거나, 다음 해에 다시 뽑을 때 그대로 씁니다.', '', ''],
    ['문항 위 1회·2회·3회 칸은 «다시 푼 날»을 적는 자리입니다',
     '처음 풀 때 1회에 날짜를 적고, 일주일 뒤 다시 풀어 맞으면 2회에 ○, 또 틀리면 ✗를 칩니다. '+
     '세 칸이 다 차기 전에 맞히는 것이 목표라고 일러 주면 학생이 스스로 관리합니다.', '', ''],
@@ -2894,8 +2983,8 @@
     toast('지금 걸러진 '+hits.length+'문항을 모두 선택했습니다');
   };
   $('selNone').onclick=function(){ SEL={}; updateSel(); refreshCards(); };
-  $('printWork').onclick=printWork;
-  $('printNote').onclick=printNote;
+  $('printWork').onclick=function(){ askOutput('학습지', buildWork); };
+  $('printNote').onclick=function(){ askOutput('오답노트', buildNote); };
 
   document.addEventListener('keydown',function(e){
     if($('cmp').classList.contains('open')){

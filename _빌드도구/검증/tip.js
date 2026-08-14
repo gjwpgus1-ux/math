@@ -1,6 +1,15 @@
 const {boot,wait,scorer}=require('./harness');
 const H=boot(); const {w,doc,$,click,key,btn,html}=H;
 const {ok,done}=scorer();
+
+/* 인쇄 단추를 누르면 묻는 창이 뜬다 — «바로 인쇄»까지 눌러 주는 도우미 */
+async function doPrint(H, id){
+  H.click(H.$(id)); await wait(90);
+  const b=H.doc.getElementById('outPrint');
+  if(b) H.click(b);
+  await wait(600);
+}
+
 (async()=>{
   await wait(150);
   key('1'); key('Enter'); await wait(120);   /* 의무 응답 1건 */
@@ -55,7 +64,7 @@ const {ok,done}=scorer();
   click($('selAll')); await wait(90);
   ok('8개 선택', $('selCnt').textContent==='선택 8개', $('selCnt').textContent);
   const before=w.__printed||0;
-  click($('printNote')); await wait(500);
+  await doPrint(H,'printNote');
   ok('오답노트 인쇄됨', (w.__printed||0)>before);
   ok('8장', doc.querySelectorAll('.sheet').length===8, doc.querySelectorAll('.sheet').length);
   ok('장마다 풀이 횟수 칸', doc.querySelectorAll('.sheet .sbox').length===8);
