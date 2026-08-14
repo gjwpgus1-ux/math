@@ -68,7 +68,7 @@ async function doPrint(H, id){
   ok('시행은 3월부터 차례대로', [...g1.querySelectorAll('.chip')].map(c=>c.textContent).join()==='3월,4월,5월,6월,7월,9월,10월,11월',
      [...g1.querySelectorAll('.chip')].map(c=>c.textContent).join());
   click($('ftoggle')); await wait(40);
-  ok('화살표 안내', /키로/.test($('keyhint').textContent));
+  ok('화살표 안내', /←/.test($('keyhint').textContent) && /Ctrl/.test($('keyhint').textContent));
 
   console.log('\n[6] 성취기준');
   const S=w.QSTD;

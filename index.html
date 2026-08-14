@@ -75,6 +75,14 @@
   #studybar.on{display:flex}
   #studybar .cnt{font-size:13px;font-weight:600;color:var(--accent)}
   #studybar button{padding:6px 11px;font-size:12.5px}
+  #helpBtn{border-color:#bcd3f0;color:#1d4ed8;background:#f5f9ff;white-space:nowrap}
+  #helpBtn:hover{background:#e9f2ff}
+  .tip kbd{display:inline-block;min-width:20px;text-align:center;padding:1px 6px;margin:0 1px;
+     border:1px solid #cbd2da;border-bottom-width:2px;border-radius:5px;background:#fbfcfd;
+     font-family:Consolas,monospace;font-size:12px;color:#333}
+  .tip table{border-collapse:collapse;margin:4px 0 8px 26px;font-size:13px}
+  .tip table td{border:1px solid var(--line);padding:5px 10px}
+  .tip table td:first-child{background:var(--bg);font-family:Consolas,monospace;white-space:nowrap}
   #tipBtn{border-color:#e5c9a0;color:#b45309;background:#fffaf2}
   #tipBtn:hover{background:#fff4e5}
 
@@ -425,15 +433,16 @@
     <button id="stdBtn">성취기준 달기</button>
   </h1>
   <div class="searchbar">
-    <input id="q" placeholder="문구·수식·연도·번호를 섞어 입력   예) 고2 6월 14번 · 확통 정규분포 · x^2 · sqrt2 · 쉼표로 묶으면 둘 다: lim, x^2" autocomplete="off">
+    <input id="q" placeholder="검색어를 입력하세요" autocomplete="off">
     <button id="clear">초기화</button>
+    <button id="helpBtn" title="수식·쉼표·단축키로 찾는 법">❓ 검색 도움말</button>
   </div>
   <div id="fbar">
     <button id="ftoggle">필터 열기<span class="arrow">▾</span></button>
     <span id="scopebar"><b>범위</b></span>
     <span id="fsummary"></span>
     <button id="fclear" style="display:none">필터 해제</button>
-    <span id="keyhint">검색한 뒤 <b>←</b> <b>→</b> 키로 다음 4문항을 볼 수 있습니다</span>
+    <span id="keyhint"><b>←</b> <b>→</b> 다음 4문항 · <b>Ctrl</b>+<b>←</b> <b>→</b> 탭 이동</span>
     <button id="adminBtn" style="display:none">관리자<span class="n" id="adminN" style="display:none">0</span></button>
   </div>
   <div class="filters" id="filters"></div>
@@ -1330,6 +1339,16 @@
       d.appendChild(s); d.appendChild(c); d.appendChild(x); box.appendChild(d);
     });
   }
+  /* Ctrl+화살표로 옆 탭 — 끝에 닿으면 반대쪽 끝으로 돌아간다 */
+  function goTab(d){
+    if(!TABS.length) return;
+    var i=(activeTab<0) ? (d>0?0:TABS.length-1) : activeTab+d;
+    if(i<0) i=TABS.length-1;
+    if(i>=TABS.length) i=0;
+    openTab(i);
+    var box=$('tabs'), el=box.children[i];
+    if(el && el.scrollIntoView) try{ el.scrollIntoView({block:'nearest',inline:'nearest'}); }catch(e){}
+  }
   function openTab(i){
     var t=TABS[i]; activeTab=i; drawTabs();
     if(t.t==='q'){ $('q').value=t.k; run(false,true); }
@@ -1720,6 +1739,81 @@
     });
   }
   $('tipBtn').onclick=openTips;
+
+  /* ================= 검색 도움말 =================
+     내용을 고치시려면 아래 HELP 안의 글만 바꾸시면 됩니다.
+     칸이 둘인 줄은 «친 것 → 나오는 것» 표가 됩니다. */
+  var HELP=[
+   ['섞어서 한 번에 치시면 됩니다',
+    '연도·시행·학년·과목·문항번호·문구를 차례에 상관없이 함께 적으시면 됩니다. 띄어쓰기는 무시합니다.',
+    [['25 고3 3월 1,2,3,7','2025년 3월 고3 학평의 그 여섯 문항'],
+     ['고3 6월 22','해마다 6월 모평 22번을 모두'],
+     ['확통 정규분포','확률과 통계 중 정규분포가 나온 문항']]],
+   ['수식도 그대로 찾습니다',
+    '문항의 수식을 글자로 되살려 두었습니다. 자판으로 치기 어려운 기호는 낱말로 적으시면 됩니다. '+
+    '전체 5,694문항 중 5,454문항(95.8%)에 들어 있고, 글자가 없는 스캔본 8개 시험만 빠져 있습니다.',
+    [['x^2','이차식이 든 문항'],
+     ['a_n','수열 aₙ 이 든 문항'],
+     ['2^3','2의 세제곱'],
+     ['f(x)  g(x)=','함수 표기 그대로'],
+     ['|x|','절댓값']]],
+   ['기호는 낱말로 적으셔도 됩니다',
+    '영문 약어와 한글 이름 아무 쪽이나 쓰시면 됩니다. 대소문자는 가리지 않고 알아듣습니다.',
+    [['sqrt · root · 루트','√'],
+     ['sum · 시그마','Σ'],
+     ['int · 적분','∫'],
+     ['pi · 파이','π'],
+     ['theta · 세타','θ  (alpha·beta 도 됩니다)'],
+     ['abs · vert · 절댓값','|'],
+     ['-> ','→  (예: lim x->0)'],
+     ['inf · 무한대','∞'],
+     ['lim · sin · cos · tan · log','그대로 치시면 됩니다']]],
+   ['쉼표로 묶으면 «둘 다» 든 문항만 나옵니다',
+    '조건을 쉼표로 나누어 적으면 모두 들어 있는 문항만 골라 냅니다. 셋 이상도 됩니다.',
+    [['lim','579문항'],
+     ['x^2','968문항'],
+     ['lim, x^2','81문항 — 둘 다 든 것만'],
+     ['정규분포, 표준편차','43문항'],
+     ['고2, lim, sin','고2 중에서 둘 다 든 것']]],
+   ['숫자만 늘어놓은 쉼표는 문항 번호로 읽습니다',
+    '«1,2,3» 처럼 숫자뿐이면 예전대로 번호 목록입니다. 물결로 범위도 됩니다.',
+    [['25 고3 3월 1,2,3,7,10,30','그 여섯 문항'],
+     ['26 고3 3월 1~5','1번부터 5번까지']]],
+   ['로마자는 대문자와 소문자를 가립니다',
+    '점·선분 이름은 대문자, 변수는 소문자로 적으시면 서로 섞이지 않습니다. 한글은 가릴 것이 없습니다.',
+    [['AB','선분 AB — 659문항'],
+     ['ab','a 곱하기 b — 910문항']]],
+   ['단축키',
+    '검색창에 커서가 없을 때 듣습니다. 검색창에서 빠져나오려면 Esc 를 누르시면 됩니다.',
+    [['<kbd>←</kbd> <kbd>→</kbd>','다음·이전 4문항'],
+     ['<kbd>Ctrl</kbd>+<kbd>←</kbd> <kbd>→</kbd>','앞·뒤 탭으로 이동'],
+     ['<kbd>Esc</kbd>','창 닫기 · 검색창에서 나오기']]],
+   ['찾는 것이 안 나오면',
+    '수식은 시험지에 찍힌 모양 그대로 찾습니다. 분수는 아직 못 읽으니 «n(n+1)/2» 같은 것은 걸리지 않습니다. '+
+    '문구로 바꿔 적거나, 쉼표로 조건을 나눠 좁혀 보시면 대개 나옵니다.', []]
+  ];
+  function openHelp(){
+    var h='<h3>검색하는 법</h3>'+
+      '<p class="sub">여덟 가지입니다. 앞의 여섯이 찾는 요령, 뒤의 둘이 단축키와 막혔을 때입니다.</p><div class="tip">';
+    HELP.forEach(function(t,i){
+      h+='<h4><i>'+(i+1)+'</i>'+esc(t[0])+'</h4><p>'+esc(t[1])+'</p>';
+      if(t[2] && t[2].length){
+        h+='<table>';
+        t[2].forEach(function(r){
+          /* 단축키 칸에는 이미 만들어 둔 표시가 들어 있어 그대로 쓴다 */
+          var a=/<kbd>/.test(r[0]) ? r[0] : esc(r[0]);
+          h+='<tr><td>'+a+'</td><td>'+esc(r[1])+'</td></tr>';
+        });
+        h+='</table>';
+      }
+    });
+    h+='</div><div class="mb"><button class="primary" id="helpOk">알겠습니다</button></div>';
+    modal(h, function(){
+      $('mbox').classList.add('wide');
+      $('helpOk').onclick=function(){ $('mbox').classList.remove('wide'); closeModal(); };
+    });
+  }
+  $('helpBtn').onclick=openHelp;
 
   /* ================= 오류제보 ================= */
   function openReport(it){
@@ -3075,7 +3169,16 @@
       else if(e.key===' '){ e.preventDefault(); drawStd(); }
       return;
     }
-    if(e.key==='Escape'){ closeModal(); $('admin').classList.remove('open'); return; }
+    if(e.key==='Escape'){
+      /* 검색창에 커서가 있으면 먼저 거기서 빠져나온다 — 그래야 화살표가 바로 듣는다 */
+      if(document.activeElement===$('q')){ $('q').blur(); return; }
+      closeModal(); $('admin').classList.remove('open'); return;
+    }
+    /* Ctrl+화살표 — 탭 옮기기. 검색창에 커서가 있어도 듣는다 */
+    if((e.ctrlKey||e.metaKey) && (e.key==='ArrowLeft'||e.key==='ArrowRight')){
+      if(TABS.length>1){ e.preventDefault(); goTab(e.key==='ArrowRight'?1:-1); }
+      return;
+    }
     if(document.activeElement===$('q')) return;
     if(hits.length>PAGE4){
       if(e.key==='ArrowLeft') goPage(-1);
