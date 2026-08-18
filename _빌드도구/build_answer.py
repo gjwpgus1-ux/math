@@ -9,6 +9,7 @@ import sys, os, re, json, glob, collections
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import pypdfium2 as pdfium
 import layout
+import anstable
 
 HAND = {}
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -74,6 +75,48 @@ def read_answers(path):
     return blocks
 
 
+def merged_blocks(path):
+    """두 가지 방법으로 읽어 합친다.
+
+    · 객관식 : 예전 방식(«1③2⑤…» 글자 이어 읽기) — 오래 검증된 것을 그대로 쓴다
+    · 단답형 : 칸 자리로 읽는 방식 — 다만 그 표의 객관식을 «하나도 틀리지 않고
+               거의 다» 읽어 냈을 때만 믿는다. 조금이라도 어긋나면 통째로 버린다.
+    """
+    old = read_answers(path)
+    try:
+        new = anstable.read_file(path, pdfium)
+    except Exception:
+        new = []
+    if not old:
+        return new
+
+    used = set()
+    out = []
+    for label, og in old:
+        st = min(og)
+        pick = None
+        for i, (nl, ng) in enumerate(new):
+            if i in used or min(ng) != st:
+                continue
+            pick = i; break
+        merged = dict(og)
+        if pick is not None:
+            used.add(pick)
+            ng = new[pick][1]
+            shared = [k for k in ng if k in og]
+            agree = all(og[k] == ng[k] for k in shared)
+            enough = len(shared) >= len(og) * 0.9
+            if agree and enough:
+                for k, v in ng.items():
+                    merged.setdefault(k, v)
+        out.append((label, merged))
+    # 예전 방식이 아예 못 본 덩어리(선택과목 등)는 새 방식 것을 그대로
+    for i, (nl, ng) in enumerate(new):
+        if i not in used and len(ng) >= 5:
+            out.append((nl, ng))
+    return out
+
+
 def split_blocks(found, g):
     """한 쪽에 공통(1~)과 선택(23~)이 같이 있을 수 있어 나눈다.
     고1·고2는 선택과목이 없으므로 1~30을 통째로 둔다."""
@@ -109,7 +152,13 @@ def parse_name(rel):
     if '평가원' in base or '모의평가' in base:
         return None
 
-    g = '고1' if '고1' in folder else ('고2' if '고2' in folder else '고3')
+    # 학년은 폴더 «전국연합_고N» 의 앞부분으로 정한다.
+    # «전국연합_고2_3월(고1 범위)» 처럼 괄호 안에 다른 학년이 적혀 있어 그냥 찾으면 틀린다.
+    m = re.match(r'전국연합_(고[123])', folder)
+    if m:
+        g = m.group(1)
+    else:
+        g = '고1' if '고1' in folder else ('고2' if '고2' in folder else '고3')
 
     m = re.match(r'(\d{2})(\d{2})([가나])?(?![0-9년])', base)   # 2103_고1_해설 꼴
     if m:
@@ -185,7 +234,7 @@ def main():
         if hv:
             blocks = [(None, {int(k): v for k, v in hv.items()})]
         else:
-            blocks = read_answers(f)
+            blocks = merged_blocks(f)
         if not blocks:
             report.append((rel, '정답표를 못 찾음', 0))
             continue
