@@ -287,7 +287,9 @@
 
   /* «15.» 이 «15최.» 처럼 글자가 끼어 읽히는 시험지가 있어 점은 있어도 되고 없어도 된다.
      대신 왼쪽 여백에서 시작하고 번호가 늘어난다는 조건으로 걸러 낸다. */
-  var NUMPAT=/^\s*([0-9]{1,2})(?![0-9])/;
+  var NUMPAT=/^\s*([0-9]{1,2})/;
+  /* EBS 교재의 문항코드 — «[26010-0009]» 꼴 */
+  var CODEPAT=/^\[\d{4,6}[-–]\d{3,5}\]$/;
   /* 쪽머리·꼬리에 늘 찍히는 말 — 이것들이 끼면 왼쪽 여백을 잘못 잡는다 */
   var KW_STRONG=/전국연합|학력평가|모의평가|문제지|저작권|평가원|교육청|홀수형|짝수형/;
   var KW_HEAD=/영역|교시|수학/;
@@ -322,6 +324,7 @@
       for(j=0;j<i;j++){
         var d=cand[i].n-cand[j].n;
         if(d<=0 || d>4) continue;
+        if(cand[i].top<=cand[j].top) continue;   /* 같은 줄에서 나온 두 읽기는 함께 못 쓴다 */
         var L=len[j]+1, G=gap[j]+d;
         if(L>len[i] || (L===len[i] && G<gap[i])){ len[i]=L; gap[i]=G; prev[i]=j; }
       }
@@ -343,6 +346,22 @@
 
     /* 문항번호 후보를 먼저 모으고, 그것들의 왼쪽 끝으로 여백을 정한다.
        모든 줄로 여백을 정하면 쪽머리 한 줄에 통째로 어긋난다. */
+    /* ① 문항코드로 나누기 — EBS 수능특강·수능완성 같은 교재는 문항마다
+       «[26010-0009]» 꼴의 코드가 바로 위에 붙는다. 번호보다 훨씬 또렷한 자국이라
+       코드가 둘 이상 보이면 이것만으로 자른다. */
+    var codes=ls.filter(function(l){ return CODEPAT.test(l.s.replace(/\s/g,'')); })
+                .sort(function(a,b){ return a.top-b.top; });
+    if(codes.length>=2){
+      var out0=[];
+      codes.forEach(function(c,i){
+        var t0=Math.max(top0, c.top - medH*0.4);
+        var t1=(i+1<codes.length) ? codes[i+1].top - medH*0.5 : bot0;
+        if(t1-t0 >= medH*1.2) out0.push({n:i+1, x0:col[0], x1:col[1], t0:t0, t1:t1});
+      });
+      if(out0.length) return out0;
+    }
+
+    /* ② 문항번호로 나누기 */
     var cand=[];
     ls.forEach(function(l){
       var s=halfWide(l.s);
@@ -352,8 +371,14 @@
       if(rest.length<1) return;                   /* 쪽번호처럼 숫자만 있는 줄은 제외 */
       if(/^점/.test(rest)) return;                /* «4점]» 같은 배점 표시는 문항 번호가 아니다 */
       var n=+m[1];
-      if(n<1 || n>60) return;
-      cand.push({n:n, top:l.top, x:l.x});
+      if(n>=1 && n<=60) cand.push({n:n, top:l.top, x:l.x});
+      /* «32P2n=64» 처럼 번호와 수식이 붙어 버리는 교재가 있다.
+         두 자리로 읽은 것과 한 자리로 읽은 것을 둘 다 후보에 넣고,
+         뒤에서 «번호가 차례로 늘어나는 사슬»이 옳은 쪽을 골라 준다. */
+      if(m[1].length===2){
+        var n1=+m[1][0];
+        if(n1>=1) cand.push({n:n1, top:l.top, x:l.x});
+      }
     });
     if(!cand.length) return [];
     var cxs=cand.map(function(c){ return c.x; }).sort(function(a,b){ return a-b; });
@@ -486,12 +511,18 @@
     return pg.render({canvasContext:ctx, viewport:vp}).promise.then(function(){
       return pg.getTextContent();
     }).then(function(tc){
-      var W=vp1.width, H=vp1.height;
-      var ts=(tc.items||[]).map(function(it){
-        var tr=it.transform||[1,0,0,1,0,0];
-        var h=Math.abs(it.height||tr[3]||10);
-        return {s:it.str||'', x:tr[4], top:H-(tr[5]+h), w:it.width||0, h:h};
-      }).filter(function(t){ return t.w>0 || t.s.trim(); });
+      var W=vp1.width, H=vp1.height, ts=[];
+      (tc.items||[]).forEach(function(it){
+        /* 글자 자리는 «뷰포트 변환»을 거쳐야 쪽에 보이는 자리와 맞는다.
+           그냥 transform 값만 쓰면 여백을 잘라 낸 PDF(CropBox)나 돌려 놓은 쪽에서 어긋난다. */
+        var m=PDFJS.Util.transform(vp1.transform, it.transform||[1,0,0,1,0,0]);
+        /* 옆면에 세로로 찍힌 딱지·워터마크는 글줄을 헝클어뜨리므로 뺀다 */
+        if(Math.abs(m[1]) > Math.abs(m[0])*0.3) return;
+        var h=Math.hypot(m[2],m[3]) || Math.abs(it.height) || 10;
+        var s=it.str||'';
+        if(!s.trim() && !(it.width>0)) return;
+        ts.push({s:s, x:m[4], top:m[5]-h, w:it.width||0, h:h});
+      });
 
       var boxes=detect(ts, W, H);
       var wrap=document.createElement('div');

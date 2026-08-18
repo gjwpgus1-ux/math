@@ -95,6 +95,47 @@ S.ok('네모에 번호 딱지를 안 붙인다', HTML.indexOf('class="qn"')<0);
 S.ok('번호 딱지 모양새도 지웠다', !/\.qbox \.qn\{/.test(HTML));
 S.ok('도움말에 ← → 안내가 있다', /← → 키로 넘깁니다/.test(HTML));
 
+/* ---------- 글자 자리를 제대로 읽는가 ---------- */
+S.ok('뷰포트 변환을 거쳐 자리를 잡는다', /PDFJS\.Util\.transform\(vp1\.transform/.test(HTML));
+S.ok('세로로 돌아간 글씨는 뺀다', /Math\.abs\(m\[1\]\)\s*>\s*Math\.abs\(m\[0\]\)\*0\.3/.test(HTML));
+S.ok('글자 높이를 변환 뒤 값으로 잰다', /Math\.hypot\(m\[2\],m\[3\]\)/.test(HTML));
+
+/* ---------- 교재의 문항코드로 자르기 ---------- */
+(function(){
+  /* «[26010-0007]» 코드가 문항마다 붙는 교재(EBS 수능특강 등) 흉내 */
+  const ts=[];
+  const put=(s,x,top,h)=>ts.push({s:s,x:x,top:top,w:s.length*(h*0.5),h:h});
+  [0,1,2,3].forEach(i=>{
+    const y=100+i*130;
+    put('[26010-000'+(7+i)+']', 94, y, 7);
+    put('가나다라마바사아자차카타파하', 62, y+10, 10);
+    put('풀이에 이어지는 본문 줄입니다', 94, y+28, 10);
+    put('①1②2③3④4⑤5', 94, y+46, 10);
+  });
+  const bs=T.detect(ts, 584, 737);
+  S.ok('문항코드가 있으면 그것으로 넷을 가른다', bs.length===4, bs.length);
+  S.ok('코드 자리부터 잘라 낸다', bs[0] && bs[0].t0 < 100, bs[0] && bs[0].t0.toFixed(0));
+  S.ok('칸끼리 겹치지 않는다',
+       bs.every((b,i)=> i===0 || b.t0 >= bs[i-1].t1 - 1));
+})();
+
+/* ---------- 번호가 수식과 붙어 버린 줄 ---------- */
+(function(){
+  /* «32P2n=64» 처럼 3번 문항의 번호와 수식이 붙는 경우 */
+  const ts=[];
+  const put=(s,x,top,h)=>ts.push({s:s,x:x,top:top,w:s.length*(h*0.5),h:h});
+  put('1가나다라마바사아자차', 62, 100, 10);
+  put('2가나다라마바사아자차', 62, 200, 10);
+  put('32P2n=64를만족시키는', 62, 300, 10);
+  put('4가나다라마바사아자차', 62, 400, 10);
+  for(let k=0;k<10;k++) put('본문'+k, 94, 110+k*30, 10);
+  const got=T.detect(ts,584,737).map(b=>b.n);
+  S.ok('«32P2n» 을 3번으로 읽어 낸다', got.join(',')==='1,2,3,4', got.join(','));
+})();
+S.ok('같은 줄에서 나온 두 읽기를 함께 쓰지 않는다',
+     T.bestChain([{n:3,top:10},{n:32,top:10},{n:4,top:20}]).map(c=>c.n).join(',')==='3,4',
+     T.bestChain([{n:3,top:10},{n:32,top:10},{n:4,top:20}]).map(c=>c.n).join(','));
+
 S.ok('빈 쪽은 아무것도 안 내놓는다', T.detect([],600,800).length===0);
 S.ok('글자가 몇 개뿐이면 안 내놓는다',
      T.detect([{s:'1.가나다',x:60,top:100,w:40,h:10}],600,800).length===0);
