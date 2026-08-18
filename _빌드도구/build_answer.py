@@ -242,13 +242,22 @@ def main():
         put = 0
         sel_order = ['확률과통계', '미적분', '기하']
         sel_i = 0
+        # 파일 이름에 과목이 박혀 있으면 (2107_고3_해설_기하 처럼) 그것을 따른다.
+        # 차례로 짐작하면 한 과목만 든 파일에서 엉뚱한 과목에 넣게 된다.
+        base0 = os.path.basename(rel)
+        fixed_sel = None
+        for k, v in (('확통', '확률과통계'), ('확률과 통계', '확률과통계'),
+                     ('미적', '미적분'), ('기하', '기하')):
+            if k in base0:
+                fixed_sel = v
+                break
         for label, found in blocks:
             for kind, part in split_blocks(found, g):
                 if kind == '공통':
                     want = ['공통', '', hyung] if hyung else ['공통', '']
                     idx = [i for i in cands if exams[i]['s'] in want]
                 else:
-                    nm = label or (sel_order[sel_i] if sel_i < len(sel_order) else None)
+                    nm = fixed_sel or label or (sel_order[sel_i] if sel_i < len(sel_order) else None)
                     sel_i += 1
                     alias = {'확률과통계': ('확통', '확률과 통계'), '미적분': ('미적', '미적분'),
                              '기하': ('기하',)}.get(nm, ())
