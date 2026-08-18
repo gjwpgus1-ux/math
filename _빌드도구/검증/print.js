@@ -88,7 +88,9 @@ async function doPrint(H, id){
   ok('load·error 둘 다 기다림', /addEventListener\('load', one\)/.test(html) && /addEventListener\('error', one\)/.test(html));
   ok('늦으면 20초 뒤 그냥 인쇄', /\}, 20000\)/.test(html));
   ok('그림칸이 따로 생김', /\.simg\{[^}]*flex:1;min-height:0/.test(html));
-  ok('슬롯마다 .simg', [...doc.querySelectorAll('.sslot')].every(s=>!!s.querySelector('.simg')));
+  /* 맨 뒤 «빠른 정답» 장에는 그림이 없다 — 그 장은 빼고 본다 */
+  ok('슬롯마다 .simg',
+     [...doc.querySelectorAll('.sslot')].filter(s=>!s.querySelector('.qa')).every(s=>!!s.querySelector('.simg')));
 
   console.log('\n[6] 오답노트에도 같은 문구');
   await doPrint(H,'printNote');

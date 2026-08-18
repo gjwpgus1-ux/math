@@ -154,6 +154,14 @@
   .badge.pt{background:#f1efe8;color:#5f5e5a}
   .badge.sc{background:#fff4e5;color:var(--warn)}
   .badge.neg{background:#fdecea;color:var(--danger)}
+  .badge.ans{background:#e8f0fe;color:#1a4fa0;border:1px solid #cfdffb}
+  .badge.ansno{background:#f5f5f4;color:#a3a29e;border:1px solid #ebeae7;font-weight:500}
+  .ansbtn{font-size:11px;padding:2px 8px;border-radius:99px;font-weight:600;
+          background:#eef4ff;color:#1a4fa0;border:1px solid #cfdffb;cursor:pointer}
+  .ansbtn:hover{background:#dde9ff}
+  .solbox{max-height:64vh;overflow:auto;border:1px solid var(--line);border-radius:8px;
+          background:#fff;padding:10px;text-align:center}
+  .solbox img{max-width:100%;height:auto}
   .card.dim{opacity:.5}
   .card .body{padding:10px;overflow:auto;max-height:620px;background:#fff;cursor:copy;position:relative}
   .card .body:hover{background:#fcfdff}
@@ -456,6 +464,13 @@
   .scol{flex:1;min-width:0;display:flex;flex-direction:column;padding:0 5mm}
   .scol.divider{border-right:1.1px solid #333}
   .slab{font-size:9.5pt;color:#444;margin:0 0 1.5mm;font-weight:bold}
+  .slab .sans{margin-left:3mm;font-weight:bold;color:#1a4fa0}
+  .qa{display:flex;flex-wrap:wrap;gap:1mm 4mm;margin-top:2mm}
+  .qarow{display:flex;align-items:baseline;gap:2mm;font-size:9pt;
+         width:calc(50% - 4mm);border-bottom:1px dotted #cfd4da;padding-bottom:0.8mm}
+  .qarow .qan{color:#444;flex:1}
+  .qarow .qav{font-weight:bold;color:#1a4fa0}
+  .qanote{font-size:8pt;color:#8a8f96;margin-top:3mm}
   .sbox{display:flex;margin:0 0 1.5mm}
   .sbox span{width:9mm;height:6mm;border:1px solid #9aa1ab;margin-left:-1px;
              font-size:7pt;color:#c2c8d0;display:flex;align-items:center;justify-content:center}
@@ -734,6 +749,8 @@
 <script src="data/index.js"></script>
 <script src="data/sim.js"></script>
 <script src="data/std.js"></script>
+<script src="data/ans.js"></script>
+<script src="data/sol.js"></script>
 <script src="lib/jspdf.umd.min.js"></script>
 <script src="lib/html2canvas.min.js"></script>
 <script>
@@ -856,6 +873,42 @@
     return (parseInt(e.y,10)-1)+'년 '+m+' 시행';
   }
   function ptsOf(it){ var m=/([234])점/.exec(it[5]); return m? +m[1] : 0; }
+
+  /* ── 정답 ─────────────────────────────────────────────
+     data/ans.js 는 «시험이름 → {문항번호: 답}». 객관식은 1~5, 단답형은 그 수 자체. */
+  var ANS=(typeof window!=='undefined' && window.QANS) || null;
+  function ansOf(it){
+    if(!ANS) return null;
+    var d=ANS[EX[it[0]].n]; if(!d) return null;
+    var v=d[it[1]];
+    return (v===undefined||v===null)? null : v;
+  }
+  function ansText(v){ return v>=1 && v<=5 ? '①②③④⑤'.charAt(v-1) : String(v); }
+
+  /* ── 해설 ─────────────────────────────────────────────
+     data/sol.js 는 «시험이름#번호 → 그림파일». 아직 시험 삼아 몇 회차만 있다. */
+  var SOL=(typeof window!=='undefined' && window.QSOL) || null;
+  /* → [파일이름, 가로, 세로] 또는 null */
+  function solOf(it){
+    if(!SOL) return null;
+    return SOL[EX[it[0]].n+'#'+it[1]] || null;
+  }
+  function solSrc(f){ return 'img/해설/'+f; }
+  function openSol(it){
+    var s=solOf(it); if(!s) return;
+    var f=s[0];
+    var av=ansOf(it);
+    var h='<h3>'+esc(label(it))+' 해설</h3>'+
+      '<p class="sub">'+(av===null?'':'정답 '+ansText(av)+' · ')+
+      '해설지에서 이 문항 부분만 오려 온 것입니다.</p>'+
+      '<div class="solbox"><img src="'+solSrc(f)+'" alt="해설"></div>'+
+      '<div class="mb"><button class="primary" id="solOk">닫기</button></div>';
+    modal(h, function(){
+      $('mbox').classList.add('wide');
+      $('solOk').onclick=function(){ $('mbox').classList.remove('wide'); closeModal(); };
+    });
+    if(typeof statLog==='function') statLog('해설', EX[it[0]].n, 1);
+  }
   function lsGet(k,dflt){ try{ var v=JSON.parse(localStorage.getItem(k)); return v==null?dflt:v; }catch(e){ return dflt; } }
   function lsSet(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){ toast('저장 공간이 부족합니다',true); } }
 
@@ -1452,6 +1505,29 @@
     }
     var p=ptsOf(it);
     if(p){ var bp=document.createElement('span'); bp.className='badge pt'; bp.textContent=p+'점'; h.appendChild(bp); }
+
+    /* 정답 — 복붙모드는 늘 보이고, 학습모드는 눌러야 보인다 */
+    var av=ansOf(it);
+    if(av===null){
+      var bx=document.createElement('span'); bx.className='badge ansno';
+      bx.textContent='정답 준비 중';
+      bx.title='이 시험의 정답은 아직 넣지 못했습니다';
+      h.appendChild(bx);
+    }else if(MODE==='study'){
+      var ab=document.createElement('button'); ab.className='ansbtn';
+      ab.textContent='정답 보기'; ab.title='누르면 이 문항의 정답이 보입니다';
+      ab.onclick=function(ev){
+        ev.stopPropagation();
+        var bb=document.createElement('span'); bb.className='badge ans';
+        bb.textContent='정답 '+ansText(av);
+        ab.parentNode.replaceChild(bb,ab);
+      };
+      h.appendChild(ab);
+    }else{
+      var ba=document.createElement('span'); ba.className='badge ans';
+      ba.textContent='정답 '+ansText(av);
+      h.appendChild(ba);
+    }
     if(curTabIsSim()){
       var anc=BY_PATH[TABS[activeTab].k];
       if(anc && scopeOfItem(it)!==scopeOfItem(anc)){
@@ -1481,6 +1557,7 @@
       b.onclick=function(ev){ ev.stopPropagation(); fn(); };
       h.appendChild(b); return b;
     }
+    if(solOf(it)) mk('해설',function(){ openSol(it); });
     if(MODE==='study') mk('복사',function(){ copyImage(it); });
     mk('저장',function(){ saveImage(it); });
     if(SIM) mk('비슷한 문항',function(){ openSimTab(it); });
@@ -1732,22 +1809,36 @@
   }
   function askOutput(kind, build){
     if(!selCount()){ toast('먼저 문항을 선택해 주세요',true); return; }
-    var n=selCount();
+    var n=selCount(), ns=solItems().length;
     modal('<h3>'+esc(kind)+' 내보내기</h3>'+
-      '<p class="sub">고른 '+n+'문항을 어떻게 할까요?</p>'+
+      '<p class="sub">고른 '+n+'문항을 어떻게 할까요?'+
+        (ns? ' 해설이 있는 문항은 '+ns+'개입니다.'
+           : ' (고른 문항의 해설은 아직 없습니다)')+'</p>'+
       '<div class="mb" style="justify-content:stretch;flex-direction:column;gap:8px">'+
         '<button class="primary" id="outPdf" style="width:100%;padding:12px">'+
-          'PDF 파일로 저장'+(pdfReady()?'':' (준비 안 됨)')+'</button>'+
-        '<button id="outPrint" style="width:100%;padding:12px">바로 인쇄</button>'+
+          '문항 PDF로 저장'+(pdfReady()?'':' (준비 안 됨)')+'</button>'+
+        '<button id="outPrint" style="width:100%;padding:12px">문항 바로 인쇄</button>'+
+        '<button class="primary" id="outSolPdf" style="width:100%;padding:12px">'+
+          '해설 PDF로 저장</button>'+
+        '<button id="outSolPrint" style="width:100%;padding:12px">해설 바로 인쇄</button>'+
         '<button id="outCancel" style="width:100%">취소</button>'+
       '</div>',
       function(){
         $('outCancel').onclick=closeModal;
         $('outPdf').disabled=!pdfReady();
+        $('outSolPdf').disabled=!pdfReady() || !ns;
+        $('outSolPrint').disabled=!ns;
         $('outPdf').onclick=function(){ closeModal(); statOut(kind,'PDF',n); makePdf(kind, build); };
         $('outPrint').onclick=function(){
           closeModal(); statOut(kind,'인쇄',n);
           var P=build(); if(P) printWhenReady(P);
+        };
+        $('outSolPdf').onclick=function(){
+          closeModal(); statOut('해설','PDF',ns); makePdf('해설', buildSol);
+        };
+        $('outSolPrint').onclick=function(){
+          closeModal(); statOut('해설','인쇄',ns);
+          var P=buildSol(); if(P) printWhenReady(P);
         };
       });
   }
@@ -1870,8 +1961,28 @@
       });
       P.appendChild(m.sheet);
     }
+    quickAnsSheet(P, list);      /* 맨 뒤에 «빠른 정답» 한 장 */
     numberSheets(P, true);
     return P;
+  }
+  /* 학습지 맨 마지막 장 — 고른 문항의 정답을 한눈에 */
+  function quickAnsSheet(P, list){
+    var rows=list.filter(function(it){ return ansOf(it)!==null; });
+    if(!rows.length) return;
+    var m=makeSheet();
+    var c=document.createElement('div'); c.className='scol';
+    var h='<div class="sslot" style="flex:1">'+
+          '<div class="slab">빠른 정답</div><div class="qa">';
+    rows.forEach(function(it){
+      h+='<div class="qarow"><span class="qan">'+esc(labelHeld(it))+'</span>'+
+         '<span class="qav">'+ansText(ansOf(it))+'</span></div>';
+    });
+    h+='</div></div>';
+    if(rows.length<list.length){
+      h+='<div class="qanote">정답을 아직 넣지 못한 문항 '+(list.length-rows.length)+'개는 빠져 있습니다.</div>';
+    }
+    c.innerHTML=h;
+    m.body.appendChild(c); P.appendChild(m.sheet);
   }
   function buildNote(){
     var list=selectedItems();
@@ -1881,8 +1992,10 @@
     list.forEach(function(it){
       var m=makeSheet();
       var L=document.createElement('div'); L.className='scol divider';
+      var av=ansOf(it);
       L.innerHTML='<div class="sslot" style="flex:1">'+BOX3+
-                  '<div class="slab">'+esc(labelHeld(it))+'</div>'+
+                  '<div class="slab">'+esc(labelHeld(it))+
+                  (av===null?'':'<span class="sans">정답 '+ansText(av)+'</span>')+'</div>'+
                   '<div class="simg"><img src="'+imgSrc(it)+'"></div></div>';
       var R=document.createElement('div'); R.className='scol';
       var qs='';
@@ -1893,6 +2006,41 @@
       });
       R.innerHTML='<div class="sslot" style="flex:1">'+qs+'</div>';
       m.body.appendChild(L); m.body.appendChild(R); P.appendChild(m.sheet);
+    });
+    numberSheets(P, true);
+    return P;
+  }
+
+  /* 해설 모음 — 고른 문항의 해설만 모아 한 장씩 채운다.
+     해설 그림은 길이가 제각각이라 세로 길이 비율로 장을 나눈다. */
+  function solItems(){
+    return selectedItems().filter(function(it){ return !!solOf(it); });
+  }
+  function buildSol(){
+    var list=solItems();
+    if(!list.length){ toast('고른 문항 가운데 해설이 있는 것이 없습니다',true); return; }
+    var P=$('printArea'); P.innerHTML='';
+    var COLW=88;                       /* 한 단의 폭 (mm 어림) */
+    var PAGE=2.0;                      /* 한 장에 두 단 */
+    var used=0, m=null, col=null;
+    function newSheet(){ m=makeSheet(); P.appendChild(m.sheet); used=0; newCol(true); }
+    function newCol(first){
+      col=document.createElement('div');
+      col.className='scol'+(first?' divider':'');
+      m.body.appendChild(col);
+    }
+    list.forEach(function(it){
+      var s=solOf(it);
+      var u=Math.min(1, (s[2]/s[1])*(COLW/230));   /* 단 하나를 1로 본 높이 */
+      if(!m || used+u>PAGE+0.001){
+        if(m && used<=1.0-0.001 && m.body.children.length<2){ newCol(false); used=1; }
+        else newSheet();
+      }else if(used>=1.0-0.001 && m.body.children.length<2){ newCol(false); }
+      var d=document.createElement('div'); d.className='sslot'; d.style.flex=u;
+      d.innerHTML='<div class="slab">'+esc(labelHeld(it))+
+                  (ansOf(it)===null?'':'<span class="sans">정답 '+ansText(ansOf(it))+'</span>')+
+                  '</div><div class="simg"><img src="'+solSrc(s[0])+'"></div>';
+      col.appendChild(d); used+=u;
     });
     numberSheets(P, true);
     return P;

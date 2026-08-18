@@ -22,6 +22,8 @@ function boot(expose){
   w.eval(fs.readFileSync(APP+'/data/index.js','utf8'));
   w.eval(fs.readFileSync(APP+'/data/sim.js','utf8'));
   w.eval(fs.readFileSync(APP+'/data/std.js','utf8'));
+  if(fs.existsSync(APP+'/data/ans.js')) w.eval(fs.readFileSync(APP+'/data/ans.js','utf8'));
+  if(fs.existsSync(APP+'/data/sol.js')) w.eval(fs.readFileSync(APP+'/data/sol.js','utf8'));
   let SRC=html.match(/<script>([\s\S]*?)<\/script>/)[1];
   if(expose){
     SRC=SRC.replace(/\}\)\(\);\s*$/,'window.__T={'+expose+'};})();');

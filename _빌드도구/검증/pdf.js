@@ -24,8 +24,10 @@ w.jspdf={ jsPDF: function(o){ CALLS.opt=o; CALLS.pages=1;
   ok('물어보는 창이 뜸', $('modal').classList.contains('open'));
   ok('제목에 «학습지»', /학습지 내보내기/.test($('mbox').textContent), $('mbox').textContent.slice(0,20));
   ok('고른 수 안내', /6문항/.test($('mbox').textContent));
-  ok('PDF 단추', !!$('outPdf') && /PDF 파일로 저장/.test($('outPdf').textContent), $('outPdf').textContent);
-  ok('인쇄 단추', !!$('outPrint') && $('outPrint').textContent==='바로 인쇄');
+  ok('문항 PDF 단추', !!$('outPdf') && /문항 PDF로 저장/.test($('outPdf').textContent), $('outPdf').textContent);
+  ok('문항 인쇄 단추', !!$('outPrint') && $('outPrint').textContent==='문항 바로 인쇄', $('outPrint').textContent);
+  ok('해설 PDF 단추', !!$('outSolPdf') && /해설 PDF로 저장/.test($('outSolPdf').textContent));
+  ok('해설 인쇄 단추', !!$('outSolPrint') && $('outSolPrint').textContent==='해설 바로 인쇄');
   ok('취소 단추', !!$('outCancel'));
   ok('PDF 단추가 켜져 있음', !$('outPdf').disabled);
 

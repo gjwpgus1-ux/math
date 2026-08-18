@@ -45,7 +45,7 @@ def get_chars(pg):
     n = tp.count_chars()
     txt = tp.get_text_range(0, n)
     out = []
-    for i in range(n):
+    for i in range(min(n, len(txt))):   # 글자 수와 실제 글월 길이가 어긋나는 파일이 있다
         ch = txt[i]
         if ch in '\r\n\t\x00':
             continue
