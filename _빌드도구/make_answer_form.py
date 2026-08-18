@@ -158,6 +158,10 @@ def main():
             ws.cell(r, c).border = BOX
         r += 1
 
+    if not rows_todo:
+        ws.cell(2, 1, '해설지에서 읽을 수 있는 정답은 모두 들어갔습니다. 더 채우실 것이 없습니다.')
+        ws.cell(2, 1).font = Font(name=FONT, size=11, bold=True, color='1F3864')
+
     ws.column_dimensions['A'].width = 26
     for col, w in zip('BCDE', (7, 7, 7, 11)):
         ws.column_dimensions[col].width = w

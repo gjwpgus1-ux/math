@@ -210,6 +210,8 @@ def main():
     order, rowsof = [], collections.defaultdict(list)
     for r in range(2, ws.max_row + 1):
         f = ws.cell(r, 6).value
+        if not f:                      # 다 채워 남은 줄이 없을 때의 안내줄
+            continue
         if f not in rowsof:
             order.append(f)
         rowsof[f].append((r, ws.cell(r, 1).value))
@@ -266,6 +268,12 @@ def main():
         for r, _ in rowsof[f]:
             ws.cell(r, 38).value = i         # AL열 — 있던 칸은 건드리지 않는다
 
+    if not pages:
+        for p in (BOOK,):
+            if os.path.exists(p):
+                os.remove(p)
+        print('손으로 채울 것이 남아 있지 않습니다. 정답표 모음은 만들지 않았습니다.')
+        return
     pages[0].save(BOOK, save_all=True, append_images=pages[1:], resolution=150)
 
     # 엑셀에 «정답표 쪽» 칸 덧붙이기 (파일이 열려 있으면 건너뛴다)
