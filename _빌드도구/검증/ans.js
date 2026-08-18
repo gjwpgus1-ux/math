@@ -21,10 +21,10 @@ S.ok('정답이 1,500개 넘는다', all>1500, all);
 let badv=0, badn=0;
 exams.forEach(k=>Object.keys(A[k]).forEach(n=>{
   const v=A[k][n];
-  if(!Number.isInteger(v) || v<1) badv++;
+  if(!Number.isInteger(v) || v<0) badv++;      /* 0 = 모두 정답 처리된 문항 */
   if(!/^\d{1,2}$/.test(n) || +n<1 || +n>30) badn++;
 }));
-S.ok('정답 값이 모두 1 이상 정수', badv===0, badv);
+S.ok('정답 값이 모두 0 이상 정수', badv===0, badv);
 S.ok('문항 번호가 모두 1~30', badn===0, badn);
 
 /* 실제 문항과 짝이 맞는가 */
@@ -49,6 +49,9 @@ S.ok('①~⑤가 고르게 나온다 (한쪽 쏠림 없음)', mx < mn*1.5, JSON.
 S.ok('①~⑤를 동그라미 숫자로 바꾼다',
      T.ansText(1)==='①' && T.ansText(3)==='③' && T.ansText(5)==='⑤');
 S.ok('단답형은 숫자 그대로', T.ansText(17)==='17' && T.ansText(296)==='296');
+S.ok('0은 «모두 정답»으로 보인다', T.ansText(0)==='모두 정답', T.ansText(0));
+const allok=exams.filter(k=>Object.values(A[k]).some(v=>v===0));
+S.ok('모두 정답 문항이 자료에 있다', allok.length>0, allok.join(','));
 
 const withAns=IT.find(it=>T.ansOf(it)!==null);
 const noAns=IT.find(it=>T.ansOf(it)===null);

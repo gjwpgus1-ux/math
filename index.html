@@ -883,7 +883,11 @@
     var v=d[it[1]];
     return (v===undefined||v===null)? null : v;
   }
-  function ansText(v){ return v>=1 && v<=5 ? '①②③④⑤'.charAt(v-1) : String(v); }
+  /* 0 은 «모두 정답으로 처리된 문항» 을 뜻한다 */
+  function ansText(v){
+    if(v===0) return '모두 정답';
+    return v>=1 && v<=5 ? '①②③④⑤'.charAt(v-1) : String(v);
+  }
 
   /* ── 해설 ─────────────────────────────────────────────
      data/sol.js 는 «시험이름#번호 → 그림파일». 아직 시험 삼아 몇 회차만 있다. */
