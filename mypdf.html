@@ -70,6 +70,7 @@
   #tools #prev,#tools #next{padding:5px 11px;font-size:12px}
   #tools button{padding:6px 11px;font-size:12.5px}
   #tools .gap{flex:1}
+  #tools .lbl{font-size:12.5px;color:var(--dim)}
   #tools .mode{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
   #tools .mode button{border:none;border-radius:0}
   #tools .mode button.on{background:var(--accent);color:#fff;font-weight:600}
@@ -137,6 +138,9 @@
   .sheet:last-child{page-break-after:auto}
   .scol{flex:1;min-width:0;display:flex;flex-direction:column;padding:0 5mm}
   .scol.divider{border-right:1.1px solid #333}
+  /* 넓적한 문항용 — 한 단으로 쓰고 위아래를 줄로 가른다 */
+  .scol.wide{flex:1;padding:0 3mm}
+  .scol.wide .sslot.topline{border-top:1.1px solid #333;padding-top:2mm}
   .slab{font-size:9.5pt;color:#444;margin:0 0 1.5mm;font-weight:bold}
   .sbox{display:flex;margin:0 0 1.5mm}
   .sbox span{width:9mm;height:6mm;border:1px solid #9aa1ab;margin-left:-1px;
@@ -206,6 +210,12 @@
     <button id="allPage">이 쪽 전부</button>
     <button id="none">전부 해제</button>
     <span class="gap"></span>
+    <span class="lbl" title="오답노트에서 문항과 질문을 어떻게 놓을지">양식</span>
+    <span class="mode">
+      <button id="shAuto" class="on" title="문항 모양을 보고 알아서 고릅니다">자동</button>
+      <button id="shTall" title="왼쪽 문항 · 오른쪽 질문">좌우</button>
+      <button id="shWide" title="위 문항 · 아래 질문">위아래</button>
+    </span>
     <button id="again">다른 PDF</button>
     <button class="primary" id="make">오답노트 만들기</button>
   </div>
@@ -696,27 +706,53 @@
       all[i].appendChild(n);
     }
   }
+  /* 문항 그림이 넓적하면 좌우로 나눈 칸에서 너무 쭈그러든다.
+     그래서 그림의 가로세로 비를 보고 «좌우»와 «위아래» 중에 고른다.
+     쪽이 한 단인지 두 단인지가 아니라 그림 모양으로 정한다 —
+     같은 시험지 안에서도 문항마다 모양이 다르기 때문이다. */
+  var SHAPE_CUT=0.75;                 /* 이보다 넓적하면 위아래 */
+  var SHAPE='auto';                   /* auto | wide(위아래) | tall(좌우) */
+  function shapeOf(b){
+    if(SHAPE!=='auto') return SHAPE;
+    var w=b.x1-b.x0, h=b.t1-b.t0;
+    return (h>0 && w/h > SHAPE_CUT) ? 'wide' : 'tall';
+  }
+  function noteLines(n){ var s=''; for(var i=0;i<n;i++) s+='<div></div>'; return s; }
+  function qBlocks(scale){
+    var qs='';
+    NOTE_Q.forEach(function(q,qi){
+      var rows=Math.max(2, Math.round(q[2]*(scale||1)));
+      qs+='<div class="nblk" style="flex:'+q[1]+'">'+
+          '<div class="nq"'+(qi===0?' style="margin-top:0"':'')+'>'+(qi+1)+'. '+esc(q[0])+'</div>'+
+          '<div class="nlines">'+noteLines(rows)+'</div></div>';
+    });
+    return qs;
+  }
   function buildNote(){
     var list=chosen();
     if(!list.length){ toast('먼저 문항을 골라 주세요',true); return null; }
     var P=$('printArea'); P.innerHTML='';
-    var lines=function(n){ var s=''; for(var i=0;i<n;i++) s+='<div></div>'; return s; };
     list.forEach(function(b){
       var src=cropOf(b); if(!src) return;
       var m=makeSheet();
-      var L=document.createElement('div'); L.className='scol divider';
-      L.innerHTML='<div class="sslot" style="flex:1">'+BOX3+
-                  '<div class="slab">'+esc(labelOf(b))+'</div>'+
-                  '<div class="simg"><img src="'+src+'"></div></div>';
-      var R=document.createElement('div'); R.className='scol';
-      var qs='';
-      NOTE_Q.forEach(function(q,qi){
-        qs+='<div class="nblk" style="flex:'+q[1]+'">'+
-            '<div class="nq"'+(qi===0?' style="margin-top:0"':'')+'>'+(qi+1)+'. '+esc(q[0])+'</div>'+
-            '<div class="nlines">'+lines(q[2])+'</div></div>';
-      });
-      R.innerHTML='<div class="sslot" style="flex:1">'+qs+'</div>';
-      m.body.appendChild(L); m.body.appendChild(R); P.appendChild(m.sheet);
+      if(shapeOf(b)==='wide'){
+        /* 위에 문항 45% · 아래 질문 55% — 넓적한 문항을 크게 보이게 */
+        var col=document.createElement('div'); col.className='scol wide';
+        col.innerHTML='<div class="sslot" style="flex:45">'+BOX3+
+                      '<div class="slab">'+esc(labelOf(b))+'</div>'+
+                      '<div class="simg"><img src="'+src+'"></div></div>'+
+                      '<div class="sslot topline" style="flex:55">'+qBlocks(0.72)+'</div>';
+        m.body.appendChild(col);
+      }else{
+        var L=document.createElement('div'); L.className='scol divider';
+        L.innerHTML='<div class="sslot" style="flex:1">'+BOX3+
+                    '<div class="slab">'+esc(labelOf(b))+'</div>'+
+                    '<div class="simg"><img src="'+src+'"></div></div>';
+        var R=document.createElement('div'); R.className='scol';
+        R.innerHTML='<div class="sslot" style="flex:1">'+qBlocks(1)+'</div>';
+        m.body.appendChild(L); m.body.appendChild(R);
+      }
+      P.appendChild(m.sheet);
     });
     numberSheets(P);
     return P;
@@ -810,6 +846,10 @@
     '글자가 없는 스캔본은 이 방법으로만 됩니다.'],
    ['잘못 만든 네모는 × 로 지웁니다',
     '네모에 마우스를 대면 오른쪽 위에 × 가 나타납니다.'],
+   ['양식은 문항 모양을 보고 알아서 고릅니다',
+    '세로로 긴 문항은 «왼쪽 문항 · 오른쪽 질문»으로, 넓적한 문항은 «위 문항 · 아래 질문»으로 놓습니다. '+
+    '넓적한 문항을 좁은 칸에 넣으면 수식이 안 보일 만큼 작아지기 때문입니다. '+
+    '마음에 안 드시면 위쪽 «양식»에서 좌우나 위아래로 못박으실 수 있습니다.'],
    ['다 고르셨으면 «오답노트 만들기»',
     'PDF로 저장할지 바로 인쇄할지 물어봅니다. 한 문항에 한 장씩, '+
     '왼쪽에 문항 · 오른쪽에 네 가지 질문이 들어간 양식으로 만들어집니다.'],
@@ -819,7 +859,7 @@
   ];
   function openHelp(){
     var h='<h3>내 PDF로 오답노트 만들기</h3>'+
-      '<p class="sub">여덟 가지만 아시면 됩니다.</p>'+
+      '<p class="sub">아홉 가지만 아시면 됩니다.</p>'+
       '<div style="font-size:13.5px;line-height:1.7;max-height:60vh;overflow:auto">';
     HELP.forEach(function(t,i){
       h+='<p style="margin:0 0 10px"><b>'+(i+1)+'. '+esc(t[0])+'</b><br>'+
@@ -840,6 +880,16 @@
   });
   $('prev').onclick=function(){ goPage(-1); };
   $('next').onclick=function(){ goPage(1); };
+  /* 오답노트 양식 — 기본은 자동, 마음에 안 들 때만 바꾼다 */
+  function setShape(v){
+    SHAPE=v;
+    $('shAuto').className=(v==='auto'?'on':'');
+    $('shTall').className=(v==='tall'?'on':'');
+    $('shWide').className=(v==='wide'?'on':'');
+  }
+  $('shAuto').onclick=function(){ setShape('auto'); };
+  $('shTall').onclick=function(){ setShape('tall'); toast('모든 문항을 좌우로 놓습니다'); };
+  $('shWide').onclick=function(){ setShape('wide'); toast('모든 문항을 위아래로 놓습니다'); };
   $('mSel').onclick=function(){ setMode('sel'); };
   $('mDraw').onclick=function(){ setMode('draw'); };
   $('none').onclick=function(){

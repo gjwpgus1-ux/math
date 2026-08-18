@@ -47,14 +47,24 @@ S.ok('그 단추가 mypdf.html 로 간다', /mypdf\.html/.test(IDX));
 /* ---------- 문항 경계 찾기 ---------- */
 let SRC=HTML.match(/<script>\s*\(function\(\)\{([\s\S]*?)\}\)\(\);\s*<\/script>/)[1];
 SRC='(function(){'+SRC+'window.__T={detect:detect,findCols:findCols,toLines:toLines,bestChain:bestChain,'+
+  'shapeOf:shapeOf,setShape:setShape,buildNote:buildNote,'+
+  'fake:function(n,wide){PAGES=[];SEL={};var w=document.createElement("div");w.className="pg";'+
+  'var cv=document.createElement("canvas");cv.width=800;cv.height=1000;'+
+  'var rec={pno:1,cv:cv,W:800,H:1000,sx:1,sy:1,wrap:w,boxes:[]};PAGES.push(rec);'+
+  'for(var i=0;i<n;i++){var b={id:"f"+i,rec:rec,el:document.createElement("div"),'+
+  'x0:0,x1:(wide?600:200),t0:i*100,t1:i*100+300,n:i+1};rec.boxes.push(b);SEL[b.id]=b;}},'+
   'showPage:showPage,goPage:goPage,cur:function(){return CUR;},'+
   'setPages:function(n){PAGES=[];for(var i=0;i<n;i++){var w=document.createElement("div");w.className="pg";'+
   'document.getElementById("pages").appendChild(w);PAGES.push({pno:i+1,wrap:w,boxes:[]});}},'+
   'labelOf:labelOf};})();';
 const ids=['toast','modal','mbox','drop','busy','busyMsg','bar','tools','cnt','pgpos','pages','printArea','st1','st2','st3'];
-const btns=['pick','mSel','mDraw','allPage','none','again','make','helpBtn','prev','next'];
+const btns=['pick','mSel','mDraw','allPage','none','again','make','helpBtn','prev','next',
+            'shAuto','shTall','shWide'];
 const dom2=new JSDOM(ids.map(i=>`<div id="${i}"></div>`).join('')+
   btns.map(i=>`<button id="${i}"></button>`).join('')+'<input id="file">',{runScripts:'outside-only'});
+/* jsdom 은 그림판을 흉내만 낸다 — 잘라내기가 돌아가게 최소한만 채운다 */
+dom2.window.HTMLCanvasElement.prototype.getContext=function(){ return {drawImage:function(){}}; };
+dom2.window.HTMLCanvasElement.prototype.toDataURL=function(){ return 'data:image/png;base64,T'; };
 dom2.window.eval(SRC);
 const T=dom2.window.__T;
 
@@ -94,6 +104,56 @@ S.ok('오답노트 이름표는 쪽 수만 적는다',
 S.ok('네모에 번호 딱지를 안 붙인다', HTML.indexOf('class="qn"')<0);
 S.ok('번호 딱지 모양새도 지웠다', !/\.qbox \.qn\{/.test(HTML));
 S.ok('도움말에 ← → 안내가 있다', /← → 키로 넘깁니다/.test(HTML));
+
+/* ---------- 오답노트 양식 고르기 ---------- */
+S.ok('양식 단추 셋이 있다', !!doc.getElementById('shAuto') && !!doc.getElementById('shTall')
+     && !!doc.getElementById('shWide'));
+S.ok('처음엔 자동이 켜져 있다', doc.getElementById('shAuto').className==='on');
+const D2=dom2.window.document;
+/* 그림 모양으로 고르기 — 세로로 길면 좌우, 넓적하면 위아래 */
+S.ok('세로로 긴 문항은 좌우', T.shapeOf({x0:0,x1:200,t0:0,t1:500})==='tall');
+S.ok('넓적한 문항은 위아래', T.shapeOf({x0:0,x1:600,t0:0,t1:200})==='wide');
+S.ok('기출 시험지 비(0.45)는 좌우', T.shapeOf({x0:0,x1:45,t0:0,t1:100})==='tall');
+S.ok('교재 비(2.64)는 위아래', T.shapeOf({x0:0,x1:264,t0:0,t1:100})==='wide');
+S.ok('경계 0.75 언저리 — 0.7은 좌우', T.shapeOf({x0:0,x1:70,t0:0,t1:100})==='tall');
+S.ok('경계 0.75 언저리 — 0.8은 위아래', T.shapeOf({x0:0,x1:80,t0:0,t1:100})==='wide');
+T.setShape('tall');
+S.ok('좌우로 못박으면 넓적해도 좌우', T.shapeOf({x0:0,x1:600,t0:0,t1:200})==='tall');
+S.ok('단추 표시도 따라온다', D2.getElementById('shTall').className==='on'
+     && D2.getElementById('shAuto').className==='');
+T.setShape('wide');
+S.ok('위아래로 못박으면 길쭉해도 위아래', T.shapeOf({x0:0,x1:200,t0:0,t1:500})==='wide');
+T.setShape('auto');
+S.ok('자동으로 되돌아온다', T.shapeOf({x0:0,x1:200,t0:0,t1:500})==='tall');
+
+/* 실제로 그려지는가 */
+(function(){
+  const D=dom2.window.document;
+  D.getElementById('printArea').innerHTML='';
+  T.fake(2,false); T.buildNote();
+  let sh=D.querySelectorAll('#printArea .sheet');
+  S.ok('길쭉한 문항 두 장', sh.length===2, sh.length);
+  S.ok('좌우 양식은 칸이 둘', sh[0].querySelectorAll('.scol').length===2);
+  S.ok('가운데 세로줄이 있다', !!sh[0].querySelector('.scol.divider'));
+  S.ok('넓적용 칸은 안 쓴다', !sh[0].querySelector('.scol.wide'));
+
+  D.getElementById('printArea').innerHTML='';
+  T.fake(2,true); T.buildNote();
+  sh=D.querySelectorAll('#printArea .sheet');
+  S.ok('넓적한 문항 두 장', sh.length===2, sh.length);
+  S.ok('위아래 양식은 칸이 하나', sh[0].querySelectorAll('.scol').length===1);
+  S.ok('넓적용 칸을 쓴다', !!sh[0].querySelector('.scol.wide'));
+  const slots=sh[0].querySelectorAll('.sslot');
+  const fx=e=>e? (e.style.flex||'').split(/\s+/)[0] : '';
+  S.ok('위가 문항 45%', fx(slots[0])==='45', fx(slots[0]));
+  S.ok('아래가 질문 55%', fx(slots[1])==='55', fx(slots[1]));
+  S.ok('위아래를 가르는 줄이 있다', !!sh[0].querySelector('.sslot.topline'));
+  S.ok('네 질문이 그대로 들어간다', sh[0].querySelectorAll('.nq').length===4);
+  S.ok('1·2·3회 상자와 이름표도 있다',
+       !!sh[0].querySelector('.sbox') && !!sh[0].querySelector('.slab'));
+  S.ok('쪽 번호와 문구가 붙는다', !!sh[0].querySelector('.pgn .cpr'));
+  D.getElementById('printArea').innerHTML='';
+})();
 
 /* ---------- 글자 자리를 제대로 읽는가 ---------- */
 S.ok('뷰포트 변환을 거쳐 자리를 잡는다', /PDFJS\.Util\.transform\(vp1\.transform/.test(HTML));
