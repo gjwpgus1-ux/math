@@ -260,16 +260,26 @@ def main():
                             put += 1
         report.append((rel, 'ok', put))
 
-    # 엑셀에 손으로 채워 주신 것 — 자동으로 읽은 것보다 우선한다
-    xp = os.path.join(HERE, '정답_엑셀입력.json')
-    xn = 0
-    if os.path.exists(xp):
+    # 사람이 넣어 준 것 — 자동으로 읽은 것보다 우선한다
+    names = {e['n'] for e in exams}
+    qset = {e['n']: qno[i] for i, e in enumerate(exams)}
+    for fname, what in (('정답_엑셀입력.json', '엑셀에서 채워 넣은'),
+                        ('정답_그림읽기.json', '정답표 그림에서 읽은')):
+        xp = os.path.join(HERE, fname)
+        if not os.path.exists(xp):
+            continue
+        xn = skip = 0
         for n, d in json.load(open(xp, encoding='utf-8')).items():
             if n.startswith('_'):
                 continue
+            if n not in names:
+                print('   !! «%s» 는 검색기에 없는 시험입니다 (%s)' % (n, fname)); continue
             for q, v in d.items():
+                if int(q) not in qset[n]:
+                    skip += 1; continue
                 ANS[n][int(q)] = v; xn += 1
-        print('엑셀에서 채워 넣은 정답 %d개를 함께 넣었습니다.' % xn)
+        print('%s 정답 %d개를 함께 넣었습니다.%s'
+              % (what, xn, ('  (없는 번호 %d개는 건너뜀)' % skip) if skip else ''))
 
     out = {k: {str(n): a for n, a in sorted(v.items())} for k, v in ANS.items() if v}
     js = 'window.QANS=' + json.dumps(out, ensure_ascii=False, separators=(',', ':')) + ';\n'
