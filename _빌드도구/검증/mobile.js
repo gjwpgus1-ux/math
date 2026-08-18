@@ -87,16 +87,29 @@ S.ok('위쪽 도구줄과 숫자가 같다', $('selCnt').textContent==='선택 3
 
 /* ---- 한 쪽에 몇 문항 ---- */
 setW(1400); S.ok('넓은 화면은 한 쪽에 4문항', T2.perPage()===4, T2.perPage());
-setW(820);  S.ok('820px 이하는 2문항', T2.perPage()===2, T2.perPage());
-setW(390);  S.ok('휴대전화도 2문항', T2.perPage()===2, T2.perPage());
+setW(820);  S.ok('좁은 화면도 4문항', T2.perPage()===4, T2.perPage());
+setW(390);  S.ok('휴대전화도 4문항', T2.perPage()===4, T2.perPage());
 setW(1400); T2.setMode('search'); T2.render(true);
 S.ok('넓은 화면에서 카드가 4장', doc.querySelectorAll('#grid .card').length===4,
      doc.querySelectorAll('#grid .card').length);
 setW(390); T2.render(true);
-S.ok('좁은 화면에서 카드가 2장', doc.querySelectorAll('#grid .card').length===2,
+S.ok('좁은 화면에서도 카드가 4장 (세로로)', doc.querySelectorAll('#grid .card').length===4,
      doc.querySelectorAll('#grid .card').length);
-S.ok('쪽 수도 2문항 기준으로 센다',
-     $('pageAll').textContent===String(Math.ceil(T2.hits().length/2)), $('pageAll').textContent);
+S.ok('쪽 수는 4문항 기준',
+     $('pageAll').textContent===String(Math.ceil(T2.hits().length/4)), $('pageAll').textContent);
+
+/* ---- 질문 창이 좁은 화면에서 겹치지 않는가 ---- */
+(function(){
+  const RS=fs.readFileSync(path.join(APP,'index.html'),'utf8').replace(/\s+/g,'');
+  const m=/@media\(max-width:900px\)\{#cmp\.cb,#crs\.sb,#std\.sb\{([\s\S]*?)\}/.exec(RS);
+  S.ok('좁은 화면 질문 창 규칙이 있다', !!m);
+  const M=m?m[1]:'';
+  S.ok('격자를 풀고 위에서 아래로 쌓는다', /display:block/.test(M));
+  S.ok('창 하나가 통째로 굴러간다', /overflow:auto/.test(M));
+  S.ok('칸 높이를 묶지 않는다', /#cmp\.cc,#crs\.cc,#std\.cc[^}]*max-height:none/.test(RS));
+  S.ok('가운데 두 후보도 세로로', /#cmp\.cmid\{display:block\}/.test(RS));
+  S.ok('목록이 잘리지 않는다', /#crsBtns,#stdCands,#stdHits\{overflow:visible/.test(RS));
+})();
 
 /* ---- 주소창이 접혀 세로만 바뀔 때 보던 쪽이 유지되는가 ---- */
 (function(){

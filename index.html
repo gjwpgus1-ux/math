@@ -504,6 +504,28 @@
   /* 넓은 화면에서는 아래 막대를 쓰지 않는다 — 위쪽 도구줄로 충분하다 */
   @media (min-width:821px){ #mbar{display:none !important} }
 
+  /* ── 좁은 화면에서 뜨는 질문 창(유사문항·교과목·성취기준) ──
+     넓은 화면에서는 왼쪽 문항 · 오른쪽 질문으로 나란히 놓는 격자를 쓴다.
+     그런데 좁은 화면에서 격자 그대로 두면 칸 높이가 서로 밀려 글과 그림이 겹친다.
+     여기서는 격자를 풀고 «위에서 아래로» 쌓아 창 하나가 통째로 굴러가게 한다. */
+  @media (max-width:900px){
+    #cmp .cb,#crs .sb,#std .sb{
+      display:block;overflow:auto;-webkit-overflow-scrolling:touch;
+      padding:10px 12px 14px}
+    #cmp .cb>*,#crs .sb>*,#std .sb>*{margin:0 0 10px}
+    #cmp .cmid{display:block}
+    #cmp .cmid>*{margin:0 0 10px}
+    /* 칸 높이를 묶지 않는다 — 묶으면 안쪽 내용이 잘리거나 서로 포갠다 */
+    #cmp .cc,#crs .cc,#std .cc,#cmp .cb>.cc,#cmp .cmid>.cc{max-height:none}
+    #cmp .ci,#crs .ci,#std .ci{max-height:42vh;flex:none}
+    #crs .sp2,#std .sp2{min-height:0}
+    #crsBtns,#stdCands,#stdHits{overflow:visible;max-height:none;flex:none}
+    .crail{min-height:0}
+    .crail .sp{display:none}                 /* 빈 공간을 벌리던 자리 */
+    #crs .stop .rq,#std .stop .rq{font-size:16.5px}
+    .crail .rq{font-size:15.5px}
+  }
+
   @media print{
     header,main,.drawer,.nav,#pager,#toast,.modal,#cmp,#std,#crs,#foot{display:none !important}
     #printArea{display:block}
@@ -762,9 +784,8 @@
   IT.forEach(function(it,i){ BY_PATH[it[2]]=it; IDX[it[2]]=i; });
 
   var MODE='search', PAGE=24, shown=0, page=0;
-  /* 한 쪽에 몇 문항을 보일지 — 좁은 화면에서는 둘만.
-     휴대전화는 한 줄에 한 문항이라 넷이면 한 쪽에서 너무 많이 굴려야 한다. */
-  function perPage(){ return (window.innerWidth<=820) ? 2 : 4; }
+  /* 한 쪽에 넷씩 — 좁은 화면에서는 한 줄에 하나씩 세로로 넷이 놓인다 */
+  function perPage(){ return 4; }
   var hits=[], TABS=[], activeTab=-1, SEL={};
   var OV={}, REPORTS=[], PAIRS=[], NEG={}, NEGV=[], DEL={}, PREF=null;
   var isAdmin=false, adminTab='rep';
