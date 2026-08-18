@@ -260,6 +260,17 @@ def main():
                             put += 1
         report.append((rel, 'ok', put))
 
+    # 엑셀에 손으로 채워 주신 것 — 자동으로 읽은 것보다 우선한다
+    xp = os.path.join(HERE, '정답_엑셀입력.json')
+    xn = 0
+    if os.path.exists(xp):
+        for n, d in json.load(open(xp, encoding='utf-8')).items():
+            if n.startswith('_'):
+                continue
+            for q, v in d.items():
+                ANS[n][int(q)] = v; xn += 1
+        print('엑셀에서 채워 넣은 정답 %d개를 함께 넣었습니다.' % xn)
+
     out = {k: {str(n): a for n, a in sorted(v.items())} for k, v in ANS.items() if v}
     js = 'window.QANS=' + json.dumps(out, ensure_ascii=False, separators=(',', ':')) + ';\n'
     open(os.path.join(APP, 'data', 'ans.js'), 'w', encoding='utf-8').write(js)

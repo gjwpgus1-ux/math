@@ -110,11 +110,18 @@ def read_grid(pg, start=1, per_row=5, max_rows=7):
             if idx is None:
                 continue
             s = cl[idx][0]
-            if s and re.fullmatch(r'\d{1,2}', s) and int(s) != no:
-                continue                         # 번호가 어긋나면 이 줄은 표가 아니다
-            v = cl[idx + 1][0] if idx + 1 < len(cl) else ''
-            if v and cl[idx + 1][1] > px + step - 6:
-                v = ''                           # 너무 오른쪽 — 다음 번호 칸이다
+            # 답이 세 자리쯤 되면 번호와 붙어 한 칸으로 읽힌다 — «29288» = 29번 답 288
+            v = None
+            if s and re.fullmatch(r'\d{3,6}', s) and s.startswith(str(no)):
+                rest = s[len(str(no)):]
+                if re.fullmatch(r'\d{1,4}', rest):
+                    v = rest
+            if v is None:
+                if s and re.fullmatch(r'\d{1,2}', s) and int(s) != no:
+                    continue                     # 번호가 어긋나면 이 줄은 표가 아니다
+                v = cl[idx + 1][0] if idx + 1 < len(cl) else ''
+                if v and cl[idx + 1][1] > px + step - 6:
+                    v = ''                       # 너무 오른쪽 — 다음 번호 칸이다
             if v in CIRC and v:
                 out[no] = CIRC.index(v) + 1; got = True
             elif re.fullmatch(r'\d{1,4}', v or ''):
