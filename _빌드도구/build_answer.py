@@ -90,6 +90,11 @@ def merged_blocks(path):
         except Exception:
             tries.append([])
     if not old:
+        # 평가원 해설은 표가 아니라 «01. ② 02. ①» 꼴로 적혀 있다
+        try:
+            tries.append(anstable.read_dotted(path, pdfium))
+        except Exception:
+            pass
         return max(tries, key=lambda t: sum(len(g) for _, g in t))
 
     used = [set(), set()]
@@ -154,6 +159,9 @@ def parse_name(rel):
         return None
 
     if folder.startswith('평가원'):
+        m = re.search(r'(\d{4})학년도-수능', base)
+        if m:
+            return ('수능·모평', m.group(1), '수능', None)
         m = re.search(r'(\d{4})학년도-(\d{1,2})월', base)
         if m:
             return ('수능·모평', m.group(1), m.group(2) + '월', None)
