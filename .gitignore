@@ -22,3 +22,12 @@ desktop.ini
 # 백업
 _백업/
 *.zip
+
+# 파이썬이 만드는 찌꺼기
+__pycache__/
+*.pyc
+
+# 고치기 전 백업본 (data/index.js.바꾸기전 같은 것)
+data/*.바꾸기전
+data/*.고치기전
+data/*.프라임고치기전
