@@ -249,7 +249,9 @@ def read_dotted(path, pdfium):
         for cl, ps in cand:
             if not ps:
                 continue
-            if len(ps) >= 3 or (len(ps) >= 2 and got and min(n for n, _ in ps) == max(got) + 1):
+            # 세 쌍 넘으면 정답 줄. 한두 쌍뿐이어도 앞에서 이어지는 번호면 받는다
+            # («30. 105» 처럼 마지막 한 칸만 따로 놓인 파일이 있다)
+            if len(ps) >= 3 or (got and min(n for n, _ in ps) == max(got) + 1):
                 for n, v in ps:
                     got.setdefault(n, v)
     return [(None, got)] if got else []

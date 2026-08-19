@@ -159,12 +159,14 @@ def parse_name(rel):
         return None
 
     if folder.startswith('평가원'):
+        # 2021학년도까지는 가형·나형으로 갈렸다 (선택과목 없는 30문항 한 벌)
+        hy = '가형' if '가형' in base else ('나형' if '나형' in base else None)
         m = re.search(r'(\d{4})학년도-수능', base)
         if m:
-            return ('수능·모평', m.group(1), '수능', None)
+            return ('수능·모평', m.group(1), '수능', hy)
         m = re.search(r'(\d{4})학년도-(\d{1,2})월', base)
         if m:
-            return ('수능·모평', m.group(1), m.group(2) + '월', None)
+            return ('수능·모평', m.group(1), m.group(2) + '월', hy)
         m = re.search(r'(\d{4})년-(\d{1,2})월', base)
         if m:  # 2025년 9월 시행 = 2026학년도
             return ('수능·모평', str(int(m.group(1)) + 1), m.group(2) + '월', None)
