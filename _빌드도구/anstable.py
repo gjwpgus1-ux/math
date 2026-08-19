@@ -16,9 +16,20 @@ PAIR = re.compile(r'(\d{1,2})\s*\.\s*([①②③④⑤]|\d{1,4})')
 PUA_DIGIT = {k: v for k, v in formula.PUA.items() if v.isdigit()}
 
 
+# 동그라미 숫자가 파일마다 다른 글자로 박혀 있다.  ①  ⓵  ❶  ➀ …
+# 모두 ①②③④⑤ 로 맞춰 둔다.
+CIRC_ALT = {}
+for _base in (0x2460, 0x24F5, 0x2776, 0x2780, 0x278A):     # ①  ⓵  ❶  ➀  ➊
+    for _i in range(5):
+        CIRC_ALT[_base + _i] = CIRC[_i]
+
+
 def de(ch):
-    """PUA 숫자를 진짜 숫자로. 그 밖의 글자는 그대로."""
-    return PUA_DIGIT.get(ord(ch), ch)
+    """PUA 숫자와 여러 꼴의 동그라미 숫자를 표준 글자로. 그 밖은 그대로."""
+    o = ord(ch)
+    if o in PUA_DIGIT:
+        return PUA_DIGIT[o]
+    return CIRC_ALT.get(o, ch)
 
 
 def cells(chars, gap=4.5):
@@ -216,19 +227,19 @@ def read_dotted(path, pdfium):
         «18.1331982» 처럼 엉겨 옆 숫자를 물고 들어온다."""
         out = []
         for j, (t, x0, x1) in enumerate(cl):
-            m = re.fullmatch(r'(\d{1,2})\.\s*([①②③④⑤]|\d{1,4})', t)
-            if m:
-                a, b = m.group(1), m.group(2)
-            else:
-                m = re.fullmatch(r'(\d{1,2})\.', t)
+            hit = PAIR.findall(t)            # «09. ⑤ 10. ①» 처럼 한 칸에 둘이 들기도 한다
+            if not hit:
+                m = re.fullmatch(r'(\d{1,2})\.', t)   # 번호만 있고 답은 다음 칸
                 if not m or j + 1 >= len(cl):
                     continue
-                a, b = m.group(1), cl[j + 1][0]
+                b = cl[j + 1][0]
                 if not re.fullmatch(r'[①②③④⑤]|\d{1,4}', b):
                     continue
-            n = int(a)
-            if 1 <= n <= 30:
-                out.append((n, CIRC.index(b) + 1 if b in CIRC else int(b)))
+                hit = [(m.group(1), b)]
+            for a, b in hit:
+                n = int(a)
+                if 1 <= n <= 30:
+                    out.append((n, CIRC.index(b) + 1 if b in CIRC else int(b)))
         return out
 
     # 세 쌍 넘게 있으면 정답 줄로 본다. 두 쌍뿐이어도 앞 줄에서 이어지는
