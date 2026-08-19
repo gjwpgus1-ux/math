@@ -54,9 +54,15 @@ const allok=exams.filter(k=>Object.values(A[k]).some(v=>v===0));
 S.ok('모두 정답 문항이 자료에 있다', allok.length>0, allok.join(','));
 
 const withAns=IT.find(it=>T.ansOf(it)!==null);
-const noAns=IT.find(it=>T.ansOf(it)===null);
 S.ok('정답이 붙은 문항을 찾을 수 있다', !!withAns);
-S.ok('정답이 없는 문항도 있다 (평가원 등)', !!noAns);
+S.ok('빠진 문항이 하나도 없다', IT.every(it=>T.ansOf(it)!==null),
+     IT.filter(it=>T.ansOf(it)===null).length+'개 빔');
+/* 「정답 준비 중」이 뜨는지 보려면 일부러 한 시험을 비워야 한다 */
+const blankExam=EX[IT[IT.length-1][0]].n;
+const kept=A[blankExam];
+delete A[blankExam];
+const noAns=IT.find(it=>T.ansOf(it)===null);
+S.ok('일부러 비운 시험은 정답이 없다', !!noAns, blankExam);
 S.ok('정답 값이 자료와 같다',
      withAns && T.ansOf(withAns)===A[EX[withAns[0]].n][withAns[1]]);
 
@@ -104,6 +110,7 @@ async function find(q){
   S.ok('정답이 없으면 «정답 준비 중»으로 알린다', none.length>0, none.length);
   S.ok('«정답 준비 중»에는 답이 안 붙는다',
        none.every(c=>!/정답 [①-⑤]/.test(headOf(c).textContent)));
+  A[blankExam]=kept;                 /* 비워 둔 것을 되돌린다 */
 
   /* ---- 인쇄에는 안 나가야 한다 ---- */
   const css=raw.replace(/\s+/g,'');
