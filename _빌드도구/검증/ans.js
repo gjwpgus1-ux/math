@@ -195,6 +195,9 @@ async function find(q){
   S.ok('빠른 정답 모양이 있다', /\.qarow\{/.test(css));
   S.ok('한 단에 세로로 쌓는다 (좌우 번갈이 아님)',
        /\.qa\{[^}]*flex-direction:column/.test(css) && !/\.qarow\{[^}]*width:calc\(50%/.test(css));
+  S.ok('줄 높이를 5mm로 못박았다 (아래가 잘리지 않게)',
+       /\.qarow\{[^}]*height:5mm/.test(css) && /\.qarow\{[^}]*box-sizing:border-box/.test(css));
+  S.ok('한 단 47줄 × 5mm = 235mm 로 A4 안에 든다', 47*5 <= 251);
 
   /* 적게 고르면 왼쪽 한 단에만 — 오른쪽 단을 만들지 않는다 */
   const qcols=[...last.querySelectorAll('.scol')];
@@ -215,15 +218,14 @@ async function find(q){
   S.ok('많이 고르면 두 단', cols2.length===2, cols2.length);
   const L=[...cols2[0].querySelectorAll('.qarow .qan')].map(e=>e.textContent);
   const R=[...cols2[1].querySelectorAll('.qarow .qan')].map(e=>e.textContent);
-  S.ok('왼쪽 단이 가득 찬다', L.length===50, L.length);
+  S.ok('왼쪽 단이 가득 찬다 (47줄)', L.length===47, L.length);
   S.ok('오른쪽 단은 그다음 것', R.length>0, R.length);
   const order=[...qsheet[0].querySelectorAll('.qarow .qan')].map(e=>e.textContent);
   S.ok('왼쪽을 다 읽은 뒤 오른쪽 — 좌우 번갈이 아님',
        order.slice(0,L.length).join('|')===L.join('|') &&
        order.slice(L.length).join('|')===R.join('|'));
   const want=manyIt.slice(0,50).map(it=>/* 라벨은 화면과 같은 차례 */ 1);
-  S.ok('왼쪽 단의 차례가 고른 차례와 같다',
-       L.length===50 && L[0]!==L[1]);
+  S.ok('왼쪽 단의 차례가 고른 차례와 같다', L.length===47 && L[0]!==L[1]);
 
   S.done();
 })();

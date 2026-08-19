@@ -465,10 +465,13 @@
   .scol.divider{border-right:1.1px solid #333}
   .slab{font-size:9.5pt;color:#444;margin:0 0 1.5mm;font-weight:bold}
   .slab .sans{margin-left:3mm;font-weight:bold;color:#1a4fa0}
-  /* 빠른 정답 — 한 단에 한 줄씩 세로로 쌓는다 (단이 모자라면 다음 단으로) */
-  .qa{display:flex;flex-direction:column;gap:1mm;margin-top:2mm}
-  .qarow{display:flex;align-items:baseline;gap:2mm;font-size:9pt;
-         border-bottom:1px dotted #cfd4da;padding-bottom:0.8mm}
+  /* 빠른 정답 — 한 단에 한 줄씩 세로로 쌓는다 (단이 모자라면 다음 단으로)
+     줄 높이를 5mm로 못박아 «한 단에 몇 줄»이 자로 잰 듯 맞아떨어지게 한다.
+     (높이를 글꼴에 맡기면 쪽마다 조금씩 달라져 아래가 잘린다) */
+  .qa{display:flex;flex-direction:column;gap:0;margin-top:2mm}
+  .qarow{display:flex;align-items:center;gap:2mm;font-size:9pt;
+         height:5mm;line-height:5mm;box-sizing:border-box;
+         border-bottom:1px dotted #cfd4da}
   .qarow .qan{color:#444;flex:1}
   .qarow .qav{font-weight:bold;color:#1a4fa0}
   .qanote{font-size:8pt;color:#8a8f96;margin-top:3mm}
@@ -1973,7 +1976,11 @@
   /* 학습지 맨 마지막 장 — 고른 문항의 정답을 한눈에
      왼쪽 단을 위에서 아래로 다 채우고, 넘치면 오른쪽 단으로 넘어간다.
      («좌 우 좌 우» 로 번갈아 놓으면 눈이 갈지자로 움직여 읽기 나쁘다) */
-  var QA_PER_COL=50;                 /* 한 단에 들어가는 줄 수 (A4 기준) */
+  /* 한 단에 들어가는 줄 수.
+     A4 한 장 277mm − 머리글 5 − 쪽번호 7 = 265mm,
+     칸 위아래 여백 6, 제목 5.5, 표 위 여백 2 → 쓸 수 있는 높이 251.5mm.
+     줄 높이를 5mm로 못박았으므로 47줄(235mm)이면 «없는 정답» 안내가 붙어도 남는다. */
+  var QA_PER_COL=47;
   function quickAnsSheet(P, list){
     var rows=list.filter(function(it){ return ansOf(it)!==null; });
     if(!rows.length) return;
