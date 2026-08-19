@@ -83,44 +83,57 @@ def merged_blocks(path):
                거의 다» 읽어 냈을 때만 믿는다. 조금이라도 어긋나면 통째로 버린다.
     """
     old = read_answers(path)
-    try:
-        new = anstable.read_file(path, pdfium)
-    except Exception:
-        new = []
+    tries = []
+    for cl in (True, False):          # 글자를 다시 묶는 방식 · 줄 그대로 쓰는 방식
+        try:
+            tries.append(anstable.read_file(path, pdfium, cluster=cl))
+        except Exception:
+            tries.append([])
     if not old:
-        return new
+        return max(tries, key=lambda t: sum(len(g) for _, g in t))
 
-    used = set()
+    used = [set(), set()]
     out = []
     for label, og in old:
         st = min(og)
-        pick = None
-        for i, (nl, ng) in enumerate(new):
-            if i in used or min(ng) != st:
-                continue
-            pick = i; break
         merged = dict(og)
-        if pick is not None:
-            used.add(pick)
+        best = None
+        for ti, new in enumerate(tries):        # 두 방식 가운데 잘 맞는 쪽을 쓴다
+            pick = None
+            for i, (nl, ng) in enumerate(new):
+                if i in used[ti] or min(ng) != st:
+                    continue
+                pick = i; break
+            if pick is None:
+                continue
+            used[ti].add(pick)
             ng = new[pick][1]
             shared = [k for k in ng if k in og]
-            agree = all(og[k] == ng[k] for k in shared)
-            enough = len(shared) >= len(og) * 0.9
-            if agree and enough:
-                for k, v in ng.items():
-                    merged.setdefault(k, v)
+            if not all(og[k] == ng[k] for k in shared):
+                continue                        # 하나라도 어긋나면 버린다
+            if len(shared) < len(og) * 0.9:
+                continue
+            if best is None or len(ng) > len(best):
+                best = ng
+        if best:
+            for k, v in best.items():
+                merged.setdefault(k, v)
         out.append((label, merged))
     # 예전 방식이 아예 못 본 덩어리(선택과목 등)는 새 방식 것을 그대로
-    for i, (nl, ng) in enumerate(new):
-        if i not in used and len(ng) >= 5:
-            out.append((nl, ng))
+    for ti, new in enumerate(tries):
+        for i, (nl, ng) in enumerate(new):
+            if i not in used[ti] and len(ng) >= 5:
+                if not any(min(g) == min(ng) and len(g) >= len(ng) for _, g in out):
+                    out.append((nl, ng)); used[ti].add(i)
     return out
 
 
-def split_blocks(found, g):
+def split_blocks(found, g, hyung=None):
     """한 쪽에 공통(1~)과 선택(23~)이 같이 있을 수 있어 나눈다.
-    고1·고2는 선택과목이 없으므로 1~30을 통째로 둔다."""
-    if g in ('고1', '고2'):
+
+    고1·고2, 그리고 고3 가형·나형은 선택과목이 없는 30문항짜리다.
+    이런 시험까지 23번에서 자르면 23~30번(단답형)이 넣을 곳을 잃는다."""
+    if g in ('고1', '고2') or hyung:
         return [('공통', found)]
     lo = {k: v for k, v in found.items() if k <= 22}
     hi = {k: v for k, v in found.items() if k >= 23}
@@ -252,7 +265,7 @@ def main():
                 fixed_sel = v
                 break
         for label, found in blocks:
-            for kind, part in split_blocks(found, g):
+            for kind, part in split_blocks(found, g, hyung):
                 if kind == '공통':
                     want = ['공통', '', hyung] if hyung else ['공통', '']
                     idx = [i for i in cands if exams[i]['s'] in want]

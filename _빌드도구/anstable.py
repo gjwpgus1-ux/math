@@ -35,7 +35,7 @@ def cells(chars, gap=4.5):
              min(x[1] for x in q), max(x[3] for x in q)) for q in out]
 
 
-def read_grid(pg, start=1, per_row=5, max_rows=7):
+def read_grid(pg, start=1, per_row=5, max_rows=7, cluster=True):
     """이 쪽의 정답표를 읽는다 → {번호: 답}
 
     ① «1③2⑤…» 줄을 찾아 그 줄의 «번호 칸» x자리 다섯 개를 재어 둔다
@@ -72,22 +72,41 @@ def read_grid(pg, start=1, per_row=5, max_rows=7):
     right = acell[-1][2]
     gapy = None
 
-    # ② 표 아래로 몇 줄
-    rows = []
-    for l in lines:
-        t = min(c[2] for c in l)
-        if t < top0 - 3:
-            continue
-        cc = [c for c in l if cols[0] - 12 <= c[1] <= right + 12]
-        if len(cc) >= 2:
-            rows.append((t, cc))
-    rows.sort(key=lambda r: r[0])
-    if len(rows) > 1:
-        d = [b[0] - a[0] for a, b in zip(rows, rows[1:]) if 4 < b[0] - a[0] < 60]
-        gapy = sorted(d)[len(d) // 2] if d else 14.0
+    # ② 표 아래로 몇 줄 — 먼저 줄 사이 간격을 잰다
+    tops = sorted(min(c[2] for c in l) for l in lines
+                  if min(c[2] for c in l) >= top0 - 3
+                  and any(cols[0] - 12 <= c[1] <= right + 12 for c in l))
+    d = [b - a for a, b in zip(tops, tops[1:]) if 7 < b - a < 60]
+    gapy = sorted(d)[len(d) // 2] if d else 14.0
+
+    # 번호와 답이 서로 다른 줄로 쪼개져 있는 표가 있다.
+    #   y=275  '6' '7' '8' '9' '10'      ← 번호만
+    #   y=280  '⑤' '①' '④' '④' '④'      ← 답만
+    # 그래서 줄 단위가 아니라 글자를 다시 y로 묶는다.
+    if cluster:
+        pool = [c for c in ch
+                if cols[0] - 12 <= c[1] <= right + 12
+                and top0 - gapy * 0.6 <= c[2] <= top0 + gapy * (max_rows - 0.4)]
+        pool.sort(key=lambda c: (c[2] + c[4]) / 2)
+        rows, cur = [], []
+        for c in pool:
+            cy = (c[2] + c[4]) / 2
+            if cur and cy - (cur[-1][2] + cur[-1][4]) / 2 > gapy * 0.5:
+                rows.append((min(x[2] for x in cur), cur)); cur = []
+            cur.append(c)
+        if cur:
+            rows.append((min(x[2] for x in cur), cur))
     else:
-        gapy = 14.0
-    rows = [r for r in rows if r[0] <= top0 + gapy * (max_rows - 0.4)]
+        rows = []
+        for l in lines:
+            t = min(c[2] for c in l)
+            if not (top0 - 3 <= t <= top0 + gapy * (max_rows - 0.4)):
+                continue
+            cc = [c for c in l if cols[0] - 12 <= c[1] <= right + 12]
+            if cc:
+                rows.append((t, cc))
+        rows.sort(key=lambda r: r[0])
+    rows = [r for r in rows if len(r[1]) >= 2]
 
     # ③ 칸 자리로 읽기
     out = {}
@@ -133,7 +152,7 @@ def read_grid(pg, start=1, per_row=5, max_rows=7):
     return out
 
 
-def read_file(path, pdfium):
+def read_file(path, pdfium, cluster=True):
     """한 파일에서 (시작번호별) 표를 모두 읽는다 → [(과목표시, {번호: 답})]"""
     SECT = re.compile(r'\[\s*(확률과\s*통계|미적분|기하)\s*\]')
     d = pdfium.PdfDocument(path)
@@ -150,10 +169,10 @@ def read_file(path, pdfium):
                         lab = m.group(1).replace(' ', ''); break
                 # 공통 표는 한 번만. 뒷쪽 본문에 «1③2⑤» 꼴이 우연히 있어도 표로 보지 않는다.
                 if not done1:
-                    g = read_grid(pg, start=1)
+                    g = read_grid(pg, start=1, cluster=cluster)
                     if len(g) >= 10:
                         out.append((lab, g)); done1 = True
-                g = read_grid(pg, start=23)
+                g = read_grid(pg, start=23, cluster=cluster)
                 if len(g) >= 5:
                     out.append((lab, g))
             finally:
