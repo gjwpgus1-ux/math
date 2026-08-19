@@ -314,13 +314,20 @@ def main():
         sol = json.loads(open(sp, encoding='utf-8').read().split('=', 1)[1].rstrip(';\n'))
     before = len(sol)
 
+    def save():
+        js = 'window.QSOL=' + json.dumps(sol, ensure_ascii=False, separators=(',', ':')) + ';\n'
+        open(sp, 'w', encoding='utf-8').write(js)
+        return js
+
     jobs = pick_jobs(HOW_MANY)
     print('이번에 만들 회차 %d개 (아직 남은 것 %d개)\n' % (len(jobs), len(pick_jobs())))
     for i, job in enumerate(jobs, 1):
         made = run_job(job, sol)
+        save()                      # 한 회차 끝날 때마다 적어 둔다 (중간에 끊겨도 남는다)
         print('%2d. %-34s %s' % (i, job['file'].split('/')[-1][:34],
-                                 ' · '.join('%s %d문항' % (k, v) for k, v in sorted(made.items()))))
-    js = 'window.QSOL=' + json.dumps(sol, ensure_ascii=False, separators=(',', ':')) + ';\n'
+                                 ' · '.join('%s %d문항' % (k, v) for k, v in sorted(made.items()))),
+              flush=True)
+    js = save()
     open(os.path.join(APP, 'data', 'sol.js'), 'w', encoding='utf-8').write(js)
     tot = sum(os.path.getsize(os.path.join(OUT, f)) for f in os.listdir(OUT))
     print('\n이번에 더한 해설 %d개 → 모두 %d개 · 그림 %.1fMB · data/sol.js %.0fKB'
