@@ -124,7 +124,20 @@ async function find(q){
   S.ok('index.html이 data/sol.js를 부른다', /<script src="data\/sol\.js"><\/script>/.test(raw));
   S.ok('해설 자료가 실렸다', !!SOL);
   const skeys=Object.keys(SOL||{});
-  S.ok('해설이 70개 넘는다', skeys.length>70, skeys.length);
+  S.ok('해설이 500개 넘는다', skeys.length>500, skeys.length);
+  S.ok('해설 그림이 회색으로 줄어 있다 (용량)', (()=>{
+    const tot=skeys.reduce((s,k)=>s+fs.statSync(path.join(APP,'img','해설',SOL[k][0])).size,0);
+    return tot/skeys.length < 40*1024;      /* 한 장 평균 40KB 아래 */
+  })(), '평균 '+Math.round(skeys.reduce((s,k)=>s+fs.statSync(path.join(APP,'img','해설',SOL[k][0])).size,0)/skeys.length/1024)+'KB');
+  /* ── 로고 ── */
+  S.ok('머리글에 로고가 있다', /<img id="logo" src="img\/logo-mark\.png"/.test(raw));
+  S.ok('로고 그림 두 벌이 있다',
+       fs.existsSync(path.join(APP,'img','logo.png')) && fs.existsSync(path.join(APP,'img','logo-mark.png')));
+  S.ok('팝업에도 로고가 붙는다', /\.mbox::after\{[^}]*logo-mark\.png/.test(css));
+  S.ok('학습지·오답노트·해설지에도 로고', /className='slogo'/.test(raw) && /\.shd \.slogo\{/.test(raw));
+  S.ok('소개·개인정보·문의 쪽에도 로고',
+       ['about.html','privacy.html','contact.html'].every(f=>
+         /logo-mark\.png/.test(fs.readFileSync(path.join(APP,f),'utf8'))));
   S.ok('해설마다 [파일, 가로, 세로]',
        skeys.every(k=>Array.isArray(SOL[k]) && SOL[k].length===3 && SOL[k][1]>0 && SOL[k][2]>0));
   const solfs=path.join(APP,'img','해설');

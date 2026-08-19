@@ -247,8 +247,16 @@
   .modal{position:fixed;inset:0;background:rgba(17,24,39,.45);z-index:50;
          display:none;align-items:center;justify-content:center;padding:20px}
   .modal.open{display:flex}
-  .mbox{background:var(--card);border-radius:12px;width:100%;max-width:460px;padding:18px 20px}
-  .mbox h3{margin:0 0 4px;font-size:15px}
+  /* ── 로고 ── */
+  h1 #logo{height:26px;width:auto;vertical-align:-6px;margin-right:6px}
+  @media (max-width:620px){ h1 #logo{height:22px;vertical-align:-5px} }
+  .mbox{background:var(--card);border-radius:12px;width:100%;max-width:460px;padding:18px 20px;
+        position:relative}
+  /* 팝업 오른쪽 위에 살짝 */
+  .mbox::after{content:"";position:absolute;right:16px;top:14px;width:34px;height:34px;
+               background:url(img/logo-mark.png) no-repeat center/contain;opacity:.5;
+               pointer-events:none}
+  .mbox h3{margin:0 44px 4px 0;font-size:15px}
   .mbox p.sub{margin:0 0 14px;color:var(--dim);font-size:12.5px}
   .mbox label{display:block;font-size:12.5px;color:var(--dim);margin:10px 0 4px}
   .mbox input[type=text],.mbox input[type=password],.mbox textarea,.mbox select{
@@ -461,7 +469,9 @@
          page-break-after:always;break-after:page;break-inside:avoid;
          display:flex;flex-direction:column;position:relative}
   .sbody{flex:1;display:flex;min-height:0}
-  .shd{height:5mm;font-size:8.5pt;color:#7a7f86;padding-left:1mm}
+  .shd{height:5mm;font-size:8.5pt;color:#7a7f86;padding-left:1mm;
+       display:flex;align-items:center;gap:1.5mm}
+  .shd .slogo{height:4.4mm;width:auto}
   .pgn{height:7mm;font-size:9pt;color:#555;padding-top:1.5mm;position:relative}
   .pgn .pn{display:block;text-align:center}
   .pgn .cpr{position:absolute;right:0;bottom:0.5mm;font-size:7.5pt;color:#8a8f96;white-space:nowrap}
@@ -562,7 +572,7 @@
 <body>
 
 <header>
-  <h1 id="title"><b class="brand">줍줍닷컴</b> <span class="tagline">수능·모평·학평 수학 기출, 필요한 것만 주워 담기</span> <span class="by">제작자 : 허선생</span> <small id="sub"></small>
+  <h1 id="title"><img id="logo" src="img/logo-mark.png" alt="줍줍닷컴"><b class="brand">줍줍닷컴</b> <span class="tagline">수능·모평·학평 수학 기출, 필요한 것만 주워 담기</span> <span class="by">제작자 : 허선생</span> <small id="sub"></small>
     <span class="modesw">
       <button id="modeStudy">학습모드</button>
       <button id="modeSearch" class="on">복붙모드</button>
@@ -1936,7 +1946,10 @@
   function makeSheet(){
     var sh=document.createElement('div'); sh.className='sheet';
     var hd=document.createElement('div'); hd.className='shd';
-    hd.textContent=MAKER;
+    /* 학습지·오답노트·해설지 맨 위에 로고와 만든이 */
+    var lg=document.createElement('img'); lg.className='slogo'; lg.src='img/logo.png'; lg.alt='';
+    hd.appendChild(lg);
+    hd.appendChild(document.createTextNode(MAKER));
     var body=document.createElement('div'); body.className='sbody';
     sh.appendChild(hd); sh.appendChild(body);
     return {sheet:sh, body:body};

@@ -7,7 +7,7 @@
    ③ 그 줄부터 다음 줄(또는 단 끝)까지를 잘라 낸다
 쪽을 넘어 이어지는 문항은 조각을 세로로 이어 붙인다.
 """
-import sys, os, re, json, collections
+import sys, os, re, json, glob, collections
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import pypdfium2 as pdfium
 from PIL import Image
@@ -23,17 +23,86 @@ SECT = re.compile(r'\[\s*(확률과\s*통계|미적분|기하)\s*\]')
 SCALE = 2.4          # 그림 해상도
 PAD = 4.0            # 잘라낼 때 둘레 여백(pt)
 
-# 만들 회차:  파일 → 검색기 시험 이름들 (문항번호 범위로 갈라 넣는다)
-JOBS = [
-    {'file': '전국연합_고1/2025년-고1-10월-모의고사-수학-해설.pdf',
-     'exams': [('2025년 10월 고1', 1, 30)]},
-    {'file': '전국연합_고3/해설/2603_고3_해설.pdf',
-     'exams': [('2026년 3월 고3 공통', 1, 22),
-               ('2026년 3월 고3 확률과 통계', 23, 30),
-               ('2026년 3월 고3 미적분', 23, 30),
-               ('2026년 3월 고3 기하', 23, 30)],
-     'sel_pages': True},          # 23번 이후는 쪽마다 과목이 다르다
-]
+HOW_MANY = int(os.environ.get('SOL_N', '20'))    # 이번에 만들 회차 수 (최근 것부터)
+
+
+def pick_jobs(n=None):
+    """전국연합(학평) 해설 파일을 최근 회차부터 골라 온다.
+
+    평가원(수능·모평)은 저작권이 있어 넣지 않는다.
+    이미 만들어 둔 회차는 건너뛴다."""
+    import build_answer as BA
+    src = open(os.path.join(APP, 'data', 'index.js'), encoding='utf-8').read()
+    Q = json.loads(src[src.index('{'):src.rindex('}') + 1].rstrip(';'))
+    exams = Q['exams']
+    qno = collections.defaultdict(set)
+    for r in Q['items']:
+        qno[exams[r[0]]['n']].add(r[1])
+    by_key = collections.defaultdict(list)
+    for e in exams:
+        by_key[(e['g'], e['y'], e['r'])].append(e)
+
+    done = set()
+    sp = os.path.join(APP, 'data', 'sol.js')
+    if os.path.exists(sp):
+        for k in json.loads(open(sp, encoding='utf-8').read().split('=', 1)[1].rstrip(';\n')):
+            done.add(k[:k.rfind('#')])
+
+    files = sorted(glob.glob(os.path.join(DB, '전국연합*', '*.pdf'))) + \
+            sorted(glob.glob(os.path.join(DB, '전국연합*', '해설', '*.pdf')))
+    jobs = []
+    for f in files:
+        rel = os.path.relpath(f, DB)
+        if '전과목' in rel or '다른본' in rel:
+            continue
+        key = BA.parse_name(rel)
+        if not key:
+            continue
+        g, y, r, hyung = key
+        cand = by_key.get((g, y, r), [])
+        if not cand:
+            continue
+        base = os.path.basename(rel)
+        only = None
+        for k, v in (('확통', ('확통', '확률과 통계')), ('미적', ('미적', '미적분')), ('기하', ('기하',))):
+            if k in base:
+                only = v; break
+        want = []
+        for e in cand:
+            s = e['s']
+            if s in ('공통', '') or s == hyung:
+                if hyung and s not in ('공통', '', hyung):
+                    continue
+                if only:            # 과목 전용 파일에는 공통이 함께 들어 있다
+                    pass
+                want.append((e['n'], min(qno[e['n']]), max(qno[e['n']])))
+            elif s in ('확통', '확률과 통계', '미적', '미적분', '기하'):
+                if only and s not in only:
+                    continue
+                want.append((e['n'], min(qno[e['n']]), max(qno[e['n']])))
+        want = [w for w in want if w[0] not in done]
+        if not want:
+            continue
+        mo = int(re.sub(r'\D', '', r) or 12)      # «수능» 은 12월로 본다
+        jobs.append((int(y), mo, rel, want))
+
+    # 한 회차에 파일이 여럿일 때가 있다 (묶음본·과목별본·정답만 있는 것).
+    # 담긴 시험이 많은 것, 그다음 두꺼운 것을 먼저 쓰고 겹치는 시험은 뺀다.
+    jobs.sort(key=lambda t: (-t[0], -t[1],
+                             -len(t[3]),
+                             -os.path.getsize(os.path.join(DB, t[2])),
+                             t[2]))
+    taken, out = set(), []
+    for y, mo, rel, want in jobs:
+        left = [w for w in want if w[0] not in taken]
+        if not left:
+            continue
+        taken.update(w[0] for w in left)
+        out.append({'file': rel.replace(os.sep, '/'), 'exams': left})
+    return out[:n] if n else out
+
+
+JOBS = None          # main() 에서 채운다
 
 
 def find_cols(chars, W):
@@ -228,6 +297,8 @@ def run_job(job, sol):
     for (name, no), ims in sorted(bag.items()):
         im = stack(ims)
         rel = '%s_%02d.png' % (re.sub(r'[^0-9A-Za-z가-힣]', '', name), no)
+        # 해설은 흰 바탕에 검은 글씨라 회색 16색이면 눈에 똑같고 용량은 4분의 1
+        im = im.convert('L').convert('P', palette=Image.ADAPTIVE, colors=16)
         im.save(os.path.join(OUT, rel), optimize=True)
         sol[name + '#' + str(no)] = [rel, im.width, im.height]
         made[name] += 1
@@ -236,17 +307,24 @@ def run_job(job, sol):
 
 def main():
     os.makedirs(OUT, exist_ok=True)
+    # 이미 만들어 둔 것은 그대로 두고 새로 만든 것만 더한다
     sol = {}
-    for job in JOBS:
+    sp = os.path.join(APP, 'data', 'sol.js')
+    if os.path.exists(sp):
+        sol = json.loads(open(sp, encoding='utf-8').read().split('=', 1)[1].rstrip(';\n'))
+    before = len(sol)
+
+    jobs = pick_jobs(HOW_MANY)
+    print('이번에 만들 회차 %d개 (아직 남은 것 %d개)\n' % (len(jobs), len(pick_jobs())))
+    for i, job in enumerate(jobs, 1):
         made = run_job(job, sol)
-        print('■', job['file'].split('/')[-1])
-        for k, v in sorted(made.items()):
-            print('   %-26s %2d문항' % (k, v))
+        print('%2d. %-34s %s' % (i, job['file'].split('/')[-1][:34],
+                                 ' · '.join('%s %d문항' % (k, v) for k, v in sorted(made.items()))))
     js = 'window.QSOL=' + json.dumps(sol, ensure_ascii=False, separators=(',', ':')) + ';\n'
     open(os.path.join(APP, 'data', 'sol.js'), 'w', encoding='utf-8').write(js)
     tot = sum(os.path.getsize(os.path.join(OUT, f)) for f in os.listdir(OUT))
-    print('\n해설 그림 %d개 · %.1fMB · data/sol.js %.0fKB'
-          % (len(sol), tot / 1e6, len(js) / 1024))
+    print('\n이번에 더한 해설 %d개 → 모두 %d개 · 그림 %.1fMB · data/sol.js %.0fKB'
+          % (len(sol) - before, len(sol), tot / 1e6, len(js) / 1024))
 
 
 if __name__ == '__main__':
