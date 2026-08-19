@@ -82,6 +82,29 @@ async function doPrint(H, id){
   ok('오른쪽에 붙음', /\.pgn \.cpr\{[^}]*right:0/.test(html));
   ok('한 줄로 유지', /\.pgn \.cpr\{[^}]*white-space:nowrap/.test(html));
 
+  console.log('\n[5-3] 장 사이에 빈 쪽이 끼지 않는다');
+  /* A4(297) − 위아래 여백 20 = 277mm 가 쓸 수 있는 높이.
+     한 장을 꽉 채우면 1px만 넘쳐도 장마다 빈 쪽이 하나씩 생긴다. */
+  const mh=/\.sheet\{[^}]*height:(\d+)mm/.exec(html);
+  ok('한 장 높이를 재어 볼 수 있다', !!mh, mh && mh[1]);
+  const SH=mh ? +mh[1] : 999;
+  ok('한 장 높이가 277mm 보다 작다 (여유가 있다)', SH < 277, SH+'mm');
+  ok('그래도 260mm 는 넘는다 (너무 줄이지 않았다)', SH > 260, SH+'mm');
+  ok('넘치면 잘라 낸다 (overflow:hidden)', /\.sheet\{[^}]*overflow:hidden/.test(html));
+  ok('요즘 쓰는 break-after:page 도 함께 적었다', /\.sheet\{[^}]*break-after:page/.test(html));
+  ok('마지막 장은 뒤에서 쪽을 넘기지 않는다',
+     /\.sheet:last-child\{[^}]*page-break-after:auto/.test(html) &&
+     /\.sheet:last-child\{[^}]*break-after:auto/.test(html));
+  ok('인쇄할 때 body 여백을 없앤다',
+     /@media print\{[\s\S]*?html,body\{[^}]*margin:0/.test(html));
+  ok('인쇄할 때 printArea 여백도 없앤다',
+     /@media print\{[\s\S]*?#printArea\{[^}]*margin:0/.test(html));
+  /* PDF 로 얹는 크기가 장 크기와 같아야 그림이 안 늘어난다 */
+  const mm=/var SHEET_MM=\{w:(\d+), *h:(\d+)\}/.exec(html);
+  ok('PDF 크기를 한 곳에 적어 두었다', !!mm, mm && mm[0]);
+  ok('PDF 크기가 장 크기와 같다', mm && +mm[2]===SH, mm && (mm[2]+' ↔ '+SH));
+  ok('PDF 도 그 값을 쓴다', /addImage\([\s\S]{0,80}SHEET_MM\.w, *SHEET_MM\.h\)/.test(html));
+
   console.log('\n[5-2] 그림이 다 실린 뒤에 인쇄한다');
   ok('printWhenReady 씀', /printWhenReady\(P\)/.test(html));
   ok('0.3초 타이머는 없어짐', !/setTimeout\(function\(\)\{ window\.print\(\); \},300\)/.test(html));

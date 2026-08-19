@@ -453,14 +453,19 @@
   #printArea{display:none}
   /* PDF 를 만들 때만 잠깐 화면 밖에 펼쳐 둔다 */
   #printArea.shoot{display:block;position:fixed;left:-99999px;top:0;background:#fff}
-  .sheet{width:190mm;height:277mm;page-break-after:always;overflow:hidden;
+  /* A4(210×297)에 10mm 여백이면 쓸 수 있는 칸은 190×277mm 이다.
+     그런데 높이를 277mm 로 꽉 채우면, 인쇄기가 1px만 더 크게 셈해도 넘쳐서
+     장마다 빈 쪽이 하나씩 끼어든다 (휴대전화에서 특히 그랬다).
+     그래서 272mm 로 5mm 를 남겨 둔다. PDF 쪽 SHEET_MM 과 같은 값이어야 한다. */
+  .sheet{width:190mm;height:272mm;overflow:hidden;
+         page-break-after:always;break-after:page;break-inside:avoid;
          display:flex;flex-direction:column;position:relative}
   .sbody{flex:1;display:flex;min-height:0}
   .shd{height:5mm;font-size:8.5pt;color:#7a7f86;padding-left:1mm}
   .pgn{height:7mm;font-size:9pt;color:#555;padding-top:1.5mm;position:relative}
   .pgn .pn{display:block;text-align:center}
   .pgn .cpr{position:absolute;right:0;bottom:0.5mm;font-size:7.5pt;color:#8a8f96;white-space:nowrap}
-  .sheet:last-child{page-break-after:auto}
+  .sheet:last-child{page-break-after:auto;break-after:auto}
   .scol{flex:1;min-width:0;display:flex;flex-direction:column;padding:0 5mm}
   .scol.divider{border-right:1.1px solid #333}
   .slab{font-size:9.5pt;color:#444;margin:0 0 1.5mm;font-weight:bold}
@@ -547,8 +552,9 @@
 
   @media print{
     header,main,.drawer,.nav,#pager,#toast,.modal,#cmp,#std,#crs,#foot{display:none !important}
-    #printArea{display:block}
-    body{background:#fff}
+    #printArea{display:block;margin:0;padding:0}
+    /* 둘레 여백이 조금이라도 남아 있으면 그만큼 넘쳐 빈 쪽이 생긴다 */
+    html,body{margin:0;padding:0;background:#fff}
     @page{size:A4;margin:10mm}
   }
 </style>
@@ -1804,6 +1810,9 @@
        · 각 장을 화면 밖에서 그려 그림으로 뜬 뒤 A4 크기로 PDF에 얹는다
        · 한글이 그대로 나오도록 브라우저가 그린 결과를 쓴다 (글꼴을 따로 담지 않아도 된다)
      라이브러리가 없거나 실패하면 인쇄 창으로 넘긴다. */
+  /* 한 장의 크기(mm) — 위쪽 CSS 의 .sheet 와 반드시 같아야 한다.
+     A4 인쇄칸은 190×277 이지만, 꽉 채우면 빈 쪽이 끼어들어 높이를 5mm 줄여 놓았다. */
+  var SHEET_MM={w:190, h:272};
   function pdfReady(){
     return !!(window.jspdf && window.jspdf.jsPDF && window.html2canvas);
   }
@@ -1882,8 +1891,9 @@
                                        logging:false, useCORS:true})
           .then(function(cv){
             if(i>0) pdf.addPage();
-            /* A4 210×297 에 10mm 여백 → 190×277 */
-            pdf.addImage(cv.toDataURL('image/jpeg', 0.92), 'JPEG', 10, 10, 190, 277);
+            /* 위 CSS 의 .sheet 와 같은 크기로 얹는다 (다르면 그림이 늘어난다) */
+            pdf.addImage(cv.toDataURL('image/jpeg', 0.92), 'JPEG',
+                         10, 10, SHEET_MM.w, SHEET_MM.h);
             i++;
             if(i%3===0) toast(kind+' PDF 만드는 중… '+i+' / '+sheets.length);
             setTimeout(step, 0);
@@ -1977,10 +1987,10 @@
      왼쪽 단을 위에서 아래로 다 채우고, 넘치면 오른쪽 단으로 넘어간다.
      («좌 우 좌 우» 로 번갈아 놓으면 눈이 갈지자로 움직여 읽기 나쁘다) */
   /* 한 단에 들어가는 줄 수.
-     A4 한 장 277mm − 머리글 5 − 쪽번호 7 = 265mm,
-     칸 위아래 여백 6, 제목 5.5, 표 위 여백 2 → 쓸 수 있는 높이 251.5mm.
-     줄 높이를 5mm로 못박았으므로 47줄(235mm)이면 «없는 정답» 안내가 붙어도 남는다. */
-  var QA_PER_COL=47;
+     한 장 272mm − 머리글 5 − 쪽번호 7 = 260mm,
+     칸 위아래 여백 6, 제목 5.5, 표 위 여백 2 → 쓸 수 있는 높이 246.5mm.
+     줄 높이를 5mm로 못박았으므로 46줄(230mm)이면 «없는 정답» 안내가 붙어도 남는다. */
+  var QA_PER_COL=46;
   function quickAnsSheet(P, list){
     var rows=list.filter(function(it){ return ansOf(it)!==null; });
     if(!rows.length) return;

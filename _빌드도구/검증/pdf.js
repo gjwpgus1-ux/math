@@ -56,8 +56,8 @@ w.jspdf={ jsPDF: function(o){ CALLS.opt=o; CALLS.pages=1;
   ok('A4 세로', CALLS.opt && CALLS.opt.format==='a4' && CALLS.opt.orientation==='portrait' && CALLS.opt.unit==='mm',
      JSON.stringify(CALLS.opt));
   ok('쪽수가 장수와 같음', CALLS.pages===CALLS.shots.length, CALLS.pages+' vs '+CALLS.shots.length);
-  ok('여백 10mm · 190×277 로 얹음',
-     CALLS.imgs.every(a=>a[1]===10&&a[2]===10&&a[3]===190&&a[4]===277), JSON.stringify(CALLS.imgs[0]));
+  ok('여백 10mm · 190×272 로 얹음 (빈 쪽이 안 생기게 5mm 줄임)',
+     CALLS.imgs.every(a=>a[1]===10&&a[2]===10&&a[3]===190&&a[4]===272), JSON.stringify(CALLS.imgs[0]));
   ok('파일로 저장됨', !!CALLS.saved, CALLS.saved);
   ok('파일 이름에 학습지와 날짜', /^학습지_\d{8}_\d{4}\.pdf$/.test(CALLS.saved||''), CALLS.saved);
   ok('찍은 뒤 다시 숨김', !$('printArea').classList.contains('shoot'));
