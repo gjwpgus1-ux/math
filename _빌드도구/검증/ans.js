@@ -193,6 +193,37 @@ async function find(q){
   S.ok('고른 문항이 다 적혀 있다', qrows.length===3, qrows.length);
   S.ok('줄마다 시험이름과 답', qrows.every(r=>r.querySelector('.qan') && r.querySelector('.qav')));
   S.ok('빠른 정답 모양이 있다', /\.qarow\{/.test(css));
+  S.ok('한 단에 세로로 쌓는다 (좌우 번갈이 아님)',
+       /\.qa\{[^}]*flex-direction:column/.test(css) && !/\.qarow\{[^}]*width:calc\(50%/.test(css));
+
+  /* 적게 고르면 왼쪽 한 단에만 — 오른쪽 단을 만들지 않는다 */
+  const qcols=[...last.querySelectorAll('.scol')];
+  S.ok('적게 고르면 단이 하나', qcols.length===1, qcols.length);
+  S.ok('가운데 줄도 긋지 않는다', !last.querySelector('.scol.divider'));
+
+  /* 많이 고르면 왼쪽을 다 채운 뒤 오른쪽으로 넘어간다 */
+  const many={}; const manyIt=IT.filter(it=>T.ansOf(it)!==null).slice(0,120);
+  manyIt.forEach(it=>{ many[it[2]]=true; });
+  T.SELset(many);
+  await wait(200);
+  click($('printWork'));
+  click($('outPrint'));
+  await wait(120);
+  const qsheet=[...doc.querySelectorAll('#printArea .sheet')].filter(s=>s.querySelector('.qa'));
+  S.ok('빠른 정답 장이 생긴다', qsheet.length>0, qsheet.length);
+  const cols2=[...qsheet[0].querySelectorAll('.scol')];
+  S.ok('많이 고르면 두 단', cols2.length===2, cols2.length);
+  const L=[...cols2[0].querySelectorAll('.qarow .qan')].map(e=>e.textContent);
+  const R=[...cols2[1].querySelectorAll('.qarow .qan')].map(e=>e.textContent);
+  S.ok('왼쪽 단이 가득 찬다', L.length===50, L.length);
+  S.ok('오른쪽 단은 그다음 것', R.length>0, R.length);
+  const order=[...qsheet[0].querySelectorAll('.qarow .qan')].map(e=>e.textContent);
+  S.ok('왼쪽을 다 읽은 뒤 오른쪽 — 좌우 번갈이 아님',
+       order.slice(0,L.length).join('|')===L.join('|') &&
+       order.slice(L.length).join('|')===R.join('|'));
+  const want=manyIt.slice(0,50).map(it=>/* 라벨은 화면과 같은 차례 */ 1);
+  S.ok('왼쪽 단의 차례가 고른 차례와 같다',
+       L.length===50 && L[0]!==L[1]);
 
   S.done();
 })();

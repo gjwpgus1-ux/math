@@ -465,9 +465,10 @@
   .scol.divider{border-right:1.1px solid #333}
   .slab{font-size:9.5pt;color:#444;margin:0 0 1.5mm;font-weight:bold}
   .slab .sans{margin-left:3mm;font-weight:bold;color:#1a4fa0}
-  .qa{display:flex;flex-wrap:wrap;gap:1mm 4mm;margin-top:2mm}
+  /* 빠른 정답 — 한 단에 한 줄씩 세로로 쌓는다 (단이 모자라면 다음 단으로) */
+  .qa{display:flex;flex-direction:column;gap:1mm;margin-top:2mm}
   .qarow{display:flex;align-items:baseline;gap:2mm;font-size:9pt;
-         width:calc(50% - 4mm);border-bottom:1px dotted #cfd4da;padding-bottom:0.8mm}
+         border-bottom:1px dotted #cfd4da;padding-bottom:0.8mm}
   .qarow .qan{color:#444;flex:1}
   .qarow .qav{font-weight:bold;color:#1a4fa0}
   .qanote{font-size:8pt;color:#8a8f96;margin-top:3mm}
@@ -1969,24 +1970,39 @@
     numberSheets(P, true);
     return P;
   }
-  /* 학습지 맨 마지막 장 — 고른 문항의 정답을 한눈에 */
+  /* 학습지 맨 마지막 장 — 고른 문항의 정답을 한눈에
+     왼쪽 단을 위에서 아래로 다 채우고, 넘치면 오른쪽 단으로 넘어간다.
+     («좌 우 좌 우» 로 번갈아 놓으면 눈이 갈지자로 움직여 읽기 나쁘다) */
+  var QA_PER_COL=50;                 /* 한 단에 들어가는 줄 수 (A4 기준) */
   function quickAnsSheet(P, list){
     var rows=list.filter(function(it){ return ansOf(it)!==null; });
     if(!rows.length) return;
-    var m=makeSheet();
-    var c=document.createElement('div'); c.className='scol';
-    var h='<div class="sslot" style="flex:1">'+
-          '<div class="slab">빠른 정답</div><div class="qa">';
-    rows.forEach(function(it){
-      h+='<div class="qarow"><span class="qan">'+esc(labelHeld(it))+'</span>'+
-         '<span class="qav">'+ansText(ansOf(it))+'</span></div>';
-    });
-    h+='</div></div>';
-    if(rows.length<list.length){
-      h+='<div class="qanote">정답을 아직 넣지 못한 문항 '+(list.length-rows.length)+'개는 빠져 있습니다.</div>';
+    var missing=list.length-rows.length;
+    var per=QA_PER_COL, first=true;
+    for(var s=0; s<rows.length; s+=per*2){
+      var m=makeSheet();
+      for(var k=0;k<2;k++){
+        var part=rows.slice(s+k*per, s+(k+1)*per);
+        if(k===1 && !part.length) break;          /* 오른쪽이 비면 줄도 긋지 않는다 */
+        var c=document.createElement('div');
+        c.className='scol'+(k===0 && rows.length>s+per ? ' divider' : '');
+        var h='<div class="sslot" style="flex:1">';
+        if(k===0) h+='<div class="slab">빠른 정답'+(first?'':' (이어서)')+'</div>';
+        else      h+='<div class="slab">&nbsp;</div>';
+        h+='<div class="qa">';
+        part.forEach(function(it){
+          h+='<div class="qarow"><span class="qan">'+esc(labelHeld(it))+'</span>'+
+             '<span class="qav">'+ansText(ansOf(it))+'</span></div>';
+        });
+        h+='</div>';
+        if(k===0 && missing && first){
+          h+='<div class="qanote">정답을 아직 넣지 못한 문항 '+missing+'개는 빠져 있습니다.</div>';
+        }
+        h+='</div>';
+        c.innerHTML=h; m.body.appendChild(c);
+      }
+      P.appendChild(m.sheet); first=false;
     }
-    c.innerHTML=h;
-    m.body.appendChild(c); P.appendChild(m.sheet);
   }
   function buildNote(){
     var list=selectedItems();
