@@ -1049,7 +1049,10 @@
   /* ================= 비슷한 문항 =================
      미리 계산한 글자 유사도에 과목·배점·문항번호를 얹어 다시 정렬한다.
      이 숫자들은 비교 응답이 쌓이면 조정할 대상이다. */
-  var W={text:1.00, subj:0.10, pts:0.05, num:0.05, samexam:-0.15};
+  /* intent = 해설에 적힌 «[출제의도] …» 가 얼마나 닮았는지.
+     문장 표현이 달라도 같은 것을 묻는 문항을 이 값이 찾아 준다.
+     출제의도가 없는 문항(스캔본·정답만 있는 회차)은 0이라 점수를 깎지 않는다. */
+  var W={text:1.00, intent:0.45, subj:0.10, pts:0.05, num:0.05, samexam:-0.15};
 
   /* '유사하지 않아요'는 여러 사람이 같은 판단을 했을 때만 실제로 뺀다.
      한 사람 의견으로 바로 빼면 잘못된 제외가 굳어지기 때문. */
@@ -1066,7 +1069,8 @@
     SIM[i].forEach(function(pr){
       var j=pr[0], jt=IT[j];
       if(negBlocked(it[2],jt[2])) return;
-      var je=EX[jt[0]], base=pr[1]/1000, sc=W.text*base;
+      var je=EX[jt[0]], base=pr[1]/1000, intent=(pr[2]||0)/1000;
+      var sc=W.text*base + W.intent*intent;
       if(je.s===e.s && e.s) sc+=W.subj;
       if(ptsOf(jt)===p && p) sc+=W.pts;
       sc+=W.num*Math.max(0,1-Math.abs(jt[1]-it[1])/10);
@@ -1074,7 +1078,7 @@
       if(STD) sc += stdAdjust(it[2], jt[2]);
       sc += crsAdjust(it[2], jt[2]);
       sc += prefAdjust(it[2], jt[2]);
-      out.push({j:j,sc:sc,base:base,same:scopeOf(je)===sc0});
+      out.push({j:j,sc:sc,base:base,intent:intent,same:scopeOf(je)===sc0});
     });
     out.sort(function(a,b){ return b.sc-a.sc; });
     return out.slice(0,k||24);
@@ -2349,8 +2353,9 @@
      그래서 모두가 동일하게 만들어내는 고정 세트를 두고 그 안에서 일부를 반복해 묻는다.
      (NEG 같은 개인 기록에 좌우되지 않도록 원본 유사도만 써서 만든다) */
   var CHECK_SET=null;
-  function rawScore(i,j,base){
-    var it=IT[i], jt=IT[j], e=EX[it[0]], je=EX[jt[0]], p=ptsOf(it), sc=W.text*base;
+  function rawScore(i,j,base,intent){
+    var it=IT[i], jt=IT[j], e=EX[it[0]], je=EX[jt[0]], p=ptsOf(it);
+    var sc=W.text*base + W.intent*(intent||0);
     if(je.s===e.s && e.s) sc+=W.subj;
     if(ptsOf(jt)===p && p) sc+=W.pts;
     sc+=W.num*Math.max(0,1-Math.abs(jt[1]-it[1])/10);
@@ -2363,9 +2368,9 @@
     for(var i=0;i<IT.length;i+=CHECK_STEP){
       var cand=SIM[i];
       if(!cand || cand.length<2) continue;
-      var x={j:cand[0][0], base:cand[0][1]/1000},
-          y={j:cand[1][0], base:cand[1][1]/1000};
-      x.sc=rawScore(i,x.j,x.base); y.sc=rawScore(i,y.j,y.base);
+      var x={j:cand[0][0], base:cand[0][1]/1000, intent:(cand[0][2]||0)/1000},
+          y={j:cand[1][0], base:cand[1][1]/1000, intent:(cand[1][2]||0)/1000};
+      x.sc=rawScore(i,x.j,x.base,x.intent); y.sc=rawScore(i,y.j,y.base,y.intent);
       out.push({i:i,x:x,y:y});
     }
     CHECK_SET=out; return out;
@@ -2786,6 +2791,7 @@
     var rec={a:IT[cur.i][2],x:IT[cur.x.j][2],y:IT[cur.y.j][2],c:choice,
              sx:+cur.x.sc.toFixed(3),sy:+cur.y.sc.toFixed(3),
              bx:+cur.x.base.toFixed(3),by:+cur.y.base.toFixed(3),
+             ix:+(cur.x.intent||0).toFixed(3),iy:+(cur.y.intent||0).toFixed(3),
              chk:cur.chk?1:0, who:UID, at:nowStr()};
     rec.t='cmp'; rec.id=newId();
     PAIRS.push(rec); pairSave(); sendCollect(rec);
