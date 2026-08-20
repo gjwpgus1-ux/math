@@ -1005,7 +1005,65 @@
       }catch(e){ cb(); }
     });
   }
-  function imgSrc(it){ return OV[it[2]] || ('img/'+it[2]); }
+  function imgSrc(it){ return AUXIMG[it[2]] || OV[it[2]] || ('img/'+it[2]); }
+
+  /* ================= 보조 자료 =================
+     따로 잠가 둔 자료(data/aux.bin)를 열쇠말을 맞게 넣었을 때만 이어 붙인다.
+
+     · 열쇠말은 어디에도 적어 두지 않는다. «파일이 풀리는가»로만 가린다.
+       그래서 코드를 아무리 읽어도 열쇠말을 알아낼 수 없다.
+     · 자물쇠는 브라우저에 들어 있는 것(PBKDF2 25만 번 + AES-GCM)만 쓴다.
+     · 새로고침하면 다시 잠긴다. 어디에도 남기지 않는다. */
+  var AUXIMG={}, auxOn=false, auxBusy=false, auxRaw=null;
+  var AUX_ROUNDS=250000, AUX_MIN=8;
+
+  function auxBytes(){
+    if(auxRaw) return Promise.resolve(auxRaw);
+    return fetch('data/aux.bin',{cache:'force-cache'}).then(function(r){
+      if(!r.ok) throw 0;
+      return r.arrayBuffer();
+    }).then(function(b){ auxRaw=new Uint8Array(b); return auxRaw; });
+  }
+
+  /* 맞으면 이어 붙이고 true, 아니면 조용히 false. 어떤 경우에도 알리지 않는다. */
+  function auxOpen(word){
+    if(auxOn || auxBusy) return Promise.resolve(false);
+    if(!(window.crypto && crypto.subtle && window.TextEncoder && window.fetch)) return Promise.resolve(false);
+    auxBusy=true;
+    return auxBytes().then(function(u){
+      /* 머리 3글자 JJ1 + 소금 16 + nonce 12 */
+      if(u.length<32 || u[0]!==74 || u[1]!==74 || u[2]!==49) throw 0;
+      var salt=u.slice(3,19), nonce=u.slice(19,31), body=u.slice(31);
+      return crypto.subtle.importKey('raw', new TextEncoder().encode(word),
+                                     {name:'PBKDF2'}, false, ['deriveKey'])
+        .then(function(base){
+          return crypto.subtle.deriveKey(
+            {name:'PBKDF2', salt:salt, iterations:AUX_ROUNDS, hash:'SHA-256'},
+            base, {name:'AES-GCM', length:256}, false, ['decrypt']);
+        })
+        .then(function(key){
+          return crypto.subtle.decrypt({name:'AES-GCM', iv:nonce}, key, body);
+        });
+    }).then(function(plain){
+      auxMerge(JSON.parse(new TextDecoder().decode(plain)));
+      auxOn=true; auxBusy=false; auxRaw=null;
+      return true;
+    })['catch'](function(){ auxBusy=false; return false; });
+  }
+
+  function auxMerge(D2){
+    var base=EX.length;
+    (D2.exams||[]).forEach(function(e){ e.x=1; EX.push(e); });
+    var im=D2.img||{};
+    for(var k in im) if(im.hasOwnProperty(k)) AUXIMG[k]='data:image/png;base64,'+im[k];
+    (D2.items||[]).forEach(function(r){
+      var it=[r[0]+base, r[1], r[2], r[3], r[4], r[5]];
+      BY_PATH[it[2]]=it; IDX[it[2]]=IT.length; IT.push(it);
+    });
+    buildFilters();
+  }
+  /* 이 문항이 잠가 둔 자료에서 온 것인가 — 밖으로 내보내면 안 되는 것들 */
+  function isAux(it){ var e=it && EX[it[0]]; return !!(e && e.x); }
 
   /* ================= 저장 도우미 ================= */
   function repSave(){ lsSet('gich_reports',REPORTS); updateAdminBadge(); }
@@ -1758,6 +1816,7 @@
   }
   function dataUrlOf(it){
     var path=it[2];
+    if(AUXIMG[path]) return Promise.resolve(AUXIMG[path]);   // 잠가 둔 자료는 이미 글자로 들고 있다
     if(OV[path]) return Promise.resolve(OV[path]);
     if(!needB64()) return Promise.resolve(imgSrc(it));
     return loadChunk(path).then(function(){
@@ -2866,8 +2925,25 @@
   function qSave(){ lsSet('gich_queue', QUEUE.slice(-3000)); }
   function newId(){ return UID+'-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,6); }
 
+  /* 잠가 둔 자료에서 온 문항인지 — 시트로 나가면 안 되는 것을 가려낸다.
+     그림 경로는 AUXIMG 의 열쇠와 같고, 이름표는 «시험이름 N번» 꼴이다. */
+  function auxTouch(rec){
+    if(!auxOn) return false;
+    var keys=['path','p','a','x','y'];
+    for(var i=0;i<keys.length;i++){
+      var v=rec[keys[i]];
+      if(typeof v==='string' && AUXIMG[v]) return true;
+    }
+    if(typeof rec.label==='string'){
+      for(var j=0;j<EX.length;j++)
+        if(EX[j].x && rec.label.indexOf(EX[j].n)===0) return true;
+    }
+    return false;
+  }
+
   function sendCollect(rec){
     if(!rec.id) rec.id=newId();
+    if(auxTouch(rec)) return;           // 잠가 둔 자료는 밖으로 내보내지 않는다
     if(!COLLECT_URL) return;
     QUEUE.push(rec); qSave();
     flushQueue();
@@ -2927,7 +3003,12 @@
   })();
   function statLog(kind, val, n){
     if(!STAT_ON || !COLLECT_URL) return;
-    sendCollect({t:'use', id:newId(), kind:kind, val:String(val==null?'':val).slice(0,120),
+    var s=String(val==null?'':val);
+    /* 잠가 둔 자료의 시험 이름은 사용기록에도 남기지 않는다 */
+    if(auxOn){
+      for(var i=0;i<EX.length;i++) if(EX[i].x && s.indexOf(EX[i].n)>=0) return;
+    }
+    sendCollect({t:'use', id:newId(), kind:kind, val:s.slice(0,120),
                  n:(n==null?1:n), dev:DEVICE, who:UID, at:nowStr()});
   }
   /* 첫 방문인지는 이 브라우저에만 남는 표시로 가른다 */
@@ -3815,7 +3896,10 @@
     render(true);
     if(record && raw.trim()){
       pushTab({t:'q',k:raw,label:raw,n:hits.length});
-      statLog('검색', raw, hits.length);
+      /* 아무것도 못 찾은 긴 말은 열쇠말을 잘못 친 것일 수 있다.
+         그런 글은 시트에 그대로 남기지 않고 «셈»만 남긴다. */
+      var lock=(!hits.length && raw.trim().length>=AUX_MIN);
+      statLog('검색', lock ? '(긴 검색어 · 결과 없음)' : raw, hits.length);
     }
   }
 
@@ -3825,7 +3909,19 @@
     clearTimeout(timer); timer=setTimeout(function(){ run(false,true); },130);
   });
   $('q').addEventListener('keydown',function(e){
-    if(e.key==='Enter'){ clearTimeout(timer); run(true); }
+    if(e.key!=='Enter') return;
+    clearTimeout(timer);
+    var w=$('q').value.trim();
+    /* 아무것도 못 찾은 긴 말은 보조 자료의 열쇠말일 수 있다.
+       맞으면 조용히 이어 붙이고 다시 찾는다. 아니면 여느 «결과 없음» 그대로다. */
+    if(!auxOn && w.length>=AUX_MIN && !hits.length){
+      auxOpen(w).then(function(ok){
+        if(!ok){ run(true); return; }
+        $('q').value=''; activeTab=-1; run(false); drawTabs(); $('q').focus();
+      });
+      return;
+    }
+    run(true);
   });
   $('more').onclick=function(){ render(false); };
   $('clear').onclick=function(){ $('q').value=''; clearFilters(); activeTab=-1; run(false); drawTabs(); $('q').focus(); };
