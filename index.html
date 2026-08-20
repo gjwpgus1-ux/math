@@ -1373,9 +1373,13 @@
            a_n, x^2, sqrt2, AB … 는 예전 글에 «an, x2, sqrt2, ab» 로만 남아
            엉뚱한 문항이 잔뜩 걸린다. 그런 검색어는 수식글 있는 문항에서만 찾는다. */
       var canOld = (fq === phrase);
-      return {list:pool.filter(function(it){
+      var fl = pool.filter(function(it){
         return it[6] ? it[6].indexOf(fq)>=0 : (canOld && it[5].indexOf(phrase)>=0);
-      }), mode:'formula', spec:plan};
+      });
+      if(fl.length) return {list:fl, mode:'formula', spec:plan};
+      /* 수식으로 하나도 못 찾으면 여기서 끝내지 않고, 아래 «글자 그대로»와
+         «낱말 모두 포함» 으로 내려간다.
+         («절댓값 함수» 처럼 낱말과 기호말이 섞이면 수식으로는 못 찾는다) */
     }
     var exact=pool.filter(function(it){ return it[5].indexOf(phrase)>=0; });
     if(exact.length || plan.text.length<2) return {list:exact,mode:'phrase',spec:plan};

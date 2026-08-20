@@ -18,7 +18,7 @@
     "bottom":  {"22": 2560}}              그 문항을 여기서 끊어라 (※ 확인 사항 상자 따위)
 
 사용: python3 scan_q.py <편PDF> <작업폴더> <시험이름> <첫쪽> <끝쪽> <첫번호> <끝번호> [손잡이.json]
-예:   python3 scan_q.py 문제지.pdf /tmp/대성/x01 "2026년 8월 대성 공통" 0 8 1 22 손잡이.json
+예:   python3 scan_q.py 문제지.pdf /tmp/일감/x01 "2026년 8월 고3 공통" 0 8 1 22 손잡이.json
 """
 import sys, os, re, json
 import numpy as np
