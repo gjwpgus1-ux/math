@@ -25,10 +25,14 @@ S.ok('수식글에 그림글자(PUA)가 남아 있지 않다',
 [['sqrt2','√2'],['root3','√3'],['sum','Σ'],['int','∫'],['pi','π'],
  ['theta','θ'],['alpha','α'],['beta','β'],['abs','|'],['vert','|'],
  ['루트','√'],['시그마','Σ'],['적분','∫'],['파이','π'],['세타','θ'],
- ['절댓값','|'],['절대값','|'],['극한','lim'],['무한대','∞'],
+ ['극한','lim'],['무한대','∞'],
  ['x->0','x→0'],['SQRT','√']].forEach(p=>{
-  S.ok('바꿔쓰기 '+p[0]+' → '+p[1], T.fconv(p[0])===p[1], T.fconv(p[0]));
+  S.ok('바꿔쓰기 '+p[0]+' → %s'.replace('%s',p[1]), T.fconv(p[0])===p[1], T.fconv(p[0]));
 });
+/* «절댓값» 은 일부러 기호로 안 바꾼다 — 아래 «절댓값» 묶음 참고 */
+S.ok('절댓값은 기호로 안 바꾼다', T.fconv('절댓값')==='절댓값', T.fconv('절댓값'));
+S.ok('절대값도 마찬가지', T.fconv('절대값')==='절대값', T.fconv('절대값'));
+S.ok('abs 로 치면 여전히 기호', T.fconv('abs')==='|', T.fconv('abs'));
 S.ok('낱말 속 int 는 안 바꾼다', T.fconv('point')==='point', T.fconv('point'));
 S.ok('낱말 속 pi 는 안 바꾼다', T.fconv('pig')==='pig', T.fconv('pig'));
 S.ok('띄어쓰기는 없앤다', T.fconv('sin x')==='sinx', T.fconv('sin x'));
@@ -83,5 +87,29 @@ S.ok('a_n 에 전국연합도 들어 있다',
 const r=T.search('sin');
 const 전국=r.list.filter(it=>T.EX[it[0]].g!=='수능·모평').length;
 S.ok('sin 검색에 전국연합 문항도 들어 있다', 전국>0, 전국);
+
+/* ---- 절댓값 ----
+   세로줄 | 은 절댓값 말고도 P(A|B), {x|…}, 구간별 함수의 큰 괄호에 쓰인다.
+   낱말을 기호 하나로 바꾸면 그 모두가 걸려 695문항이 나왔다. */
+const A=T.search('절댓값');
+S.ok('절댓값은 따로 가려서 찾는다', A.mode==='abs', A.mode);
+S.ok('695개(세로줄 전부)보다 훨씬 적다', A.list.length<450 && A.list.length>250, A.list.length);
+S.ok('절대값(옛 표기)도 같게 나온다', T.search('절대값').list.length===A.list.length);
+S.ok('고른 문항은 모두 짝을 이룬 세로줄을 갖는다',
+     A.list.every(it=>/\|[^|{}=]{1,25}\|/.test(it[6]||'')), 'x');
+/* P(A|B)·집합만 있는 문항은 안 걸려야 한다 */
+const bar=T.IT.filter(it=>(it[6]||'').indexOf('|')>=0);
+const only=bar.filter(it=>!/\|[^|{}=]{1,25}\|/.test(it[6]));
+S.ok('세로줄이 홀로 있는 문항은 빠진다', only.length>0 && !A.list.some(it=>only.indexOf(it)>=0), only.length);
+S.ok('|x| 로 치면 그대로 수식 검색', T.search('|x|').mode==='formula');
+S.ok('쉼표로 묶어도 된다 — 절댓값, 수열',
+     T.search('절댓값, 수열').list.length>0 && T.search('절댓값, 수열').list.length<A.list.length,
+     T.search('절댓값, 수열').list.length);
+/* 낱말이 섞이면 수식으로는 못 찾으니 글자로 내려가야 한다 */
+S.ok('«절댓값 함수» 가 결과 없음으로 끝나지 않는다', T.search('절댓값 함수').list.length>0,
+     T.search('절댓값 함수').list.length);
+/* 다른 낱말은 예전 그대로 */
+S.ok('시그마는 여전히 기호로 찾는다', T.search('시그마').mode==='formula');
+S.ok('적분도 그대로', T.search('적분').mode==='formula');
 
 S.done();
