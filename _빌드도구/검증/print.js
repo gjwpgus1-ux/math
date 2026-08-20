@@ -90,6 +90,20 @@ async function doPrint(H, id){
   const SH=mh ? +mh[1] : 999;
   ok('한 장 높이가 277mm 보다 작다 (여유가 있다)', SH < 277, SH+'mm');
   ok('그래도 260mm 는 넘는다 (너무 줄이지 않았다)', SH > 260, SH+'mm');
+
+  /* 브라우저 «인쇄»는 주소·날짜 띠를 제 마음대로 덧붙여 쓸 수 있는 높이를 깎는다.
+     휴대전화에서 재어 보니 250mm 뿐이었고, 272mm 로는 꼬리말이 다음 쪽으로 넘어갔다. */
+  const pm=/@media print\{[\s\S]*?\.sheet\{height:(\d+)mm\}/.exec(html);
+  ok('인쇄할 때는 한 장을 더 줄인다', !!pm, pm && pm[1]);
+  const PH=pm ? +pm[1] : 999;
+  ok('인쇄용 높이가 250mm 이하다 (머리말·꼬리말 자리)', PH <= 250, PH+'mm');
+  ok('그래도 230mm 는 넘는다', PH > 230, PH+'mm');
+  ok('인쇄용이 PDF용보다 작다', PH < SH, PH+' < '+SH);
+  ok('줄 최소 높이도 함께 줄인다',
+     /@media print\{[\s\S]*?\.nlines div\{min-height:(\d)mm\}/.test(html));
+  ok('내보내기 창에 머리글·바닥글 끄라는 안내가 있다',
+     /outTip[\s\S]{0,300}머리글\/바닥글/.test(html));
+  ok('휴대전화는 PDF 를 권한다', /휴대전화에서는 <b>PDF로 저장<\/b>/.test(html));
   ok('넘치면 잘라 낸다 (overflow:hidden)', /\.sheet\{[^}]*overflow:hidden/.test(html));
   ok('요즘 쓰는 break-after:page 도 함께 적었다', /\.sheet\{[^}]*break-after:page/.test(html));
   ok('마지막 장은 뒤에서 쪽을 넘기지 않는다',
