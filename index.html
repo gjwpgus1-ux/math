@@ -1402,6 +1402,11 @@
   var ROUND_ORDER=['3월','4월','5월','6월','7월','9월','10월','11월'];
   function buildFilters(){
     var box=$('filters');
+    /* 두 번 불릴 수 있다 (잠가 둔 자료를 풀면 시험이 늘어 다시 짓는다).
+       비우지 않으면 «구분·시행·과목·연도» 줄이 통째로 두 번 생긴다. */
+    box.innerHTML='';
+    var sb0=$('scopebar');
+    while(sb0.lastChild && sb0.lastChild.className==='chip') sb0.removeChild(sb0.lastChild);
     var divs=uniq(divOf);
     divs.sort(function(a,b){ return DIV_ORDER.indexOf(a)-DIV_ORDER.indexOf(b); });
     var rounds=uniq(function(e){return e.r}).filter(function(r){ return ROUND_ORDER.indexOf(r)>=0; });
@@ -3924,9 +3929,13 @@
     /* 아무것도 못 찾은 긴 말은 보조 자료의 열쇠말일 수 있다.
        맞으면 조용히 이어 붙이고 다시 찾는다. 아니면 여느 «결과 없음» 그대로다. */
     if(!auxOn && w.length>=AUX_MIN && !hits.length){
+      var n0=IT.length;
       auxOpen(w).then(function(ok){
         if(!ok){ run(true); return; }
         $('q').value=''; activeTab=-1; run(false); drawTabs(); $('q').focus();
+        /* 열렸다는 것을 알려 주지 않으면 «안 되네» 하고 다시 치게 된다.
+           맞게 넣은 사람에게만 뜨므로 감추는 데 해가 되지 않는다. */
+        toast('자료를 더 불러왔습니다 — '+(IT.length-n0)+'문항');
       });
       return;
     }
