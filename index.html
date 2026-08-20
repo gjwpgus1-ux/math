@@ -898,6 +898,27 @@
   }
   var F_ENG={sqrt:'√',root:'√',sum:'Σ',int:'∫',pi:'π',theta:'θ',alpha:'α',beta:'β',
              abs:'|',vert:'|',inf:'∞',infty:'∞'};
+  /* 붙여 쓴 낱말도 알아듣기 — costheta → cosθ, sinalpha → sinα
+     함수 이름은 그대로 두되, 쪼개는 데는 쓸 줄 알아야 한다. */
+  var F_TOK={sqrt:'√',root:'√',sum:'Σ',int:'∫',pi:'π',theta:'θ',alpha:'α',beta:'β',
+             abs:'|',vert:'|',inf:'∞',infty:'∞',gamma:'γ',sigma:'σ',
+             sin:'sin',cos:'cos',tan:'tan',log:'log',ln:'ln',lim:'lim'};
+  /* 아는 낱말«만»으로 온전히 쪼개질 때만 바꾼다.
+     point 는 po+int 로 쪼개지지 않으므로 그대로 두어, 낱말 속 int 를 안 건드린다. */
+  function fsplit(w){
+    var low=w.toLowerCase();
+    if(F_TOK.hasOwnProperty(low)) return F_TOK[low];
+    var out=[], i=0;
+    while(i<low.length){
+      var hit=null;
+      for(var L=Math.min(5,low.length-i); L>=2; L--){
+        if(F_TOK.hasOwnProperty(low.slice(i,i+L))){ hit=low.slice(i,i+L); break; }
+      }
+      if(!hit) return w;          // 온전히 안 쪼개진다 — 그냥 둔다
+      out.push(F_TOK[hit]); i+=hit.length;
+    }
+    return out.join('');
+  }
   function fconv(s){
     s=(s||'');
     F_KOR.forEach(function(p){ s=s.split(p[0]).join(p[1]); });
@@ -906,7 +927,7 @@
        2계도함수 ″ 는 색인에서 ′′ 로 펴 두었으므로 두 번 친 것과 그대로 맞는다. */
     s=s.replace(/[‴]/g,'′′′').replace(/[″]/g,'′′').replace(/['’‘´`]/g,'′');
     /* 로마자는 덩어리째 맞을 때만 바꾼다 — «point» 안의 «int» 는 건드리지 않는다 */
-    s=s.replace(/[A-Za-z]+/g,function(w){ return F_ENG[w.toLowerCase()]||w; });
+    s=s.replace(/[A-Za-z]+/g,fsplit);
     return s.replace(/\s+/g,'');
   }
   /* 수식으로 볼지 가르는 자국 — 수학기호·로마자·함수이름 중 하나라도 있으면.
@@ -2316,10 +2337,19 @@
      ['int · 적분','∫'],
      ['pi · 파이','π'],
      ['theta · 세타','θ  (alpha·beta 도 됩니다)'],
-     ['abs · vert · 절댓값','|'],
+     ['abs · vert','|'],
      ['-> ','→  (예: lim x->0)'],
      ['inf · 무한대','∞'],
-     ['lim · sin · cos · tan · log','그대로 치시면 됩니다']]],
+     ['lim · sin · cos · tan · log','그대로 치시면 됩니다'],
+     ['costheta · sinalpha','붙여 쓰셔도 알아듣습니다 (cosθ · sinα)'],
+     ['cos(pi-theta)','괄호와 섞어 쓰셔도 됩니다 (cos(π-θ))']]],
+   ['«절댓값» 은 낱말로 치시면 됩니다',
+    '수식글에서 세로줄 | 은 절댓값 말고도 조건부확률 P(A|B), 집합 {x | … }, '+
+    '구간별 함수의 큰 괄호에도 쓰입니다. 그래서 «절댓값» 이라고 치시면 '+
+    '짝을 이룬 절댓값 기호가 든 문항만 골라 냅니다.',
+    [['절댓값','387문항 — 절댓값이 든 문항만'],
+     ['|x|','20문항 — 기호 그대로 좁혀서'],
+     ['절댓값, 수열','48문항 — 쉼표로 더 좁히기']]],
    ['쉼표로 묶으면 «둘 다» 든 문항만 나옵니다',
     '조건을 쉼표로 나누어 적으면 모두 들어 있는 문항만 골라 냅니다. 셋 이상도 됩니다.',
     [['lim','579문항'],

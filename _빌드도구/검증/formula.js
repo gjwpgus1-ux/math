@@ -112,6 +112,22 @@ S.ok('«절댓값 함수» 가 결과 없음으로 끝나지 않는다', T.searc
 S.ok('시그마는 여전히 기호로 찾는다', T.search('시그마').mode==='formula');
 S.ok('적분도 그대로', T.search('적분').mode==='formula');
 
+/* ---- 붙여 쓴 낱말 ----
+   costheta 처럼 붙여 쓰면 낱말을 통째로만 보아 못 알아들었다.
+   아는 낱말«만»으로 온전히 쪼개질 때만 쪼갠다 (point 는 po+int 로 안 쪼갠다). */
+[['costheta','cosθ'],['sintheta','sinθ'],['tanbeta','tanβ'],['sinalpha','sinα'],
+ ['sqrtpi','√π'],['alphabeta','αβ'],['cos(pi-theta)','cos(π-θ)'],
+ ['point','point'],['pig','pig'],['AB','AB'],['sinxcosx','sinxcosx']].forEach(p=>{
+  S.ok('붙여쓰기 '+p[0]+' → '+p[1], T.fconv(p[0])===p[1], T.fconv(p[0]));
+});
+S.ok('costheta 로도 찾힌다', T.search('costheta').list.length>0, T.search('costheta').list.length);
+S.ok('cos theta 와 같은 결과',
+     T.search('costheta').list.length===T.search('cos theta').list.length);
+S.ok('cos(pi-theta) 도 찾힌다', T.search('cos(pi-theta)').list.length>0,
+     T.search('cos(pi-theta)').list.length);
+S.ok('cos(pi-theta) 가 costheta 보다 좁다',
+     T.search('cos(pi-theta)').list.length < T.search('costheta').list.length);
+
 /* ---- 대소문자 ----
    예전에는 대문자만 «수식» 으로 보아서, X 는 수식글에서 x 는 예전 글에서 찾았다.
    서로 다른 곳을 뒤지니 «대소문자를 가린다» 는 말이 실제로는 맞지 않았다. */

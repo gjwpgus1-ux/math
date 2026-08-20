@@ -14,7 +14,7 @@ S.ok('셋 다 검색줄 안에 있다',
      $('q').parentNode===$('clear').parentNode && $('clear').parentNode===$('helpBtn').parentNode);
 
 /* ---- 도움말 내용 ---- */
-S.ok('도움말이 일곱 꼭지', T.HELP.length===7, T.HELP.length);
+S.ok('도움말이 여덟 꼭지', T.HELP.length===8, T.HELP.length);
 click($('helpBtn'));
 const box=$('mbox'), txt=box.textContent;
 S.ok('팝업이 열린다', $('modal').classList.contains('open'));
@@ -69,4 +69,12 @@ key('Escape');
 S.ok('Esc 로 검색창에서 커서가 빠진다', doc.activeElement!==$('q'), doc.activeElement&&doc.activeElement.id);
 
 S.ok('안내 문구에 Ctrl 이 적혀 있다', $('keyhint').textContent.indexOf('Ctrl')>=0, $('keyhint').textContent);
+/* ---- 새로 넣은 안내 ---- */
+click($('helpBtn'));
+const t2=$('mbox').textContent;
+S.ok('붙여 쓴 낱말 안내가 있다', /costheta/.test(t2));
+S.ok('괄호와 섞어 쓰는 보기도 있다', /cos\(pi-theta\)/.test(t2));
+S.ok('절댓값 꼭지가 있다', /절댓값.{0,40}낱말로/.test(t2.replace(/\s+/g,' ')));
+S.ok('세로줄이 여러 뜻이라는 설명', /조건부확률|P\(A\|B\)/.test(t2));
+$('helpOk').click();
 S.done();
