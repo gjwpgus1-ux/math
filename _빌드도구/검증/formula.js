@@ -112,6 +112,25 @@ S.ok('«절댓값 함수» 가 결과 없음으로 끝나지 않는다', T.searc
 S.ok('시그마는 여전히 기호로 찾는다', T.search('시그마').mode==='formula');
 S.ok('적분도 그대로', T.search('적분').mode==='formula');
 
+/* ---- 대소문자 ----
+   예전에는 대문자만 «수식» 으로 보아서, X 는 수식글에서 x 는 예전 글에서 찾았다.
+   서로 다른 곳을 뒤지니 «대소문자를 가린다» 는 말이 실제로는 맞지 않았다. */
+['ab','x','n','f'].forEach(q=>{
+  S.ok('소문자 «'+q+'» 도 수식글에서 찾는다', T.search(q).mode==='formula', T.search(q).mode);
+});
+S.ok('AB 와 ab 가 둘 다 수식 검색',
+     T.search('AB').mode==='formula' && T.search('ab').mode==='formula');
+S.ok('AB 와 ab 는 결과가 다르다', T.search('AB').list.length!==T.search('ab').list.length,
+     T.search('AB').list.length+' vs '+T.search('ab').list.length);
+S.ok('ab 가 예전보다 좁아졌다 (910 → 200 아래)', T.search('ab').list.length<200,
+     T.search('ab').list.length);
+S.ok('sinx 는 있고 sinX 는 없다',
+     T.search('sinx').list.length>0 && T.search('sinX').list.length===0);
+S.ok('한글만 친 것은 그대로 글자 찾기', T.search('정규분포').mode!=='formula');
+/* 수식글에 없으면 예전 글로 내려간다 */
+S.ok('p(a) 는 수식글에 없어 글자로 내려간다', T.search('p(a)').mode!=='formula' &&
+     T.search('p(a)').list.length>0, T.search('p(a)').mode);
+
 /* ---- <보기> ㄱㄴㄷ 유형 ----
    «옳은 것만을 있는 대로 고른 것은?» 으로 찾으면, 같은 유형이면서
    다르게 쓴 문항(보기의 각 명제에 대하여 / 보기에서 참인 명제만을 /
