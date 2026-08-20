@@ -127,7 +127,11 @@ def analyse_page(pg):
         bh = sub.shape[0]
         # 세로 괘선(거의 모든 줄에 잉크가 있는 x)은 본문이 아니므로 왼쪽 끝 계산에서 뺀다
         colcnt = sub.sum(axis=0)
-        real = (colcnt > 0) & (colcnt < bh * 0.5)
+        # 잉크가 «한 점이라도» 있는 곳을 왼쪽 끝으로 삼으면, 스캔 얼룩이나
+        # 쪽 테두리 한 줄에 끌려가 엉뚱한 여백을 문항번호 자리로 착각한다.
+        # 글자 획 하나만큼(단 높이의 0.4%)은 있어야 본문으로 친다.
+        floor = max(2, int(bh * 0.004))
+        real = (colcnt >= floor) & (colcnt < bh * 0.5)
         xs = np.flatnonzero(real)
         if xs.size == 0:
             out_cols.append([x0 / SC, x1 / SC]); out_lines.append([]); continue

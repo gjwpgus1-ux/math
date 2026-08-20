@@ -12,8 +12,9 @@
   파일  JJ1 | 소금(16) | nonce(12) | 잠긴 내용
 
 담기는 것
-  {"exams":[...], "items":[[…]], "img":{"이름.png":"base64", …}}
+  {"exams":[...], "items":[[…]], "img":{"이름.png":"base64", …}, "sim":[[…]]}
   공개본 data/index.js 와 같은 모양이라 앱이 그대로 이어 붙일 수 있다.
+  sim 은 «이 문항과 비슷한 공개 문항» 목록이라, 잠금을 풀면 유사문항 추천도 된다.
 
 쓰는 법
   1) 시험지 PDF 를 공개본과 똑같이 크롭한다 (extract → assemble → render)
@@ -61,6 +62,28 @@ def unseal(blob, pw):
     return json.loads(AESGCM(derive(pw, salt)).decrypt(nonce, ct, None))
 
 
+def similar(app, items, topk=24):
+    """잠근 문항마다 «비슷한 공개 문항» 을 미리 찾아 둔다.
+    build_sim.py 와 같은 잣대(문자 3-gram TF-IDF 코사인)를 쓴다."""
+    import build_sim as BS
+    raw = open(os.path.join(app, 'data', 'index.js'), encoding='utf-8').read()
+    D = json.loads(raw[raw.index('{'):raw.rindex('}') + 1])
+    pub = [it[5] for it in D['items']]
+    mine = [r[5] for r in items]
+    vecs, inv = BS.tfidf(pub + mine)          # 공개 + 잠근 것을 한 자리에서 잰다
+    n = len(pub)
+    out = []
+    for i in range(len(mine)):
+        sc = BS.scores(n + i, vecs, inv)
+        best = sorted(((j, s) for j, s in sc.items() if j < n),
+                      key=lambda z: -z[1])[:topk]
+        out.append([[j, int(round(s * 1000))] for j, s in best if s > BS.MIN_KEEP])
+    got = sum(1 for r in out if r)
+    print('  비슷한 문항 찾음 — %d / %d 문항 (평균 %.1f개)'
+          % (got, len(out), sum(len(r) for r in out) / max(1, len(out))))
+    return out
+
+
 def collect(work, keys):
     """공개본 add_exams.py 와 같은 자리에서 시험·문항·그림을 모은다."""
     exams, items, imgs = [], [], {}
@@ -105,6 +128,7 @@ def main():
     if not data['items']:
         print('넣을 문항이 없습니다.')
         return
+    data['sim'] = similar(APP, data['items'])
 
     pw = os.environ.get('AUX_PW') or getpass.getpass('암호 (오프라인으로 나눠 줄 것): ')
     if len(pw) < MIN_PW:

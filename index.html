@@ -1056,9 +1056,14 @@
     (D2.exams||[]).forEach(function(e){ e.x=1; EX.push(e); });
     var im=D2.img||{};
     for(var k in im) if(im.hasOwnProperty(k)) AUXIMG[k]='data:image/png;base64,'+im[k];
-    (D2.items||[]).forEach(function(r){
+    var sim=D2.sim||[];
+    (D2.items||[]).forEach(function(r,k){
       var it=[r[0]+base, r[1], r[2], r[3], r[4], r[5]];
-      BY_PATH[it[2]]=it; IDX[it[2]]=IT.length; IT.push(it);
+      BY_PATH[it[2]]=it; IDX[it[2]]=IT.length;
+      /* «비슷한 문항»도 미리 재어 두었으므로 같은 자리에 이어 붙인다.
+         SIM 은 문항 차례와 자리를 맞춰야 하니 빈 것이라도 채운다. */
+      if(SIM) SIM[IT.length]=sim[k]||[];
+      IT.push(it);
     });
     buildFilters();
   }
