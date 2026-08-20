@@ -268,13 +268,17 @@ const dump=w=>({q:JSON.parse(w.localStorage.getItem('gich_queue')||'[]'),
   const card=doc0(R).querySelector('.card');
   const rep=[...card.querySelectorAll('button')].find(b=>b.textContent==='오류제보');
   rep.dispatchEvent(new R.w.Event('click',{bubbles:true})); await wait(80);
+  // 아무것도 안 고르고 보내면 막아야 한다
+  R.$('rpOk').dispatchEvent(new R.w.Event('click',{bubbles:true})); await wait(200);
+  ok('안 고르면 안 보내짐', SHEET.rep.length===nr, SHEET.rep.length);
+  const cb=R.$('rpK0'); cb.checked=true; cb.dispatchEvent(new R.w.Event('change',{bubbles:true}));
   R.$('rpMemo').value='아래쪽 선택지가 잘려 있습니다';
   R.$('rpOk').dispatchEvent(new R.w.Event('click',{bubbles:true})); await wait(400);
   ok('시트에 제보 1건', SHEET.rep.length===nr+1, SHEET.rep.length);
   const last=SHEET.rep[SHEET.rep.length-1];
   ok('파일 경로가 감', /\.png$/.test(last.path||''), last.path);
   ok('시험·문항 이름도 감', !!last.label, last.label);
-  ok('유형이 감', !!last.kind, last.kind);
+  ok('유형이 감', last.kind==='문제 잘림', last.kind);
   ok('메모가 감', last.memo==='아래쪽 선택지가 잘려 있습니다', last.memo);
   ok('익명번호', /^u[a-z0-9]{6}$/.test(last.who||''), last.who);
   ok('이름은 안 물음', !R.$('rpWho'));
