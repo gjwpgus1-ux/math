@@ -44,6 +44,21 @@ function sheet_(name, head) {
     sh.appendRow(head);
     sh.setFrozenRows(1);
     sh.getRange(1, 1, 1, head.length).setFontWeight('bold');
+    return sh;
+  }
+  /* 나중에 칸이 늘어난 경우 — 이미 있는 시트에도 모자란 칸과 제목을 채워 준다.
+     («의도L·의도R» 처럼 뒤에 붙인 칸이 여기서 만들어진다) */
+  if (sh.getMaxColumns() < head.length) {
+    sh.insertColumnsAfter(sh.getMaxColumns(), head.length - sh.getMaxColumns());
+  }
+  var cur = sh.getRange(1, 1, 1, head.length).getValues()[0];
+  var fix = false;
+  for (var i = 0; i < head.length; i++) {
+    if (String(cur[i] || '') !== head[i]) { cur[i] = head[i]; fix = true; }
+  }
+  if (fix) {
+    sh.getRange(1, 1, 1, head.length).setValues([cur]).setFontWeight('bold');
+    sh.setFrozenRows(1);
   }
   return sh;
 }
