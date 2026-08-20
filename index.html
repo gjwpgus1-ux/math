@@ -3985,7 +3985,20 @@
   $('mNote').onclick=function(){ askOutput('오답노트', buildNote); };
   $('mTop').onclick=function(){ try{ window.scrollTo({top:0,behavior:'smooth'}); }catch(e){ window.scrollTo(0,0); } };
 
+  /* 지금 글자를 치고 있는 중인가 — 입력칸·여러 줄 칸·고르기 칸 어디든 */
+  function typing(){
+    var el=document.activeElement;
+    if(!el) return false;
+    var t=(el.tagName||'').toLowerCase();
+    return t==='input' || t==='textarea' || t==='select' || el.isContentEditable===true;
+  }
+
   document.addEventListener('keydown',function(e){
+    /* 글자를 치는 중에는 «글쇠 하나짜리» 단축키를 재운다.
+       관리자 암호나 오류제보를 칠 때 1·2·f·k 따위가 단축키로 먼저 먹혀
+       글자가 제대로 안 들어가던 것을 막는다.
+       Esc 와 Ctrl·Alt 조합(탭 이동 Ctrl+←→ 등)은 글자가 아니므로 살린다. */
+    if(typing() && e.key!=='Escape' && !e.ctrlKey && !e.altKey && !e.metaKey) return;
     if($('cmp').classList.contains('open')){
       if(e.key==='Escape' && !$('cmp').classList.contains('gate')){ $('cmp').classList.remove('open'); return; }
       if(e.key==='1') cmpToggle('x');

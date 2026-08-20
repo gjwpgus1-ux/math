@@ -1,6 +1,6 @@
 /* 글쇠 하나짜리 단축키 — / · 1~4 · f · ? */
 const {boot,scorer}=require('./harness.js');
-const {w,doc,$}=boot('search:search,setMode:m=>{MODE=m;},MODE:()=>MODE,SEL:()=>SEL,'+
+const {w,doc,$,html}=boot('search:search,setMode:m=>{MODE=m;},MODE:()=>MODE,SEL:()=>SEL,'+
   'hits:()=>hits,setHits:h=>{hits=h;},render:render,page:()=>page,IT:IT,EX:EX');
 const T=w.__T, S=scorer();
 /* 시작 팝업이 떠 있으면 키를 다 삼킨다 */
@@ -120,4 +120,43 @@ S.ok('검색모드에서 숫자키가 선택을 바꾸지 않는다', (function(
 T.setHits([]); T.render(true);
 key('1'); key('4');
 S.ok('문항이 없을 때 눌러도 괜찮다', true);
+
+/* ---- 글자를 치는 중에는 단축키가 자야 한다 ----
+   관리자 암호나 오류제보를 칠 때 1·2·f·k·? 가 단축키로 먼저 먹혀
+   글자가 제대로 안 들어가던 것을 막았는지 본다. */
+(function(){
+  const punch=(el,s)=>{ el.focus();
+    for(const ch of s){ doc.dispatchEvent(new w.KeyboardEvent('keydown',{key:ch,bubbles:true})); el.value+=ch; } };
+
+  S.ok('글자 치는 중인지 가리는 것이 있다', /function typing\(\)/.test(html));
+  S.ok('입력칸·여러 줄 칸·고르기 칸을 모두 본다',
+       /t==='input'[\s\S]{0,80}t==='textarea'[\s\S]{0,80}t==='select'/.test(html));
+  S.ok('Esc 와 Ctrl 조합은 그래도 듣는다', /typing\(\) && e\.key!=='Escape' && !e\.ctrlKey/.test(html));
+
+  /* 오류제보 메모칸 */
+  T.setHits(T.IT.slice(0,4)); T.render(true);
+  const card=doc.querySelector('.card');
+  const rep=[...card.querySelectorAll('button')].find(b=>b.textContent==='오류제보');
+  rep.dispatchEvent(new w.MouseEvent('click',{bubbles:true}));
+  const memo=$('rpMemo');
+  S.ok('오류제보 메모칸이 있다', !!memo);
+  if(memo){
+    memo.value=''; punch(memo,'12kf?/');
+    S.ok('친 글자가 그대로 들어간다', memo.value==='12kf?/', JSON.stringify(memo.value));
+    S.ok('제보 창이 딴 데로 안 넘어간다', /오류 제보/.test($('mbox').textContent));
+  }
+  doc.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+
+  /* 관리자 암호칸 — 제목을 여러 번 눌러 연다 */
+  for(let i=0;i<8;i++) $('title').dispatchEvent(new w.MouseEvent('click',{bubbles:true}));
+  const pw=$('pwIn');
+  S.ok('관리자 암호칸이 열린다', !!pw);
+  if(pw){
+    pw.value=''; punch(pw,'1234kf/?');
+    S.ok('암호도 친 대로 들어간다', pw.value==='1234kf/?', JSON.stringify(pw.value));
+    S.ok('암호 창이 그대로다', /관리자 모드/.test($('mbox').textContent));
+  }
+  doc.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+})();
+
 S.done();
