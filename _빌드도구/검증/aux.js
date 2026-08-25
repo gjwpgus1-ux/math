@@ -108,5 +108,16 @@ function makeFixture(){
   /* 원래대로 되돌린다 */
   if(had) fs.writeFileSync(AUX,had); else fs.unlinkSync(AUX);
   fs.rmSync(WORK,{recursive:true,force:true});
+
+  console.log('\n[6] 묶음이 여럿이고 열쇠말이 각각 다르다');
+  const src2=fs.readFileSync(path.join(APP,'index.html'),'utf8');
+  const list=(src2.match(/AUX_FILES=\[([^\]]*)\]/)||[])[1]||'';
+  ok('묶음 목록이 있다', !!list, list);
+  ok('둘 이상 담겨 있다', list.split(',').length>=2, list);
+  ok('아직 안 연 것만 풀어 본다', /auxDone\[n\]/.test(src2));
+  ok('하나 열려도 나머지는 잠긴 채', /left=AUX_FILES\.filter/.test(src2));
+  ok('열쇠말은 6자부터 본다', /AUX_MIN=6/.test(src2));
+  ok('묶음마다 파일을 따로 받아 온다', /fetch\('data\/'\+name/.test(src2));
+
   done();
 })();

@@ -32,13 +32,13 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.dirname(HERE)
-OUT = os.path.join(APP, 'data', 'aux.bin')
+OUT = os.path.join(APP, 'data', os.environ.get('AUX_OUT', 'aux.bin'))
 
 MAGIC = b'JJ1'
 ROUNDS = 250000
 SALT_N = 16
 NONCE_N = 12
-MIN_PW = 8
+MIN_PW = 6
 
 
 def derive(pw, salt):
@@ -147,7 +147,7 @@ def main():
           and len(back['img']) == len(data['img']))
     print('\n시험 %d개 · 문항 %d개 · 그림 %d장'
           % (len(data['exams']), len(data['items']), len(data['img'])))
-    print('data/aux.bin  %.1fMB (잠그기 전 %.1fMB)' % (len(blob) / 1e6, plain / 1e6))
+    print('%s  %.1fMB (잠그기 전 %.1fMB)' % (os.path.relpath(OUT, APP), len(blob) / 1e6, plain / 1e6))
     print('되풀어 확인: %s' % ('통과' if ok else '실패'))
     print('\n암호는 저장하지 않았습니다. 잊으면 되살릴 수 없습니다.')
 

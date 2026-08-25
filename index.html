@@ -1066,23 +1066,23 @@
        그래서 코드를 아무리 읽어도 열쇠말을 알아낼 수 없다.
      · 자물쇠는 브라우저에 들어 있는 것(PBKDF2 25만 번 + AES-GCM)만 쓴다.
      · 새로고침하면 다시 잠긴다. 어디에도 남기지 않는다. */
-  var AUXIMG={}, auxOn=false, auxBusy=false, auxRaw=null;
-  var AUX_ROUNDS=250000, AUX_MIN=8;
+  /* 묶음마다 파일이 따로다. 열쇠말도 따로라, 아는 말로 열리는 것만 열린다.
+     새 묶음을 넣으려면 아래 목록에 파일 이름만 더하면 된다. */
+  var AUX_FILES=['aux.bin','aux2.bin'];
+  var AUXIMG={}, auxOn=false, auxBusy=false, auxRaw={}, auxDone={};
+  var AUX_ROUNDS=250000, AUX_MIN=6;
 
-  function auxBytes(){
-    if(auxRaw) return Promise.resolve(auxRaw);
-    return fetch('data/aux.bin',{cache:'force-cache'}).then(function(r){
+  function auxBytes(name){
+    if(auxRaw[name]) return Promise.resolve(auxRaw[name]);
+    return fetch('data/'+name,{cache:'force-cache'}).then(function(r){
       if(!r.ok) throw 0;
       return r.arrayBuffer();
-    }).then(function(b){ auxRaw=new Uint8Array(b); return auxRaw; });
+    }).then(function(b){ auxRaw[name]=new Uint8Array(b); return auxRaw[name]; });
   }
 
-  /* 맞으면 이어 붙이고 true, 아니면 조용히 false. 어떤 경우에도 알리지 않는다. */
-  function auxOpen(word){
-    if(auxOn || auxBusy) return Promise.resolve(false);
-    if(!(window.crypto && crypto.subtle && window.TextEncoder && window.fetch)) return Promise.resolve(false);
-    auxBusy=true;
-    return auxBytes().then(function(u){
+  /* 묶음 하나를 그 열쇠말로 풀어 본다. 안 맞으면 조용히 실패한다. */
+  function auxTry(name, word){
+    return auxBytes(name).then(function(u){
       /* 머리 3글자 JJ1 + 소금 16 + nonce 12 */
       if(u.length<32 || u[0]!==74 || u[1]!==74 || u[2]!==49) throw 0;
       var salt=u.slice(3,19), nonce=u.slice(19,31), body=u.slice(31);
@@ -1096,11 +1096,29 @@
         .then(function(key){
           return crypto.subtle.decrypt({name:'AES-GCM', iv:nonce}, key, body);
         });
-    }).then(function(plain){
-      auxMerge(JSON.parse(new TextDecoder().decode(plain)));
-      auxOn=true; auxBusy=false; auxRaw=null;
-      return true;
-    })['catch'](function(){ auxBusy=false; return false; });
+    });
+  }
+
+  /* 맞으면 이어 붙이고 true, 아니면 조용히 false. 어떤 경우에도 알리지 않는다.
+     묶음이 여럿이므로 아직 안 연 것들을 차례로 풀어 본다.
+     묶음마다 열쇠말이 다르니, 이 말로 열리는 것만 열린다. */
+  function auxOpen(word){
+    if(auxBusy) return Promise.resolve(false);
+    if(!(window.crypto && crypto.subtle && window.TextEncoder && window.fetch)) return Promise.resolve(false);
+    var left=AUX_FILES.filter(function(n){ return !auxDone[n]; });
+    if(!left.length) return Promise.resolve(false);
+    auxBusy=true;
+    var i=0, any=false;
+    function step(){
+      if(i>=left.length){ auxBusy=false; return any; }
+      var name=left[i++];
+      return auxTry(name, word).then(function(plain){
+        auxMerge(JSON.parse(new TextDecoder().decode(plain)));
+        auxDone[name]=1; auxOn=true; any=true; auxRaw[name]=null;
+        return step();
+      })['catch'](function(){ return step(); });
+    }
+    return Promise.resolve().then(step);
   }
 
   function auxMerge(D2){
@@ -3997,7 +4015,9 @@
     var w=$('q').value.trim();
     /* 아무것도 못 찾은 긴 말은 보조 자료의 열쇠말일 수 있다.
        맞으면 조용히 이어 붙이고 다시 찾는다. 아니면 여느 «결과 없음» 그대로다. */
-    if(!auxOn && w.length>=AUX_MIN && !hits.length){
+    /* 아직 안 연 묶음이 하나라도 있으면 열쇠말일 수 있다 */
+    var auxLeft=AUX_FILES.some(function(n){ return !auxDone[n]; });
+    if(auxLeft && w.length>=AUX_MIN && !hits.length){
       var n0=IT.length;
       auxOpen(w).then(function(ok){
         if(!ok){ run(true); return; }

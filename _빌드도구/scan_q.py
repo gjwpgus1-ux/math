@@ -30,11 +30,17 @@ DPI = 200
 SC = DPI / 72.0
 DARK = 200
 PAT = re.compile(r'^([0-9lLI]{1,2})[.,]$')
+LINE = re.compile(r'^\s*([0-9lLI]{1,2})\s*[.,]\s')
 ONE = str.maketrans('lLI', '111')
 NEAR_LEFT = 44        # 단 왼쪽 끝에서 이만큼 안쪽까지를 «번호 자리»로 본다
 PAD = 10              # 잘라 낼 때 둘레 여백(픽셀)
 LINE_GAP = 7          # 이만큼 비면 글줄이 바뀐 것
 BLOCK_GAP = 26        # 이만큼 비면 덩어리가 바뀐 것
+RULE_GAP = 40         # 괘선이 이만큼 끊긴 것은 이어진 것으로 본다
+RULE_BAND = 18        # 괘선을 이만큼 좌우로 넓게 본다 (쪽이 조금 기울어도)
+MIN_CONT = 130        # 다음 단으로 이어졌다고 볼 최소 길이
+FOOT_H = 150          # 쪽번호 상자로 볼 최대 높이
+FOOT_GAP = 150        # 위 덩어리와 이만큼 떨어져 있으면 쪽번호로 본다
 
 
 def rules(ink):
@@ -42,10 +48,19 @@ def rules(ink):
     ph, pw = ink.shape
     lo, hi = int(pw * 0.35), int(pw * 0.65)
     cs = ink[:, lo:hi].sum(axis=0)
-    if cs.size == 0 or cs.max() < ph * 0.35:
+    if cs.size == 0 or cs.max() < ph * 0.18:
         return None, 0, ph
     rx = lo + int(cs.argmax())
-    col = ink[:, rx]
+    # 쪽이 조금만 기울어도 괘선이 여러 칸에 걸쳐 흩어진다.
+    # 한 칸만 보지 말고 좌우로 조금 넓게 «띠»로 보아야 끊기지 않는다.
+    a0 = max(0, rx - RULE_BAND); a1 = min(pw, rx + RULE_BAND + 1)
+    col = ink[:, a0:a1].any(axis=1)
+    # 스캔이 흐려 괘선이 군데군데 끊긴다. 짧은 끊김은 이어 붙여 놓고 재야
+    # 본문의 위·아래 끝을 제대로 잡는다. (안 그러면 쪽 가운데서 끊긴다)
+    idx = np.flatnonzero(col)
+    for a, b in zip(idx[:-1], idx[1:]):
+        if 1 < b - a <= RULE_GAP:
+            col[a:b] = True
     best, i = (0, 0, ph), 0
     while i < ph:
         if not col[i]:
@@ -59,6 +74,36 @@ def rules(ink):
     if best[0] < ph * 0.40:
         return None, 0, ph
     return rx, best[1], best[2]
+
+
+def cut_above(ink, x0, x1, y, ct):
+    """다음 문항이 시작하는 y 위쪽의 «빈 줄» 한가운데를 끊는 자리로 삼는다.
+
+    번호 «2.» 의 위끝을 그대로 쓰면, 그 줄에 분수처럼 위로 솟은 것이 있을 때
+    앞 문항 그림에 윗동강이 딸려 들어간다."""
+    on = ink[:, x0:x1].any(axis=1)
+    i = min(y, len(on) - 1)
+    while i > ct and on[i]:          # 다음 문항의 글에서 위로 빠져나온다
+        i -= 1
+    j = i
+    while j > ct and not on[j]:      # 빈 줄의 위끝까지
+        j -= 1
+    return (i + j) // 2 if i > j else y - 4
+
+
+def drop_footer(ink, x0, x1, ct, cb):
+    """단의 아래끝을 «쪽번호 상자» 위로 당긴다.
+
+    쪽 아래 «1/16» 은 문항이 아닌데, 문항을 단 끝까지 자르면 늘 딸려 들어간다.
+    맨 아래 덩어리가 작고(글 몇 줄이 못 되고) 위 덩어리와 멀리 떨어져 있으면
+    쪽번호로 본다."""
+    bs = blocks(ink, x0, x1, ct, cb)
+    if len(bs) < 2:
+        return cb
+    last, prev = bs[-1], bs[-2]
+    if last[1] - last[0] <= FOOT_H and last[0] - prev[1] >= FOOT_GAP:
+        return last[0] - 8
+    return cb
 
 
 def left_edge(ink, x0, x1, ct, cb):
@@ -81,6 +126,8 @@ def scan_page(pg):
     # «여기까지 글이 있다»고 잘못 재고, 빈 곳을 못 잘라 낸다.
     cols = [(0, rx - 14), (rx + 14, pw)]
     lm = [left_edge(ink, a, b, ct, cb) for a, b in cols]
+    # 단마다 아래끝을 따로 잡는다 — 쪽번호 상자를 문항에서 뺀다
+    cbot = [drop_footer(ink, a + 6, b - 6, ct, cb) for a, b in cols]
     df = pytesseract.image_to_data(im, lang='eng', config='--psm 3',
                                    output_type=pytesseract.Output.DICT)
     hits = []
@@ -96,8 +143,34 @@ def scan_page(pg):
         if abs(L - lm[ci]) > NEAR_LEFT:
             continue
         hits.append((ci, T, int(v)))
+
+    # 쪽을 통째로 읽으면 놓치는 번호가 많다 (글이 빽빽한 쪽에서 특히).
+    # 단마다 따로 한 번 더 읽어 빠진 것을 채운다.
+    have = set((c, n) for c, _, n in hits)
+    for ci, (x0, x1) in enumerate(cols):
+        sub = im.crop((max(0, lm[ci] - 20), ct, x1, cb))
+        df2 = pytesseract.image_to_data(sub, lang='eng', config='--psm 6',
+                                        output_type=pytesseract.Output.DICT)
+        L = {}
+        for i, t in enumerate(df2['text']):
+            if not t.strip():
+                continue
+            k = (df2['block_num'][i], df2['par_num'][i], df2['line_num'][i])
+            if k not in L:
+                L[k] = [df2['top'][i], df2['left'][i], []]
+            L[k][0] = min(L[k][0], df2['top'][i])
+            L[k][1] = min(L[k][1], df2['left'][i])
+            L[k][2].append(t)
+        for top, left, ws in L.values():
+            m = LINE.match(' '.join(ws))
+            if not m or left > 40:          # 줄 첫머리에 붙어 있어야 문항번호다
+                continue
+            v = m.group(1).translate(ONE)
+            if v.isdigit() and (ci, int(v)) not in have:
+                have.add((ci, int(v)))
+                hits.append((ci, ct + top, int(v)))
     hits.sort()
-    return im, dict(ink=ink, cols=cols, ct=ct, cb=cb, lm=lm, hits=hits)
+    return im, dict(ink=ink, cols=cols, ct=ct, cb=cb, cbot=cbot, lm=lm, hits=hits)
 
 
 def rising(nums):
@@ -198,7 +271,14 @@ def main():
                         continue
                     if (k, ci, bs) >= (B['k'], B['ci'], B['y']):
                         continue
-                    cand.append(dict(k=k, ci=ci, y=bs, no=n))
+                    # 문항의 첫 줄은 번호가 왼쪽으로 내어쓰기 되어 있다.
+                    # 이어지는 줄·선택지는 안쪽에서 시작하므로, 단 왼쪽 끝에
+                    # 가장 바짝 붙은 덩어리가 문항이 시작하는 자리다.
+                    seg = rec['ink'][bs:min(be, bs + 60), x0 + 6:x1 - 6]
+                    xs = np.flatnonzero(seg.any(axis=0))
+                    off = int(xs[0]) if xs.size else 9999
+                    cand.append(dict(k=k, ci=ci, y=bs, no=n, off=off))
+        cand.sort(key=lambda c: c['off'])
         if len(cand) == 1:
             keep.append(cand[0]); print('  %d번 → 빈 줄로 찾음' % n)
         elif cand:
@@ -218,17 +298,24 @@ def main():
         k, ci, y = f['k'], f['ci'], f['y']
         while True:
             pi, im, rec = pages[k]
+            if not rec:          # 괘선을 못 찾은 쪽은 건너뛴다
+                break
             x0, x1 = rec['cols'][ci]
             top = y if (k, ci) == (f['k'], f['ci']) else rec['ct']
             if nxt and (k, ci) == (nxt['k'], nxt['ci']):
-                bot = nxt['y'] - 4
+                bot = cut_above(rec['ink'], x0 + 6, x1 - 6, nxt['y'], rec['ct'])
             else:
-                bot = rec['cb']
+                bot = rec['cbot'][ci]
             if f['no'] in HB and (k, ci) == (f['k'], f['ci']):
                 bot = min(bot, HB[f['no']])       # 손으로 일러 준 끊는 자리
             box = (max(0, x0 - PAD), max(0, top - PAD),
                    min(im.width, x1 + PAD), min(im.height, bot + PAD))
-            if box[3] - box[1] > 20:
+            # 다음 단으로 «이어진» 조각은 어느 정도 길어야 진짜다.
+            # 다음 문항이 단 첫머리에서 바로 시작하면 그 앞은 테두리뿐이다.
+            same = (k, ci) == (f['k'], f['ci'])
+            if not same and bot - top < MIN_CONT:
+                pass
+            elif box[3] - box[1] > 20:
                 parts.append(im.crop(box))
             if not nxt or (k, ci) == (nxt['k'], nxt['ci']):
                 break
