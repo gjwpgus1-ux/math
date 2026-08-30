@@ -1077,7 +1077,11 @@
 
   function auxBytes(name){
     if(auxRaw[name]) return Promise.resolve(auxRaw[name]);
-    return fetch('data/'+name,{cache:'force-cache'}).then(function(r){
+    /* force-cache 로 읽으면 한 번 받아 둔 옛 파일을 계속 쓴다.
+       묶음을 새로 올려도 쓰는 쪽에서는 옛것이 그대로여서, 새로 넣은 문항·정답·해설이
+       영영 안 보인다. no-cache 는 «바뀌었는지만 물어보는» 것이라
+       안 바뀌었으면 304 로 끝나 내려받는 양은 그대로다. */
+    return fetch('data/'+name,{cache:'no-cache'}).then(function(r){
       if(!r.ok) throw 0;
       return r.arrayBuffer();
     }).then(function(b){ auxRaw[name]=new Uint8Array(b); return auxRaw[name]; });
