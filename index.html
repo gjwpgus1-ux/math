@@ -987,7 +987,10 @@
     if(!SOL) return null;
     return SOL[EX[it[0]].n+'#'+it[1]] || null;
   }
-  function solSrc(f){ return 'img/해설/'+f; }
+  /* 잠가 둔 묶음의 해설 그림은 서버에 올리지 않고 자료 안에 글자로 박아 둔다.
+     문항 그림(AUXIMG)과 같은 방식이다. */
+  var AUXSOL={};
+  function solSrc(f){ return AUXSOL[f] || ('img/해설/'+f); }
   function openSol(it){
     var s=solOf(it); if(!s) return;
     var f=s[0];
@@ -1138,6 +1141,14 @@
       if(SIM) SIM[IT.length]=sim[k]||[];
       IT.push(it);
     });
+    /* 정답·해설도 함께 들어 있으면 이어 붙인다.
+       공개본과 같은 자리를 쓰므로 ansOf·solOf 가 그대로 찾아 준다. */
+    var an=D2.ans||{};
+    for(var a1 in an) if(an.hasOwnProperty(a1)){ if(!ANS) ANS={}; ANS[a1]=an[a1]; }
+    var so=D2.sol||{};
+    for(var s1 in so) if(so.hasOwnProperty(s1)){ if(!SOL) SOL={}; SOL[s1]=so[s1]; }
+    var si=D2.solimg||{};
+    for(var s2 in si) if(si.hasOwnProperty(s2)) AUXSOL[s2]='data:image/png;base64,'+si[s2];
     buildFilters();
   }
   /* 이 문항이 잠가 둔 자료에서 온 것인가 — 밖으로 내보내면 안 되는 것들 */
