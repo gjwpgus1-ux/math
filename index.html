@@ -1068,7 +1068,7 @@
      · 새로고침하면 다시 잠긴다. 어디에도 남기지 않는다. */
   /* 묶음마다 파일이 따로다. 열쇠말도 따로라, 아는 말로 열리는 것만 열린다.
      새 묶음을 넣으려면 아래 목록에 파일 이름만 더하면 된다. */
-  var AUX_FILES=['aux.bin','aux2.bin'];
+  var AUX_FILES=['aux.bin','aux2.bin','aux3.bin'];
   var AUXIMG={}, auxOn=false, auxBusy=false, auxRaw={}, auxDone={};
   var AUX_ROUNDS=250000, AUX_MIN=6;
 
@@ -1128,7 +1128,10 @@
     for(var k in im) if(im.hasOwnProperty(k)) AUXIMG[k]='data:image/png;base64,'+im[k];
     var sim=D2.sim||[];
     (D2.items||[]).forEach(function(r,k){
-      var it=[r[0]+base, r[1], r[2], r[3], r[4], r[5]];
+      /* 칸을 하나하나 옮겨 적으면 나중에 늘어난 칸을 흘린다.
+         실제로 일곱째 칸(수식글)이 통째로 버려져 √ Σ 검색이 안 됐다.
+         통째로 베끼고 시험 자리만 옮긴다. */
+      var it=r.slice(); it[0]=r[0]+base;
       BY_PATH[it[2]]=it; IDX[it[2]]=IT.length;
       /* «비슷한 문항»도 미리 재어 두었으므로 같은 자리에 이어 붙인다.
          SIM 은 문항 차례와 자리를 맞춰야 하니 빈 것이라도 채운다. */
