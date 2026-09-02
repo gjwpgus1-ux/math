@@ -128,6 +128,42 @@ def find_cols(chars, W):
     return out
 
 
+# 쪽 맨 위의 판형 글씨 — 「2026학년도 9월 / 전국연합학력평가 / 정답 및 해설 / 고1」.
+# 해설이 쪽을 넘어 이어질 때 이것이 통째로 딸려 들어가, 풀이 한가운데에
+# 「정답 및 해설」이 큼직하게 박혔다 (2026년 9월 고1 7번이 그랬다).
+#
+# 자리만 보고 자르면 위험하다. 어떤 해설지는 머리말과 본문이 한 줄에 섞여
+# 「수학 영역에서 점 A의 좌표를 …」처럼 나오는데, 이런 줄을 버리면 풀이가 사라진다.
+# 그래서 «쪽 위쪽 + 짧은 줄 + 판형 낱말» 세 가지가 모두 맞을 때만 버린다.
+CHROME = re.compile(r'정답|해설|전국연합|학력평가|학년도|영역|^고\s*[123]$|고[123]$')
+
+
+def chrome_floor(ch, H):
+    """쪽 맨 위 머리말이 «어디까지 내려오는지» 를 잰다 (쪽 전체를 한 번에 본다).
+
+    머리말은 글자가 뒤엉켜 나오기도 한다. 실제로 「정답 및 해설」이
+    «정및해전국연합학력평가» 와 «고2답 설» 로 갈라져 나와서, 낱말만 보고
+    거르면 뒷조각이 살아남아 풀이 한가운데에 큼직하게 박혔다.
+    그래서 낱말이 든 줄을 찾으면 그 줄의 «아랫끝» 까지를 머리말 자리로 보고,
+    거기까지 걸친 짧은 줄은 낱말이 없어도 함께 버린다.
+    단마다 따로 보면 낱말이 든 단만 걸러지므로 쪽 전체를 한 번에 본다."""
+    band = H * 0.14
+    floor = 0.0
+    for l in layout.make_lines([c for c in ch if c[2] < band]):
+        s = re.sub(r'\s', '', ''.join(x[0] for x in sorted(l, key=lambda c: c[1])))
+        if CHROME.search(s):
+            floor = max(floor, max(c[4] for c in l))
+    return min(floor, band)
+
+
+def strip_chrome(rows, H, floor):
+    """머리말 자리에 걸린 짧은 줄을 걷어낸 rows 를 돌려준다."""
+    if not floor:
+        return rows
+    return [r for r in rows
+            if not (r[0] < floor + 2 and len(re.sub(r'\s', '', r[2])) <= 20)]
+
+
 def col_of(x, cuts, W):
     i = 0
     while i < len(cuts) and x > cuts[i]:
@@ -158,6 +194,10 @@ def page_pieces(pg, cuts=None):
     ch = [c for c in ch if c[2] < H * 0.90]      # 맨 아래 쪽번호는 뺀다
     if not ch:
         return [], W, H
+    # 머리말이 어느 높이에 있는지는 쪽 전체를 보고 정한다.
+    # 단마다 따로 보면, 「정답 및 해설」이 두 단에 걸쳐 갈라져 나왔을 때
+    # 낱말이 든 쪽만 걸러지고 나머지 반쪽이 살아남는다.
+    hdr_floor = chrome_floor(ch, H)
     bycol = collections.defaultdict(list)
     for c in ch:
         bycol[col_of(c[1], cuts, W)].append(c)
@@ -173,6 +213,9 @@ def page_pieces(pg, cuts=None):
             s = ''.join(x[0] for x in sorted(l, key=lambda c: c[1]))
             rows.append((top, bot, s))
         rows.sort(key=lambda t: t[0])
+        rows = strip_chrome(rows, H, hdr_floor)
+        if not rows:
+            continue
         x0 = edges[ci] if ci < len(edges) else 0
         x1 = edges[ci + 1] if ci + 1 < len(edges) else W
 

@@ -57,8 +57,19 @@ const withAns=IT.find(it=>T.ansOf(it)!==null);
 S.ok('정답이 붙은 문항을 찾을 수 있다', !!withAns);
 S.ok('빠진 문항이 하나도 없다', IT.every(it=>T.ansOf(it)!==null),
      IT.filter(it=>T.ansOf(it)===null).length+'개 빔');
-/* 「정답 준비 중」이 뜨는지 보려면 일부러 한 시험을 비워야 한다 */
-const blankExam=EX[IT[IT.length-1][0]].n;
+/* 「정답 준비 중」이 뜨는지 보려면 일부러 한 시험을 비워야 한다.
+   해설이 붙지 않은 시험으로 고른다 — 아래에서 이 시험을 «해설 단추가 없는 보기»
+   로도 쓰기 때문이다. 그냥 맨 끝 시험을 잡았더니, 해설까지 넣은 시험이
+   맨 끝에 오면서 «해설이 없으면 단추도 없다» 가 깨졌다.
+   정답과 해설은 서로 다른 자료다. 정답을 지운다고 해설이 사라지지는 않는다. */
+const SOL0=w.QSOL||{};
+const blankExam=(()=>{
+  for(let i=IT.length-1;i>=0;i--){
+    const n=EX[IT[i][0]].n;
+    if(!Object.keys(SOL0).some(k=>k.slice(0,k.lastIndexOf('#'))===n)) return n;
+  }
+  return EX[IT[IT.length-1][0]].n;
+})();
 const kept=A[blankExam];
 delete A[blankExam];
 const noAns=IT.find(it=>T.ansOf(it)===null);

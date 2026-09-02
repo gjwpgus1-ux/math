@@ -28,6 +28,7 @@ ANCHOR = re.compile(r'^\s*(\d{1,2})\s*\.\s*'
                     r'(?:(\[)\s*출제\s*의도\s*\]|출제\s*의도\s*[:：]?)\s*(.*)$')
 # 수식 조각이 딸려 온 것 («limlim», «C×××») — 평가원 쪽에서만 걷어낸다
 JUNK = re.compile(r'[A-Za-z×÷±∑∫√≤≥≠→←↔∼~^_·\'"`]{2,}')
+PUA_CUT = re.compile(r'[\ue000-\uf8ff]')
 # «…하기», «…한다», «…있는가?» 로 끝나면 제목이 다 나온 것이다
 ENDED = re.compile(r'(기|다|다\s*\.|\?)\s*$')
 MAX_CONT = 3            # 제목이 넘어가 봐야 서너 줄
@@ -40,6 +41,10 @@ ALIAS = {'확률과통계': 0, '미적분': 1, '기하': 2}
 
 
 def clean(s, junk=False):
+    # 출제의도 한 마디는 한글로만 되어 있다. 그런데 단 나누기가 어긋나면
+    # 옆 단의 수식이 같은 줄로 딸려 와 «복소수 계산하기…» 가 된다.
+    # 수식 글꼴은 비표준 코드(PUA)를 쓰므로, 그것이 처음 나오는 자리에서 끊는다.
+    s = PUA_CUT.split(s, 1)[0]
     s = TAIL.sub('', s)
     if junk:
         s = JUNK.sub(' ', s)
@@ -60,6 +65,19 @@ def read_intents(path):
     표시가 나오는 자리를 함께 적어 둔다."""
     d = pdfium.PdfDocument(path)
     out = []
+    # 단 경계는 쪽마다 재지 말고 문서 전체의 다수결로 정한다 (build_sol 과 같게).
+    # 1쪽은 「빠른 정답」 표가 단을 가로질러 놓여 있어 경계를 못 찾는데,
+    # 그러면 표와 풀이가 한 줄로 붙어 «6④7⑤8⑤9④10②8. [출제의도] 인수분해 이해하기»
+    # 가 되고, 줄 첫머리를 보는 ANCHOR 가 8·9번을 놓친다.
+    percuts = []
+    for pi in range(len(d)):
+        pg = d[pi]
+        try:
+            ch, W, H = layout.get_chars(pg)
+            percuts.append(BS.find_cols(ch, W) if ch else [])
+        finally:
+            pg.close()
+    CUTS = BS.agree_cuts(percuts)
     try:
         for pi in range(len(d)):
             pg = d[pi]
@@ -67,7 +85,7 @@ def read_intents(path):
                 ch, W, H = layout.get_chars(pg)
                 if not ch:
                     continue
-                cuts = BS.find_cols(ch, W)
+                cuts = CUTS or BS.find_cols(ch, W)
                 ch = [c for c in ch if c[2] < H * 0.90]
                 by = collections.defaultdict(list)
                 for c in ch:
