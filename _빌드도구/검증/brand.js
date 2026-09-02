@@ -7,10 +7,11 @@ const {w,doc,$}=boot('MODE:()=>MODE');
 
 /* ---- 이름 ---- */
 S.ok('탭 제목이 줍줍닷컴으로 시작', /^줍줍닷컴/.test(doc.title), doc.title);
-S.ok('탭 제목에 검색 낱말이 남아 있다', /수학 기출문제 검색기/.test(doc.title), doc.title);
+S.ok('탭 제목에 하는 일이 적혀 있다', /오답노트|기출문항/.test(doc.title), doc.title);
 S.ok('설명 메타가 있다', !!doc.querySelector('meta[name=description]'));
 S.ok('설명 메타에 줍줍닷컴', /줍줍닷컴/.test(doc.querySelector('meta[name=description]').content));
-S.ok('설명 메타에 문항 수', /5,694/.test(doc.querySelector('meta[name=description]').content));
+S.ok('설명 메타에 문항 수', /[\d,]{4,}문항/.test(doc.querySelector('meta[name=description]').content),
+         doc.querySelector('meta[name=description]').content);
 S.ok('공유용 제목이 있다', !!doc.querySelector('meta[property="og:title"]'));
 S.ok('모바일 설정이 있다', !!doc.querySelector('meta[name=viewport]'));
 
@@ -18,7 +19,7 @@ const brand=$('title').querySelector('.brand');
 S.ok('윗줄 이름이 줍줍닷컴', brand && brand.textContent==='줍줍닷컴', brand&&brand.textContent);
 const tag=$('title').querySelector('.tagline');
 S.ok('부제가 옆에 있다', !!tag && tag.textContent.length>10, tag&&tag.textContent);
-S.ok('부제에 수능·모평·학평이 들어 있다', /수능·모평·학평/.test(tag.textContent));
+S.ok('부제에 하는 일이 적혀 있다', /오답노트/.test(tag.textContent), tag.textContent);
 S.ok('제작자 표시가 남아 있다', /제작자 : 허선생/.test($('title').textContent));
 const css=fs.readFileSync(path.join(APP,'index.html'),'utf8').replace(/\s+/g,'');
 S.ok('이름이 부제보다 크다', /h1\.brand\{[^}]*font-size:21px/.test(css));

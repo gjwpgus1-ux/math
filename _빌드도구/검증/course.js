@@ -14,16 +14,21 @@ const open=id=>$(id).classList.contains('open');
   ok('성취기준은 안 뜸', !open('std'));
   ok('게이트 안내 이어짐', /하나만 더 부탁/.test($('crsGateMsg').textContent), $('crsGateMsg').textContent);
 
-  console.log('\n[2] 고를 것 여덟 가지');
+  /* 여덟 갈래 + 맨 아래 «잘 모르겠음» 한 칸 = 아홉 단추.
+     잘 모르겠음은 보기가 아니라 빠져나가는 길이라 번호가 0 이다. */
+  console.log('\n[2] 고를 것 여덟 가지 + 잘 모르겠음');
   const bs=[...$('crsBtns').querySelectorAll('button')];
-  ok('단추 8개', bs.length===8, bs.length);
+  ok('단추 9개', bs.length===9, bs.length);
   const names=bs.map(b=>b.children[1].textContent);
-  ok('여덟 갈래가 순서대로',
-     names.join(',')==='중학교,고1,대수,미적분Ⅰ,미적분Ⅱ,기하,확률과 통계,22개정에 해당 없음', names.join(','));
+  ok('여덟 갈래가 순서대로, 끝에 잘 모르겠음',
+     names.join(',')==='중학교,고1,대수,미적분Ⅰ,미적분Ⅱ,기하,확률과 통계,22개정에 해당 없음,잘 모르겠음',
+     names.join(','));
   const subs=bs.map(b=>{const s=b.querySelector('.sub'); return s?s.textContent:'';});
   ok('15개정 표기', subs[2]==='15개정 수학Ⅰ'&&subs[3]==='15개정 수학Ⅱ'&&subs[4]==='15개정 미적분',
      subs.filter(Boolean).join(' / '));
-  ok('번호 붙음', bs.map(b=>b.querySelector('.k').textContent).join(',')==='1,2,3,4,5,6,7,8');
+  ok('번호 붙음', bs.map(b=>b.querySelector('.k').textContent).join(',')==='1,2,3,4,5,6,7,8,0',
+     bs.map(b=>b.querySelector('.k').textContent).join(','));
+  ok('잘 모르겠음은 따로 보인다', bs[8].classList.contains('unsure'));
   ok('문항 그림', !!$('crsImg').querySelector('img'));
   ok('질문 문구', /교과목/.test(doc.querySelector('#crs .rq').textContent));
   ok('AI 문구', /함께 만들어가는 AI/.test(doc.querySelector('#crs .rtag').textContent));

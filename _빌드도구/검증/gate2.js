@@ -2,7 +2,10 @@ const {boot,wait,scorer}=require('./harness');
 const {ok,done}=scorer();
 const open=(H,id)=>H.$(id).classList.contains('open');
 (async()=>{
-  console.log('\n[1] 잘 모르겠음이면 다른 것으로 한 번 더');
+  /* 비교를 모르겠다고 하면 교과목으로 한 번 더 묻는다.
+     그런데 교과목까지 모르겠다고 하면 더 붙잡지 않고 그냥 들여보낸다 —
+     여기서 또 되물으면 앱에 들어가지도 못하고 맴돌게 되기 때문이다. */
+  console.log('\n[1] 비교를 모르겠으면 교과목으로, 거기서도 모르겠으면 통과');
   let H=boot(); await wait(180);
   ok('비교부터', open(H,'cmp'));
   H.key('0'); await wait(90);                       // 잘 모르겠음
@@ -10,15 +13,13 @@ const open=(H,id)=>H.$(id).classList.contains('open');
   ok('이번엔 교과목 화면', H.$('crs').classList.contains('open'),
      'cmp='+open(H,'cmp')+' crs='+H.$('crs').classList.contains('open')+' std='+open(H,'std'));
   ok('안내가 바뀜', /하나만 더 부탁/.test(H.$('crsGateMsg').textContent), H.$('crsGateMsg').textContent);
-  H.key('0'); await wait(90);                       // 또 잘 모르겠음
-  ok('다시 비교로', open(H,'cmp'), 'cmp='+open(H,'cmp')+' crs='+H.$('crs').classList.contains('open'));
-  H.key('1'); H.key('Enter'); await wait(100);
-  ok('제대로 답하니 통과', !open(H,'cmp') && !open(H,'std'));
+  H.key('0'); await wait(90);                       // 교과목도 잘 모르겠음
+  ok('붙잡지 않고 통과', !open(H,'cmp') && !H.$('crs').classList.contains('open'),
+     'cmp='+open(H,'cmp')+' crs='+H.$('crs').classList.contains('open'));
   const P=JSON.parse(H.w.localStorage.getItem('gich_pairs')||'[]');
   const S=JSON.parse(H.w.localStorage.getItem('gich_crs')||'[]');
   ok('잘 모르겠음도 기록됨', P.filter(r=>r.c==='unsure').length===1, P.length);
   ok('교과목 잘 모르겠음도', S.filter(r=>!r.c).length===1, S.length);
-  ok('마지막은 제대로 된 답', P.slice(-1)[0].c==='x', P.slice(-1)[0].c);
 
   console.log('\n[2] 성취기준으로 답해도 통과한다');
   let G=boot(); await wait(180);

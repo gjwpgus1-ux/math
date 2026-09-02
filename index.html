@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>줍줍닷컴 — 수능·모평·학평 수학 기출문제 검색기</title>
-<meta name="description" content="줍줍닷컴 — 수능·모의평가·전국연합 학력평가 수학 기출문제 5,694문항을 연도·번호·문구·수식으로 찾아 학습지와 오답노트로 바로 뽑는 무료 도구입니다.">
-<meta property="og:title" content="줍줍닷컴 — 수능·모평·학평 수학 기출문제 검색기">
-<meta property="og:description" content="수학 기출 5,694문항. 필요한 것만 주워 담아 학습지·오답노트로.">
+<title>줍줍닷컴 — 빠른 오답노트와 기출문항 검색</title>
+<meta name="description" content="줍줍닷컴 — 수능·모의평가·전국연합 학력평가 수학 기출문제 5,740문항을 연도·번호·문구·수식으로 찾아 학습지와 오답노트로 바로 뽑는 무료 도구입니다.">
+<meta property="og:title" content="줍줍닷컴 — 빠른 오답노트와 기출문항 검색">
+<meta property="og:description" content="수학 기출 5,740문항. 필요한 것만 주워 담아 학습지·오답노트로.">
 <meta property="og:type" content="website">
 <style>
   :root{
@@ -91,6 +91,10 @@
   #studybar.on{display:flex}
   #studybar .cnt{font-size:13px;font-weight:600;color:var(--accent)}
   #studybar button{padding:6px 11px;font-size:12.5px}
+  /* 가장 자주 누르는 단추는 조금 더 크고 진하게 — 눈이 먼저 가야 한다 */
+  #studybar button.big{padding:8px 18px;font-size:13.5px;font-weight:700;
+                       box-shadow:0 1px 3px rgba(37,99,235,.35)}
+  #mbar button.primary{font-weight:700;flex:1.5}
   /* 단추 안에 넣는 단축키 표시 */
   .kb{display:inline-block;min-width:15px;margin-left:6px;padding:0 4px;
       border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;
@@ -386,6 +390,8 @@
   #crsBtns button .sub{margin-left:auto;font-size:12px;color:var(--dim)}
   #crsBtns button:hover{border-color:var(--accent);background:#f6f9ff}
   #crsBtns button.none{color:var(--dim)}
+  /* «잘 모르겠음» 은 보기가 아니라 빠져나가는 길이라 한 칸 띄워 둔다 */
+  #crsBtns button.unsure{margin-top:4px;border-style:dashed}
   #crs .sfoot{flex:none;border-top:1px solid var(--line);padding-top:10px}
   #crs .rhint{font-size:11.5px;color:var(--dim);line-height:1.6}
   #crs .rhint b{display:inline-block;background:#eceff3;border:1px solid var(--line);
@@ -590,7 +596,7 @@
 <body>
 
 <header>
-  <h1 id="title"><img id="logo" src="img/logo-mark.png" alt="줍줍닷컴"><b class="brand">줍줍닷컴</b> <span class="tagline">수능·모평·학평 수학 기출, 필요한 것만 주워 담기</span> <span class="by">제작자 : 허선생</span> <small id="sub"></small>
+  <h1 id="title"><img id="logo" src="img/logo-mark.png" alt="줍줍닷컴"><b class="brand">줍줍닷컴</b> <span class="tagline">빠른 오답노트와 기출문항 검색</span> <span class="by">제작자 : 허선생</span> <small id="sub"></small>
     <span class="modesw">
       <button id="modeStudy">학습모드</button>
       <button id="modeSearch" class="on">복붙모드</button>
@@ -621,9 +627,10 @@
     <button id="selAll">전체 선택</button>
     <button id="selNone">전체 해제</button>
     <span style="flex:1"></span>
-    <button id="printWork" class="primary">학습지 인쇄</button>
-    <button id="printNote">오답노트 인쇄</button>
+    <!-- 오답노트를 쓰는 일이 훨씬 잦아서 이쪽을 앞에, 그리고 진한 단추로 둔다 -->
+    <button id="printNote" class="primary big">오답노트 인쇄</button>
     <button id="tipBtn" title="오답노트를 빨리 만드는 방법">💡 오답노트 팁</button>
+    <button id="printWork">학습지 인쇄</button>
   </div>
   <div id="tabs"></div>
 </header>
@@ -640,8 +647,8 @@
        문항을 다 고르고 나서 맨 위로 되올라가지 않아도 되게 한다. -->
   <div id="mbar">
     <span class="cnt" id="mCnt">0개</span>
-    <button id="mWork" class="primary">학습지</button>
-    <button id="mNote">오답노트</button>
+    <button id="mNote" class="primary">오답노트</button>
+    <button id="mWork">학습지</button>
     <button id="mTop" title="맨 위로">▲</button>
   </div>
 
@@ -767,12 +774,13 @@
         <div class="rq">이 문항은 어느 <b>교과목</b>인가요?</div>
         <div class="rtag">함께 만들어가는 AI 유사문항 추천 시스템 —
           <span>정확한 응답이 모여 완성도가 올라갑니다</span></div>
-        <div class="shead">2022 개정 교육과정 기준으로 하나만 고르세요</div>
+        <div class="shead" id="crsHead">2022 개정 교육과정 기준으로 하나만 고르세요</div>
       </div>
       <div id="crsBtns"></div>
       <div class="sfoot">
         <div class="rhint">숫자키 <b>1</b>~<b>8</b> 로 바로 고를 수 있습니다.
-          <b>0</b> 은 잘 모르겠음, <b>Space</b> 는 건너뛰기입니다. 이름은 묻지 않습니다.</div>
+          <b>0</b> 은 잘 모르겠음(묻지 않고 넘어갑니다), <b>Space</b> 는 건너뛰기입니다.
+          이름은 묻지 않습니다.</div>
         <div class="gatebar"><i id="crsGateFill"></i></div>
       </div>
     </div>
@@ -1232,7 +1240,7 @@
       if(negBlocked(it[2],jt[2])) return;
       var je=EX[jt[0]], base=pr[1]/1000, intent=(pr[2]||0)/1000;
       var sc=W.text*base + W.intent*intent;
-      if(je.s===e.s && e.s) sc+=W.subj;
+      if(subjOf(je)===subjOf(e) && subjOf(e)) sc+=W.subj;
       if(ptsOf(jt)===p && p) sc+=W.pts;
       sc+=W.num*Math.max(0,1-Math.abs(jt[1]-it[1])/10);
       if(jt[0]===it[0]) sc+=W.samexam;
@@ -1270,6 +1278,13 @@
   var SUBJ_ALIAS=[['확률과통계','확통'],['확률과 통계','확통'],['확통','확통'],
     ['미적분','미적'],['미적','미적'],['기하와벡터','기하'],['기하','기하'],
     ['공통','공통'],['가형','가형'],['나형','나형']];
+  /* 과목 이름은 «확통·미적·기하» 로 통일한다.
+     자료(index.js)는 이미 그렇게 맞춰 두었지만, 잠가 둔 묶음이나 나중에
+     들어올 시험이 «확률과 통계» 처럼 길게 적혀 오면 필터 칩이 둘로 갈라진다.
+     그래서 화면에 쓸 때는 늘 이 함수를 거친다. */
+  var SUBJ_ONE={'확률과통계':'확통','확률과 통계':'확통','확률과통계':'확통',
+                '미적분':'미적','기하와벡터':'기하'};
+  function subjOf(e){ var v=(e&&e.s)||''; return SUBJ_ONE[v]||v; }
   var ROUNDS=['수능','11월','10월','9월','7월','6월','5월','4월','3월'];
 
   var YEARS=null;                       /* 자료에 실제로 있는 연도 */
@@ -1420,7 +1435,7 @@
     if(sp.acad.length    && sp.acad.indexOf(e.y)<0) return false;
     if(sp.years.length   && sp.years.indexOf(e.y)<0 && sp.years.indexOf(heldYear(e))<0) return false;
     if(sp.rounds.length  && sp.rounds.indexOf(e.r)<0) return false;
-    if(sp.subjects.length&& sp.subjects.indexOf(e.s)<0) return false;
+    if(sp.subjects.length&& sp.subjects.indexOf(subjOf(e))<0) return false;
     if(!gradeOK(e, sp.grades)) return false;
     if(sp.nums.length    && sp.nums.indexOf(it[1])<0) return false;
     return true;
@@ -1507,7 +1522,7 @@
     rounds.sort(function(a,b){ return ROUND_ORDER.indexOf(a)-ROUND_ORDER.indexOf(b); });
     [['구분','grade',divs],
      ['시행','round',rounds],
-     ['과목','subject',uniq(function(e){return e.s})],
+     ['과목','subject',uniq(subjOf)],
      ['연도','year',uniq(heldYear).sort().reverse()]].forEach(function(d){
       var g=document.createElement('div'); g.className='fgroup';
       var b=document.createElement('b'); b.textContent=d[0]; g.appendChild(b);
@@ -1544,7 +1559,7 @@
   }
   function passFilter(e){
     return (!F.grade.size||F.grade.has(divOf(e))) && (!F.round.size||F.round.has(e.r))
-        && (!F.subject.size||F.subject.has(e.s)) && (!F.year.size||F.year.has(heldYear(e)))
+        && (!F.subject.size||F.subject.has(subjOf(e))) && (!F.year.size||F.year.has(heldYear(e)))
         && (!F.scope.size||F.scope.has(scopeOf(e)));
   }
   function clearFilters(){
@@ -2359,7 +2374,7 @@
      ['확통 정규분포','확률과 통계 중 정규분포가 나온 문항']]],
    ['수식도 그대로 찾습니다',
     '문항의 수식을 글자로 되살려 두었습니다. 자판으로 치기 어려운 기호는 낱말로 적으시면 됩니다. '+
-    '전체 5,694문항 중 5,454문항(95.8%)에 들어 있고, 글자가 없는 스캔본 8개 시험만 빠져 있습니다.',
+    '전체 5,740문항 중 5,500문항(95.8%)에 들어 있고, 글자가 없는 스캔본 8개 시험만 빠져 있습니다.',
     [['x^2','이차식이 든 문항'],
      ['a_n','수열 aₙ 이 든 문항'],
      ['2^3','2의 세제곱'],
@@ -2383,9 +2398,9 @@
     '수식글에서 세로줄 | 은 절댓값 말고도 조건부확률 P(A|B), 집합 {x | … }, '+
     '구간별 함수의 큰 괄호에도 쓰입니다. 그래서 «절댓값» 이라고 치시면 '+
     '짝을 이룬 절댓값 기호가 든 문항만 골라 냅니다.',
-    [['절댓값','387문항 — 절댓값이 든 문항만'],
+    [['절댓값','390문항 — 절댓값이 든 문항만'],
      ['|x|','20문항 — 기호 그대로 좁혀서'],
-     ['절댓값, 수열','48문항 — 쉼표로 더 좁히기']]],
+     ['절댓값, 수열','49문항 — 쉼표로 더 좁히기']]],
    ['쉼표로 묶으면 «둘 다» 든 문항만 나옵니다',
     '조건을 쉼표로 나누어 적으면 모두 들어 있는 문항만 골라 냅니다. 셋 이상도 됩니다.',
     [['lim','579문항'],
@@ -2648,12 +2663,33 @@
     return a===b ? WCRS.same : WCRS.diff;
   }
 
+  /* 가형·나형 문항이 이 설문의 주된 몫이다.
+     2014~2021 수능·모평은 과목이 «가형/나형» 으로만 갈려 있어서,
+     지금 쓰는 대수·미적분Ⅰ·미적분Ⅱ·확률과 통계·기하 어디에 드는지 자료에 없다.
+     그런데 유사문항을 추천할 때 정작 필요한 것이 이 갈래다.
+     그래서 되도록 가형·나형부터 묻는다 (아주 가끔은 다른 것도 낸다 —
+     한 갈래만 물으면 그쪽만 쌓이고 나머지는 영영 안 채워지기 때문이다). */
+  var GANA=null;
+  function ganaPool(){
+    if(GANA) return GANA;
+    GANA=[];
+    IT.forEach(function(it,i){
+      var s=EX[it[0]].s;
+      if(s==='가형'||s==='나형') GANA.push(i);
+    });
+    return GANA;
+  }
+  var GANA_SHARE=0.8;      /* 열 번에 여덟 번은 가형·나형에서 낸다 */
+
   /* 다음에 물어볼 문항 — 아직 답이 없는 것을 고른다 */
   function nextCrs(){
     var mine={}; CRSV.forEach(function(r){ if(r.who===UID) mine[r.p]=1; });
     var M=crsMap();
+    var G=ganaPool();
     for(var t=0;t<400;t++){
-      var i=Math.floor(Math.random()*IT.length);
+      var useG = G.length && Math.random()<GANA_SHARE;
+      var i = useG ? G[Math.floor(Math.random()*G.length)]
+                   : Math.floor(Math.random()*IT.length);
       var p=IT[i][2];
       if(mine[p]) continue;
       var m=M[p];
@@ -2669,6 +2705,12 @@
     $('crsLab').textContent=label(it)+(heldAt(EX[it[0]])?'  ('+heldAt(EX[it[0]])+')':'');
     $('crsImg').innerHTML='<img src="'+imgSrc(it)+'" alt="">';
     $('crsImg').scrollTop=0;
+    /* 가형·나형은 옛 이름이라 지금 교과목과 바로 이어지지 않는다.
+       무엇을 물어보는 것인지 한 줄로 일러 준다. */
+    var s0=EX[it[0]].s;
+    $('crsHead').textContent = (s0==='가형'||s0==='나형')
+      ? s0+' 문항입니다 — 지금 교육과정에서는 어느 과목에 드는지 골라 주세요'
+      : '2022 개정 교육과정 기준으로 하나만 고르세요';
     var L=$('crsBtns'); L.innerHTML='';
     CRS_OPT.forEach(function(o,k){
       var b=document.createElement('button');
@@ -2678,6 +2720,15 @@
       b.onclick=function(){ crsAnswer(o[0]); };
       L.appendChild(b);
     });
+    /* «잘 모르겠음» — 눌러도 되묻지 않고 그대로 들어가게 한다.
+       숫자키 0 과 같은 일을 하지만, 눌러 본 적이 없으면 그런 길이 있는 줄
+       모르기 때문에 단추로도 내놓는다. */
+    var u=document.createElement('button');
+    u.className='none unsure';
+    u.innerHTML='<span class="k">0</span><span>잘 모르겠음</span>'+
+                '<span class="sub">묻지 않고 넘어갑니다</span>';
+    u.onclick=function(){ crsAnswer(''); };
+    L.appendChild(u);
     var M=crsMap();
     $('crsCount').textContent='지금까지 '+CRSV.length+'건 응답 · 확정된 문항 '+
       Object.keys(M).filter(function(p){ return M[p].conf; }).length+'개';
@@ -2686,7 +2737,11 @@
     if(!crsCur) return;
     var rec={t:'crs', id:newId(), p:IT[crsCur.i][2], c:code||'', who:UID, at:nowStr()};
     CRSV.push(rec); crsSave(); sendCollect(rec);
-    if(gateLeft>0){ gateAnswered(!!code); return; }
+    /* 교과목까지 «잘 모르겠음» 이면 더 붙잡지 않는다.
+       유사문항 비교에서 모르겠다고 해서 여기로 넘어온 분인데,
+       여기서 또 되물으면 앱에 들어가지도 못하고 맴돌게 된다. */
+    if(gateLeft>0 && !code){ closeGate(true); return; }
+    if(gateLeft>0){ gateAnswered(true); return; }
     drawCrs();
   }
 
@@ -3025,7 +3080,7 @@
     }
   }
   function openGate(){ gateLeft=GATE_QUOTA; gateTries=0; gateUnsure=false; gateStep(); }
-  function closeGate(){
+  function closeGate(unsure){
     gateLeft=0;
     try{ sessionStorage.setItem('gich_gate','1'); }catch(e){}
     $('cmp').classList.remove('open','gate');
@@ -3033,7 +3088,10 @@
     $('crs').classList.remove('open','gate');
     $('gateFill').style.width='0'; $('stdGateFill').style.width='0';
     $('crsGateFill').style.width='0';
-    toast('고맙습니다. 덕분에 추천이 좋아집니다.');
+    /* 여기서 검색창에 커서를 두면 안 된다 — 커서가 글칸에 있으면
+       ← → 로 쪽을 넘기는 것과 숫자키가 모두 «글자 치는 중»으로 걸러진다. */
+    toast(unsure ? '괜찮습니다. 모르겠다는 것도 도움이 됩니다.'
+                 : '고맙습니다. 덕분에 추천이 좋아집니다.');
   }
   /* ---------- 구글 시트로 보내기 ----------
      · 보낸 것이 확인될 때까지 대기열에 남겨 두므로, 인터넷이 끊겼거나 창을 닫아도 잃지 않습니다.
@@ -4214,6 +4272,14 @@
     }
     var gateDone=true;
     try{ gateDone = !GATE_EVERY && sessionStorage.getItem('gich_gate')==='1'; }catch(e){ gateDone=false; }
+    /* 내 PDF모드에서 막 돌아왔으면 이번 한 번은 묻지 않는다.
+       mypdf.html 이 남긴 표를 여기서 지우므로, 그다음에 새로 열면 다시 묻는다.
+       표가 없어졌을 때를 대비해 어디서 왔는지도 함께 본다. */
+    try{
+      var fromMine = sessionStorage.getItem('gich_nogate')==='1'
+                  || /mypdf\.html/.test(document.referrer||'');
+      if(fromMine){ gateDone=true; sessionStorage.removeItem('gich_nogate'); }
+    }catch(e){}
     if(SIM && GATE_QUOTA>0 && !gateDone){ openGate(); }
     else $('q').focus();
   });
