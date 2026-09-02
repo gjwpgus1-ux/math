@@ -143,9 +143,13 @@ S.ok('ab 가 예전보다 좁아졌다 (910 → 200 아래)', T.search('ab').lis
 S.ok('sinx 는 있고 sinX 는 없다',
      T.search('sinx').list.length>0 && T.search('sinX').list.length===0);
 S.ok('한글만 친 것은 그대로 글자 찾기', T.search('정규분포').mode!=='formula');
-/* 수식글에 없으면 예전 글로 내려간다 */
-S.ok('p(a) 는 수식글에 없어 글자로 내려간다', T.search('p(a)').mode!=='formula' &&
-     T.search('p(a)').list.length>0, T.search('p(a)').mode);
+/* 수식글에 없으면 예전 글로 내려간다.
+   여기 쓰는 보기는 «어느 문항의 수식글에도 없는 것» 이어야 한다.
+   예전에는 p(a) 를 썼는데, 27학년도 9월 20번이 들어오면서 실제로 생겨
+   더는 보기가 되지 못한다. 새 시험을 넣은 뒤 이 줄이 깨지면
+   색인을 뒤져 정말 없는 것으로 바꾸면 된다. */
+S.ok('w(a) 는 수식글에 없어 글자로 내려간다', T.search('w(a)').mode!=='formula' &&
+     T.search('w(a)').list.length>0, T.search('w(a)').mode);
 
 /* ---- <보기> ㄱㄴㄷ 유형 ----
    «옳은 것만을 있는 대로 고른 것은?» 으로 찾으면, 같은 유형이면서
