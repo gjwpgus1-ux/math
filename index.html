@@ -797,6 +797,7 @@
 <script src="data/std.js"></script>
 <script src="data/ans.js"></script>
 <script src="data/sol.js"></script>
+<script src="data/course.js"></script>
 <script src="lib/jspdf.umd.min.js"></script>
 <script src="lib/html2canvas.min.js"></script>
 <script>
@@ -1275,8 +1276,16 @@
   }
 
   /* ================= 검색어 해석 ================= */
-  var SUBJ_ALIAS=[['확률과통계','확통'],['확률과 통계','확통'],['확통','확통'],
-    ['미적분','미적'],['미적','미적'],['기하와벡터','기하'],['기하','기하'],
+  /* 검색창에 친 과목 이름 → 자료에서 쓰는 이름.
+     긴 이름이 먼저 와야 한다 («미적분Ⅰ» 이 «미적분» 에 먹히면 안 된다). */
+  var SUBJ_ALIAS=[
+    ['중학교수학','중학교수학'],['중학수학','중학교수학'],['중학교','중학교수학'],
+    ['공통수학','공통수학'],
+    ['미적분1','미적분Ⅰ'],['미적분I','미적분Ⅰ'],['미적분Ⅰ','미적분Ⅰ'],['미적1','미적분Ⅰ'],
+    ['미적분2','미적분Ⅱ'],['미적분II','미적분Ⅱ'],['미적분Ⅱ','미적분Ⅱ'],['미적2','미적분Ⅱ'],
+    ['확률과통계','확통'],['확률과 통계','확통'],['확통','확통'],
+    ['미적분','미적'],['미적','미적'],['대수','대수'],
+    ['기하와벡터','기하'],['기하','기하'],
     ['공통','공통'],['가형','가형'],['나형','나형']];
   /* 과목 이름은 «확통·미적·기하» 로 통일한다.
      자료(index.js)는 이미 그렇게 맞춰 두었지만, 잠가 둔 묶음이나 나중에
@@ -1285,6 +1294,33 @@
   var SUBJ_ONE={'확률과통계':'확통','확률과 통계':'확통','확률과통계':'확통',
                 '미적분':'미적','기하와벡터':'기하'};
   function subjOf(e){ var v=(e&&e.s)||''; return SUBJ_ONE[v]||v; }
+
+  /* ================= 과목 (문항 하나하나) =================
+     시험 단위 과목(공통·가형·나형)만으로는 «미적분Ⅱ만 보기» 를 할 수 없다.
+     한 시험 안에 여러 과목이 섞여 있는 것이 3,460문항이나 되기 때문이다.
+       · 고3·모평 공통 — 대수·미적분Ⅰ
+       · 나형 — 대수·미적분Ⅰ·확통 (옛 회차에는 집합·명제도)
+       · 가형 — 거기에 미적분Ⅱ·기하까지
+     그래서 문항마다 과목을 적어 둔 data/course.js 를 따로 둔다.
+
+     보는 차례는 셋이다.
+       ① 설문에서 여럿이 같은 답을 해 «확정» 된 것  — 사람 손이 이긴다
+       ② 자동으로 가려 둔 것 (course.js)
+       ③ 그래도 없으면 시험 이름 (가형·나형·공통 …)
+     ③ 이 있어서, 못 가린 문항도 여전히 어딘가에는 걸린다. */
+  var CRS=(typeof window!=='undefined' && window.QCRS) || {};
+  var CRS_ORDER=['중학교수학','공통수학','대수','미적분Ⅰ','미적분Ⅱ','확통','기하'];
+  /* 설문에서 고른 값은 이름이 조금 다르다 (교육과정 표기를 그대로 썼다) */
+  var CRS_SAME={'중학교':'중학교수학','고1':'공통수학','대수':'대수',
+                '미적분I':'미적분Ⅰ','미적분II':'미적분Ⅱ',
+                '확률과 통계':'확통','기하':'기하'};
+  function courseOf(it){
+    var v=crsOf(it[2]);                       /* ① 설문에서 확정된 것 */
+    if(v && CRS_SAME[v]) return CRS_SAME[v];
+    /* ② 자동 → ③ 시험 이름. 시험에도 과목 이름이 없는 옛 자료는 «그 밖» 으로 모은다
+       (지금 12문항이다. 그냥 두면 어느 칩에도 안 걸려 찾을 길이 없어진다) */
+    return CRS[it[2]] || subjOf(EX[it[0]]) || '그 밖';
+  }
   var ROUNDS=['수능','11월','10월','9월','7월','6월','5월','4월','3월'];
 
   var YEARS=null;                       /* 자료에 실제로 있는 연도 */
@@ -1435,7 +1471,10 @@
     if(sp.acad.length    && sp.acad.indexOf(e.y)<0) return false;
     if(sp.years.length   && sp.years.indexOf(e.y)<0 && sp.years.indexOf(heldYear(e))<0) return false;
     if(sp.rounds.length  && sp.rounds.indexOf(e.r)<0) return false;
-    if(sp.subjects.length&& sp.subjects.indexOf(subjOf(e))<0) return false;
+    /* 과목은 문항마다 다르므로 courseOf 로 본다.
+       옛 이름(가형·나형·공통)으로 찾는 분도 있어 시험 이름도 함께 받는다. */
+    if(sp.subjects.length && sp.subjects.indexOf(courseOf(it))<0
+                          && sp.subjects.indexOf(subjOf(e))<0) return false;
     if(!gradeOK(e, sp.grades)) return false;
     if(sp.nums.length    && sp.nums.indexOf(it[1])<0) return false;
     return true;
@@ -1459,7 +1498,7 @@
   }
   function search(raw){
     var plan=parseQuery(raw);
-    var pool=IT.filter(function(it){ return passFilter(EX[it[0]]) && matchSpec(it,plan); });
+    var pool=IT.filter(function(it){ return passItem(it) && matchSpec(it,plan); });
     if(plan.andMode){
       /* 쉼표로 나눈 조건은 «모두» 든 문항만 */
       return {list:pool.filter(function(it){
@@ -1520,9 +1559,16 @@
     divs.sort(function(a,b){ return DIV_ORDER.indexOf(a)-DIV_ORDER.indexOf(b); });
     var rounds=uniq(function(e){return e.r}).filter(function(r){ return ROUND_ORDER.indexOf(r)>=0; });
     rounds.sort(function(a,b){ return ROUND_ORDER.indexOf(a)-ROUND_ORDER.indexOf(b); });
+    /* 과목은 시험이 아니라 문항마다 달려 있다. 그래서 자료를 훑어 모은다.
+       차례는 배우는 차례대로 — 중학교수학·공통수학·대수·미적분Ⅰ·미적분Ⅱ·확통·기하.
+       아직 못 가린 문항이 남아 있으면 그 시험 이름(가형·나형 …)도 뒤에 붙는다. */
+    var cseen={};
+    IT.forEach(function(it){ var c=courseOf(it); if(c) cseen[c]=1; });
+    var courses=CRS_ORDER.filter(function(c){ return cseen[c]; })
+      .concat(Object.keys(cseen).filter(function(c){ return CRS_ORDER.indexOf(c)<0; }).sort());
     [['구분','grade',divs],
      ['시행','round',rounds],
-     ['과목','subject',uniq(subjOf)],
+     ['과목','subject',courses],
      ['연도','year',uniq(heldYear).sort().reverse()]].forEach(function(d){
       var g=document.createElement('div'); g.className='fgroup';
       var b=document.createElement('b'); b.textContent=d[0]; g.appendChild(b);
@@ -1557,10 +1603,14 @@
     $('fsummary').textContent=on.length?on.join(' · '):'';
     $('fclear').style.display=on.length?'':'none';
   }
+  /* 시험을 보고 가리는 것 — 구분·시행·연도·범위 */
   function passFilter(e){
     return (!F.grade.size||F.grade.has(divOf(e))) && (!F.round.size||F.round.has(e.r))
-        && (!F.subject.size||F.subject.has(subjOf(e))) && (!F.year.size||F.year.has(heldYear(e)))
-        && (!F.scope.size||F.scope.has(scopeOf(e)));
+        && (!F.year.size||F.year.has(heldYear(e))) && (!F.scope.size||F.scope.has(scopeOf(e)));
+  }
+  /* 과목만은 문항마다 다르므로 여기서 따로 본다 */
+  function passItem(it){
+    return passFilter(EX[it[0]]) && (!F.subject.size || F.subject.has(courseOf(it)));
   }
   function clearFilters(){
     F.grade.clear();F.round.clear();F.subject.clear();F.year.clear();F.scope.clear();
@@ -2624,8 +2674,10 @@
      성취기준 기능은 그대로 두었고 위쪽 «성취기준 달기» 단추로 언제든 쓸 수 있다.
 
      고르는 값 — 바꾸시려면 CRS_OPT 의 글만 고치세요. [값, 보이는 이름, 옆에 붙는 설명] */
-  var CRS_OPT=[['중학교',     '중학교',        ''],
-               ['고1',        '고1',           '공통수학1·2'],
+  /* 보이는 이름은 과목 필터와 맞춰 둔다. 값(첫 칸)은 예전 그대로여야
+     이미 쌓인 응답이 그대로 살아 있다. */
+  var CRS_OPT=[['중학교',     '중학교수학',     ''],
+               ['고1',        '공통수학',       '공통수학1·2'],
                ['대수',       '대수',          '15개정 수학Ⅰ'],
                ['미적분I',    '미적분Ⅰ',       '15개정 수학Ⅱ'],
                ['미적분II',   '미적분Ⅱ',       '15개정 미적분'],
@@ -4034,7 +4086,7 @@
     else if(ways.length>1){
       out+='<span class="pill alt">숫자를 '+ways.length+'가지로 읽었습니다 — 누르면 그것만 봅니다</span>';
       ways.forEach(function(sp,i){
-        var n=IT.filter(function(it){ return passFilter(EX[it[0]]) && matchOne(it,sp); }).length;
+        var n=IT.filter(function(it){ return passItem(it) && matchOne(it,sp); }).length;
         out+='<span class="pill way'+(WAY_PIN===i?' on':'')+'" data-pin="'+i+'">'+esc(sp.why)+' '+n+'개</span>';
       });
     }
