@@ -141,6 +141,16 @@
   .grid.page4 .card .head{padding:6px 8px;gap:5px;font-size:11.5px}
   .grid.page4 .card .head .fp{display:none}
   .grid.page4 .card .head button{padding:3px 7px;font-size:11px}
+  /* ── 화면을 키우면(또는 브라우저를 확대하면) 칸이 좁아진다 ──
+     예전에는 4열에서 곧바로 1열로 떨어져, 중간 배율에서 글씨가 너무 작거나
+     갑자기 한 문항만 보였다. 사이에 2열(2행 × 2문항) 단계를 둔다.
+     한 쪽에 넣는 문항 수는 그대로 넷이라, 2열에서는 두 줄로 놓인다. */
+  @media (min-width:821px) and (max-width:1240px){
+    .grid.page4{grid-template-columns:repeat(2,1fr);gap:12px}
+    .grid.page4 .card .head{font-size:12px;padding:7px 9px}
+    .grid.page4 .card .head button{padding:4px 8px;font-size:11.5px}
+    .grid.page4 .card .head .fp{display:inline}
+  }
   .card{background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;
         display:flex;flex-direction:column}
   .card.flagged{border-color:#e8c9c4}
@@ -814,8 +824,13 @@
   var COLLECT_URL = 'https://script.google.com/macros/s/AKfycbyG4haAlx6sI3BzYosK0sRnq54Db2FU3Q5eMdK8h2BMdXqZgP1PUanpnmMkfJSFzeDbPQ/exec';
 
   /* 처음 열 때 유사문항 비교를 몇 건 답해야 넘어가는지. 0으로 두면 묻지 않습니다. */
-  /* 시작할 때 «제대로 된 응답»을 몇 건 받을지. 잘 모르겠음으로 답하면 한 건 더 묻습니다. */
-  var GATE_QUOTA = 1;
+  /* 시작할 때 «제대로 된 응답»을 몇 건 받을지. 잘 모르겠음으로 답하면 한 건 더 묻습니다.
+     ─────────────────────────────────────────────────────────────
+     2026-09-16 — 유사도 설문을 잠깐 닫아 두었습니다 (0).
+     다시 열려면 이 0 을 1 로만 바꾸시면 됩니다. 딸린 기능은 그대로 살아 있고,
+     위쪽 «유사문항 비교»·«교과목 고르기» 단추로는 언제든 쓸 수 있습니다.
+     ───────────────────────────────────────────────────────────── */
+  var GATE_QUOTA = 0;
   var GATE_MAX   = 5;      /* 잘 모르겠음이 이어져도 이 횟수를 넘기면 그냥 보내 줍니다 */
   /* true — 접속할 때마다 묻습니다 (새로고침해도 뜹니다)
      false — 한 번 답하면 그 창을 닫기 전까지 다시 묻지 않습니다 */
@@ -885,9 +900,16 @@
      절댓값은 «짝을 이루고, 사이가 짧고, = { } 를 품지 않는 것» 으로 가린다.
        |f(x)|  |a_n|  |2PA+PD|   → 절댓값
        P(A|B)  {x|x는…}  f(x)={| → 절댓값 아님 (세로줄이 홀로 있다) */
-  var ABS_WORD=/^(절댓값|절대값)$/;
+  /* abs·vert·| 도 «절댓값» 과 똑같이 본다.
+     예전에는 이 셋이 세로줄 하나로 바뀌어 글자 그대로 찾혔다. 그래서
+     같은 뜻인데 «절댓값» 393문항, «abs» 711문항으로 갈렸다.
+     늘어난 318문항은 절댓값이 아니라 구간별 함수의 큰 괄호,
+     조건부확률 P(B|A), 집합 {x | … } 이었다.
+     다만 |f(x)| 처럼 짝을 지어 친 것은 그대로 수식으로 찾는다 — 그쪽이 더 좁다. */
+  var ABS_WORD=/^(절댓값|절대값|abs|vert)$/;
   var ABS_PAIR=/\|[^|{}=]{1,25}\|/;
   function absMatch(it){ return !!(it[6] && ABS_PAIR.test(it[6])); }
+  function absQuery(phrase, fq){ return ABS_WORD.test(phrase) || fq==='|'; }
 
   /* «옳은 것만을 있는 대로 고른 것은?» — 보기 ㄱㄴㄷ 유형을 찾는 말이다.
      그런데 같은 유형이면서 다르게 쓴 문항이 다섯 개 있다.
@@ -1487,7 +1509,7 @@
   }
   /* 조건 하나가 이 문항에 들어 있는가 — 수식이면 수식글로, 아니면 예전 글로 */
   function termMatch(it,term){
-    if(ABS_WORD.test(norm(term))) return absMatch(it);
+    if(absQuery(norm(term), fconv(term))) return absMatch(it);
     if(bogiWord(norm(term))) return it[5].indexOf(norm(term))>=0 || bogiMatch(it);
     var f=fconv(term);
     if(isF(f)){
@@ -1509,7 +1531,7 @@
     var phrase=norm(joined);
     var fq=fconv(joined);
     if(!phrase && !fq) return {list:pool,mode:raw.trim()?'spec':'all',spec:plan};
-    if(ABS_WORD.test(phrase)) return {list:pool.filter(absMatch), mode:'abs', spec:plan};
+    if(absQuery(phrase, fq)) return {list:pool.filter(absMatch), mode:'abs', spec:plan};
     if(bogiWord(phrase)) return {list:pool.filter(function(it){
       return it[5].indexOf(phrase)>=0 || bogiMatch(it);
     }), mode:'bogi', spec:plan};
@@ -1729,6 +1751,9 @@
       }
       var hd=document.querySelector('header').offsetHeight||220;
       var h=Math.max(220, window.innerHeight-hd-130);
+      /* 2열 단계에서는 문항이 두 줄로 놓이므로 칸 높이를 반으로 나눈다.
+         그러지 않으면 아랫줄을 보려고 쪽을 한참 굴려야 한다. */
+      if(window.innerWidth<=1240) h=Math.max(190, Math.floor((h-12)/2));
       document.documentElement.style.setProperty('--cardh', h+'px');
     }catch(e){}
   }
@@ -2438,7 +2463,7 @@
      ['int · 적분','∫'],
      ['pi · 파이','π'],
      ['theta · 세타','θ  (alpha·beta 도 됩니다)'],
-     ['abs · vert','|'],
+     ['abs · vert · |','절댓값 (셋 다 «절댓값» 과 같습니다)'],
      ['-> ','→  (예: lim x->0)'],
      ['inf · 무한대','∞'],
      ['lim · sin · cos · tan · log','그대로 치시면 됩니다'],
@@ -2447,8 +2472,10 @@
    ['«절댓값» 은 낱말로 치시면 됩니다',
     '수식글에서 세로줄 | 은 절댓값 말고도 조건부확률 P(A|B), 집합 {x | … }, '+
     '구간별 함수의 큰 괄호에도 쓰입니다. 그래서 «절댓값» 이라고 치시면 '+
-    '짝을 이룬 절댓값 기호가 든 문항만 골라 냅니다.',
-    [['절댓값','393문항 — 절댓값이 든 문항만'],
+    '짝을 이룬 절댓값 기호가 든 문항만 골라 냅니다. '+
+    '«abs» «vert» «|» 도 모두 같은 뜻으로 알아듣습니다. '+
+    '다만 |x| 처럼 짝을 지어 치시면 그 모양 그대로 찾아 더 좁아집니다.',
+    [['절댓값','393문항 — abs · vert · | 로 치셔도 같습니다'],
      ['|x|','20문항 — 기호 그대로 좁혀서'],
      ['절댓값, 수열','51문항 — 쉼표로 더 좁히기']]],
    ['쉼표로 묶으면 «둘 다» 든 문항만 나옵니다',
@@ -4333,7 +4360,9 @@
       if(fromMine){ gateDone=true; sessionStorage.removeItem('gich_nogate'); }
     }catch(e){}
     if(SIM && GATE_QUOTA>0 && !gateDone){ openGate(); }
-    else $('q').focus();
+    /* 여기서 검색창에 커서를 두지 않는다.
+       커서가 글칸에 있으면 ← → 로 쪽을 넘기는 것과 숫자키가 모두
+       «글자 치는 중»으로 걸러지기 때문이다. 검색창으로 가려면 / 를 누르면 된다. */
   });
 })();
 </script>

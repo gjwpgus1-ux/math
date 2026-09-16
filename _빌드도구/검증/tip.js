@@ -1,5 +1,6 @@
 const {boot,wait,scorer}=require('./harness');
-const H=boot(); const {w,doc,$,click,key,btn,html}=H;
+/* 시작 설문은 앱에서 닫아 두었다. 그 기능을 검사하려고 여기서만 되켠다. */
+const H=boot(null,{gate:true}); const {w,doc,$,click,key,btn,html}=H;
 const {ok,done}=scorer();
 
 /* 인쇄 단추를 누르면 묻는 창이 뜬다 — «바로 인쇄»까지 눌러 주는 도우미 */

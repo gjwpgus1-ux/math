@@ -1,6 +1,8 @@
 /* 지금까지 만든 기능이 아직 살아 있는지 한 번에 훑는다 */
 const {boot,wait,scorer}=require('./harness');
-const H=boot('search:search,parseQuery:parseQuery,heldAt:heldAt,label:label,IT:IT,EX:EX,stdDraft:stdDraft,stdLevelOf:stdLevelOf,stdAdjust:stdAdjust,stdConfirmed:stdConfirmed,STDVset:function(v){STDV=v;STDMAP=null;stdSave();},recommend:recommend,PAIRSset:function(v){PAIRS=v;prefClear();pairSave();},prefAdjust:prefAdjust,WPREF:WPREF,PREF_CAP:PREF_CAP');
+/* 시작 설문은 앱에서 닫아 두었다. 여기서는 예전처럼 켠 채로 훑는다.
+   닫혀 있을 때의 모습은 «설문닫힘.js» 에서 따로 본다. */
+const H=boot('search:search,parseQuery:parseQuery,heldAt:heldAt,label:label,IT:IT,EX:EX,stdDraft:stdDraft,stdLevelOf:stdLevelOf,stdAdjust:stdAdjust,stdConfirmed:stdConfirmed,STDVset:function(v){STDV=v;STDMAP=null;stdSave();},recommend:recommend,PAIRSset:function(v){PAIRS=v;prefClear();pairSave();},prefAdjust:prefAdjust,WPREF:WPREF,PREF_CAP:PREF_CAP',{gate:true});
 const {w,doc,$,click,key,btn,html}=H;
 const {ok,done}=scorer();
 const T=()=>w.__T;

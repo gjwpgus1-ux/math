@@ -28,7 +28,13 @@ function visit(keepSession){
   w.eval(fs.readFileSync(APP+'/data/index.js','utf8'));
   w.eval(fs.readFileSync(APP+'/data/sim.js','utf8'));
   w.eval(fs.readFileSync(APP+'/data/std.js','utf8'));
-  w.eval(html.match(/<script>([\s\S]*?)<\/script>/)[1]);
+  /* 시작 설문은 앱에서 닫아 두었다(GATE_QUOTA=0).
+     그 기능이 살아 있는지는 계속 봐야 하므로 검사할 때만 되켠다. */
+  let SRC=html.match(/<script>([\s\S]*?)<\/script>/)[1];
+  const before=SRC;
+  SRC=SRC.replace(/var GATE_QUOTA\s*=\s*\d+;/, 'var GATE_QUOTA = 1;');
+  if(SRC===before) throw new Error('GATE_QUOTA 를 못 찾음');
+  w.eval(SRC);
   return {w,doc,$:id=>doc.getElementById(id),
           key:k=>doc.dispatchEvent(new w.KeyboardEvent('keydown',{key:k}))};
 }

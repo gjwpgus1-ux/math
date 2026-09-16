@@ -36,7 +36,10 @@ function boot(url){
   w.eval(fs.readFileSync(APP+'/data/index.js','utf8'));
   w.eval(fs.readFileSync(APP+'/data/sim.js','utf8'));
   w.eval(fs.readFileSync(APP+'/data/std.js','utf8'));
-  w.eval(html.match(/<script>([\s\S]*?)<\/script>/)[1]);
+  /* 시작 설문은 앱에서 닫아 두었다(GATE_QUOTA=0).
+     이 검사는 설문 응답이 오가는 것을 보므로 여기서만 되켠다. */
+  w.eval(html.match(/<script>([\s\S]*?)<\/script>/)[1]
+         .replace(/var GATE_QUOTA\s*=\s*\d+;/, 'var GATE_QUOTA = 1;'));
   return {w,doc,$:id=>doc.getElementById(id),
           click:el=>el.dispatchEvent(new w.Event('click',{bubbles:true})),
           key:k=>doc.dispatchEvent(new w.KeyboardEvent('keydown',{key:k}))};

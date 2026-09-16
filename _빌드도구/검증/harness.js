@@ -2,7 +2,12 @@
 const fs=require('fs'),path=require('path');
 const {JSDOM,VirtualConsole}=require('jsdom');
 const APP='/sessions/serene-festive-hamilton/mnt/클로드 코워크/기출문제검색기 제작/기출문제_검색기';
-function boot(expose){
+/* boot(expose, opts)
+     opts.gate — 시작 설문을 켠 채로 띄운다.
+       앱에서는 설문을 닫아 두었지만(GATE_QUOTA=0), 다시 열 날을 대비해
+       설문 기능 자체는 계속 검사해야 한다. 그래서 검사할 때만 되켠다. */
+function boot(expose, opts){
+  opts=opts||{};
   const html=fs.readFileSync(path.join(APP,'index.html'),'utf8');
   const dom=new JSDOM(html,{runScripts:'outside-only',pretendToBeVisual:true,url:'https://x/',
                             virtualConsole:new VirtualConsole()});
@@ -26,6 +31,11 @@ function boot(expose){
   if(fs.existsSync(APP+'/data/sol.js')) w.eval(fs.readFileSync(APP+'/data/sol.js','utf8'));
   if(fs.existsSync(APP+'/data/course.js')) w.eval(fs.readFileSync(APP+'/data/course.js','utf8'));
   let SRC=html.match(/<script>([\s\S]*?)<\/script>/)[1];
+  if(opts.gate){
+    const before=SRC;
+    SRC=SRC.replace(/var GATE_QUOTA\s*=\s*\d+;/, 'var GATE_QUOTA = 1;');
+    if(SRC===before) throw new Error('GATE_QUOTA 를 못 찾음');
+  }
   if(expose){
     SRC=SRC.replace(/\}\)\(\);\s*$/,'window.__T={'+expose+'};})();');
     if(!/__T=/.test(SRC)) throw new Error('IIFE 끝을 못 찾음');

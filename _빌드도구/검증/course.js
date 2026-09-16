@@ -1,5 +1,6 @@
 const {boot,wait,scorer}=require('./harness');
-const H=boot('IT:IT,EX:EX,crsMap:crsMap,crsOf:crsOf,crsAdjust:crsAdjust,CRS_OPT:CRS_OPT,CRSset:function(v){CRSV=v;CRSMAP=null;crsSave();},WCRS:WCRS');
+/* 시작 설문은 앱에서 닫아 두었다. 그 기능을 검사하려고 여기서만 되켠다. */
+const H=boot('IT:IT,EX:EX,crsMap:crsMap,crsOf:crsOf,crsAdjust:crsAdjust,CRS_OPT:CRS_OPT,CRSset:function(v){CRSV=v;CRSMAP=null;crsSave();},WCRS:WCRS',{gate:true});
 const {w,doc,$,click,key,html}=H;
 const {ok,done}=scorer();
 const T=()=>w.__T;

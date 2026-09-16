@@ -1,5 +1,6 @@
 const {boot,wait,scorer}=require('./harness');
-const H=boot(); const {w,doc,$,click,key,html}=H;
+/* 시작 설문은 앱에서 닫아 두었다. 그 화면을 보려고 여기서만 되켠다. */
+const H=boot(null,{gate:true}); const {w,doc,$,click,key,html}=H;
 const {ok,done}=scorer();
 const css=re=>re.test(html);
 (async()=>{
