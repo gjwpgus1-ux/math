@@ -138,6 +138,9 @@
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:16px}
   .grid.page4{grid-template-columns:repeat(4,1fr);gap:10px}
   .grid.page4 .card .body{max-height:var(--cardh,58vh)}
+  /* 칸 높이에 맞추어 그림을 줄인다. 안쪽 여백(위아래 10px씩)을 빼 준다.
+     width:auto 를 함께 주어야 줄어든 만큼 가로도 함께 줄어 글씨가 안 찌그러진다. */
+  .grid.page4 .card img{max-height:calc(var(--cardh,58vh) - 20px);width:auto;max-width:100%}
   .grid.page4 .card .head{padding:6px 8px;gap:5px;font-size:11.5px}
   .grid.page4 .card .head .fp{display:none}
   .grid.page4 .card .head button{padding:3px 7px;font-size:11px}
@@ -177,9 +180,13 @@
           background:#fff;padding:10px;text-align:center}
   .solbox img{max-width:100%;height:auto}
   .card.dim{opacity:.5}
-  .card .body{padding:10px;overflow:auto;max-height:620px;background:#fff;cursor:copy;position:relative}
-  .card .body:hover{background:#fcfdff}
-  .card img{width:100%;height:auto;display:block}
+  /* 문항칸 안에서는 굴리지 않는다.
+     칸보다 긴 문항은 그림을 줄여서라도 «한눈에 다 보이게» 한다.
+     (열에 네 칸일 때 열 문항 가운데 아홉은 줄이지 않아도 그대로 들어간다.
+      제일 긴 것도 절반쯤으로 줄면 들어간다.) */
+  .card .body{padding:10px;overflow:hidden;max-height:620px;background:#fff;cursor:copy;
+              position:relative;display:flex;justify-content:center;align-items:flex-start}
+  .card img{width:100%;height:auto;display:block;max-height:600px;object-fit:contain}
   .card .cue{position:absolute;right:12px;top:10px;background:rgba(37,99,235,.92);color:#fff;
              font-size:11.5px;padding:3px 8px;border-radius:5px;opacity:0;transition:opacity .15s;
              pointer-events:none}
@@ -547,8 +554,10 @@
     main{padding:14px 12px 40px}
     .grid.page4{grid-template-columns:1fr;gap:12px}   /* 한 줄에 한 문항 */
     .grid{grid-template-columns:1fr}
-    /* 문항칸 안에서 따로 굴리지 않는다 — 그림 전체가 그대로 펼쳐진다 */
+    /* 문항칸 안에서 따로 굴리지 않는다 — 그림 전체가 그대로 펼쳐진다.
+       좁은 화면은 가로가 이미 빠듯해서 줄이지 않고 제 크기로 보여 준다. */
     .card .body,.grid.page4 .card .body{max-height:none;overflow:visible}
+    .card img,.grid.page4 .card img{max-height:none;width:100%}
     .card{height:auto}
     .grid.page4 .card .head{font-size:12.5px;padding:8px 10px}
     .grid.page4 .card .head button{padding:5px 9px;font-size:12px}
@@ -1757,9 +1766,9 @@
       }
       var hd=document.querySelector('header').offsetHeight||220;
       var h=Math.max(220, window.innerHeight-hd-130);
-      /* 2열 단계에서는 문항이 두 줄로 놓이므로 칸 높이를 반으로 나눈다.
-         그러지 않으면 아랫줄을 보려고 쪽을 한참 굴려야 한다. */
-      if(window.innerWidth<=1240) h=Math.max(190, Math.floor((h-12)/2));
+      /* 2열 단계에서도 칸 높이는 줄이지 않는다.
+         칸 안에서 굴리지 않고 그림을 줄여 보여 주기 때문에, 높이를 반으로 깎으면
+         문항이 절반 크기로 쪼그라든다. 아랫줄은 쪽을 조금 내려 보면 된다. */
       document.documentElement.style.setProperty('--cardh', h+'px');
     }catch(e){}
   }
