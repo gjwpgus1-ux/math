@@ -34,6 +34,27 @@
      (관리자 화면과 팝업이 같은 코드를 쓴다). */
   h1 #cmpBtn,h1 #stdBtn,h1 #crsBtn{display:none}
   .modesw button.on{background:var(--accent);color:#fff;font-weight:600}
+
+  /* ── 최소화 모드 ──
+     로고 · 줍줍닷컴 · 검색창 · 탭만 남기고 윗줄을 모두 접는다.
+     문항을 크게 보며 검색만 할 때 윗줄이 화면을 많이 먹기 때문이다.
+     이 단추만은 두 모드에서 늘 보여야 다시 펼 수 있다. */
+  h1 #minBtn{margin-left:auto;padding:5px 10px;font-size:14px;line-height:1;color:var(--dim)}
+  h1 #minBtn .kb{margin-left:5px}
+  body.min h1 .tagline,
+  body.min h1 .by,
+  body.min h1 #sub,
+  body.min h1 .modesw,
+  body.min #clear,
+  body.min #helpBtn,
+  body.min #keysBtn,
+  body.min #fbar,
+  body.min #filters,
+  body.min #status,
+  body.min #studybar{display:none !important}
+  body.min header{padding-bottom:0}
+  body.min h1{margin-bottom:2px}
+  body.min #minBtn{color:var(--accent)}
   .searchbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
   /* 윗줄에 들어가는 글씨는 모두 학습모드 단추와 같은 13.5px 로 맞춘다.
      다만 좁은 화면에서는 검색창만 16px 로 둔다 — 그보다 작으면 아이폰이
@@ -618,6 +639,8 @@
     <button id="cmpBtn">유사문항 비교</button>
     <button id="crsBtn">교과목 고르기</button>
     <button id="stdBtn">성취기준 달기</button>
+    <!-- 최소화 — 켜면 로고·이름·검색창·탭만 남는다. 이 단추는 늘 보인다. -->
+    <button id="minBtn" title="최소화 — 검색창만 남깁니다 (m)">▴<i class="kb">m</i></button>
   </h1>
   <div class="searchbar">
     <input id="q" placeholder="검색어를 입력하세요          /  키를 누르면 여기로 옵니다" autocomplete="off">
@@ -2538,6 +2561,8 @@
    ['탭',
     [['Ctrl + ← →','앞·뒤 탭으로 이동 (끝에 닿으면 반대쪽 끝으로)'],
      ['Delete','지금 보고 있는 탭 닫기 — 마지막 탭을 닫으면 처음 화면으로 돌아갑니다']]],
+   ['화면',
+    [['m','최소화 — 로고·검색창·탭만 남깁니다 (한 번 더 누르면 되돌아옵니다)']]],
    ['이 창',
     [['k','단축키 목록 열기'],
      ['Esc','닫기']]]
@@ -2562,6 +2587,22 @@
     });
   }
   $('keysBtn').onclick=openKeys;
+
+  /* ================= 최소화 =================
+     로고·이름·검색창·탭만 남기고 윗줄을 접는다. 고른 것은 다음에도 그대로 연다. */
+  function setMin(on){
+    document.body.classList.toggle('min', !!on);
+    $('minBtn').textContent = on ? '▾' : '▴';
+    $('minBtn').appendChild(Object.assign(document.createElement('i'),
+      {className:'kb', textContent:'m'}));
+    $('minBtn').title = (on ? '최소화 풀기 — 윗줄을 다시 폅니다'
+                            : '최소화 — 검색창만 남깁니다') + ' (m)';
+    try{ localStorage.setItem('gich_min', on?'1':'0'); }catch(e){}
+    /* 윗줄 높이가 달라졌으니 아래 막대·칸을 다시 맞춘다 */
+    try{ fitCards(); showMbar(); }catch(e){}
+  }
+  function toggleMin(){ setMin(!document.body.classList.contains('min')); }
+  $('minBtn').onclick=toggleMin;
 
   /* ================= 오류제보 ================= */
   /* 고르기만 하면 되도록 짧게 추렸다. 값(앞)은 시트에 그대로 쌓이므로 짧게,
@@ -4279,6 +4320,9 @@
       if(e.key==='k' || e.key==='K' || e.code==='KeyK'){
         e.preventDefault(); openKeys(); return;
       }
+      if(e.key==='m' || e.key==='M' || e.code==='KeyM'){
+        e.preventDefault(); toggleMin(); return;
+      }
       if(e.key==='Delete'){
         /* 지금 보고 있는 탭을 닫는다. 고른 탭이 없으면 맨 앞 탭 */
         if(TABS.length){ e.preventDefault(); closeTab(activeTab>=0?activeTab:0); }
@@ -4330,6 +4374,7 @@
         $('filters').classList.add('open'); $('ftoggle').classList.add('open');
         $('ftoggle').childNodes[0].nodeValue='필터 접기';
       }
+      if(localStorage.getItem('gich_min')==='1') setMin(true);
       if(localStorage.getItem('gich_mode')==='study'){
         MODE='study'; $('modeStudy').className='on'; $('modeSearch').className='';
         $('studybar').classList.add('on');
