@@ -41,7 +41,10 @@ S.ok('좁은 화면 규칙이 있다', !!m);
 const M=(m?m[1]:'').replace(/\s+/g,'');
 S.ok('윗줄을 붙박지 않는다', /header\{position:static\}/.test(M));
 S.ok('한 줄에 한 문항', /\.grid\.page4\{grid-template-columns:1fr/.test(M));
-S.ok('문항칸 안에서 따로 굴리지 않는다', /overflow:visible/.test(M) && /max-height:none/.test(M));
+/* 이제는 넓은 화면에서도 칸 안에서 굴리지 않는다 (한눈에.js 참고).
+   그래서 좁은 화면 규칙에 따로 적어 둘 것이 없어졌다. */
+S.ok('문항칸 안에서 따로 굴리지 않는다',
+     /\.card\.body\{[^}]*overflow:visible/.test(CSS.replace(/ /g,'')));
 S.ok('좌우 큰 화살표는 감춘다', /\.nav\{display:none\}/.test(M));
 
 /* 넓은 화면에서는 예전대로 */
@@ -50,9 +53,11 @@ S.ok('넓은 화면은 네 칸 그대로', /\.grid\.page4\{grid-template-columns
 
 /* 높이 묶기를 좁은 화면에서 푸는가 */
 function setW(px){ Object.defineProperty(w,'innerWidth',{value:px,configurable:true}); }
+/* 칸 높이는 이제 넓은 화면에서도 매기지 않는다.
+   칸이 문항 길이만큼 늘어나 안에서 굴릴 일이 없어졌기 때문이다. */
 setW(1400); w.__T.fitCards();
-S.ok('넓은 화면에서는 문항칸 높이를 매긴다',
-     !!doc.documentElement.style.getPropertyValue('--cardh'),
+S.ok('넓은 화면에서도 문항칸 높이를 안 매긴다',
+     !doc.documentElement.style.getPropertyValue('--cardh'),
      doc.documentElement.style.getPropertyValue('--cardh'));
 setW(390); w.__T.fitCards();
 S.ok('좁은 화면에서는 높이를 풀어 준다',
