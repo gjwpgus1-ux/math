@@ -12,17 +12,23 @@ const chips=()=>[...grp().querySelectorAll('.chip')];
 
   console.log('\n[1] 칩 차례');
   const names=chips().map(c=>c.textContent);
-  ok('배우는 차례대로 앞에 온다',
-     names.slice(0,7).join(',')==='중학교수학,공통수학,대수,미적분Ⅰ,미적분Ⅱ,확통,기하', names.join(','));
-  ok('못 가린 것은 시험 이름으로 뒤에 남는다',
-     names.slice(7).every(n=>['가형','나형','공통','확통','미적','기하','그 밖'].indexOf(n)>=0), names.slice(7).join(','));
+  /* 배우는 차례 그대로. 맨 끝 «교육과정 밖» 은 지금 안 배우는 내용이다
+     (부등식의 영역 같은 옛 단원). 시험 이름 칩은 이제 없다 — 다 갈라 놓았다. */
+  ok('아홉 갈래가 배우는 차례대로',
+     names.join(',')==='중학교수학,공통수학1,공통수학2,대수,미적분Ⅰ,미적분Ⅱ,확통,기하,교육과정 밖',
+     names.join(','));
+  ok('시험 이름 칩은 남지 않는다',
+     !names.some(n=>['가형','나형','공통','미적','그 밖'].indexOf(n)>=0), names.join(','));
 
   console.log('\n[2] 시험 하나에 여러 과목이 섞여 있다');
   const 가형=T().IT.filter(it=>T().EX[it[0]].s==='가형');
   const kinds=new Set(가형.map(it=>T().courseOf(it)));
   ok('가형에 과목이 여럿', kinds.size>=4, [...kinds].join(','));
   const 고1=T().IT.filter(it=>T().EX[it[0]].g==='고1' && T().EX[it[0]].r!=='3월');
-  ok('고1(3월 제외)은 모두 공통수학', 고1.every(it=>T().courseOf(it)==='공통수학'), 고1.length);
+  ok('고1(3월 제외)은 모두 공통수학1·2',
+     고1.every(it=>['공통수학1','공통수학2'].indexOf(T().courseOf(it))>=0), 고1.length);
+  ok('공통수학1·2가 둘 다 쓰인다',
+     new Set(고1.map(it=>T().courseOf(it))).size===2);
   const 고1삼월=T().IT.filter(it=>T().EX[it[0]].g==='고1' && T().EX[it[0]].r==='3월');
   ok('고1 3월은 모두 중학교수학', 고1삼월.every(it=>T().courseOf(it)==='중학교수학'), 고1삼월.length);
   const 미적=T().IT.filter(it=>T().EX[it[0]].s==='미적');

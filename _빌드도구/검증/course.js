@@ -21,10 +21,12 @@ const open=id=>$(id).classList.contains('open');
   const bs=[...$('crsBtns').querySelectorAll('button')];
   ok('단추 9개', bs.length===9, bs.length);
   const names=bs.map(b=>b.children[1].textContent);
-  /* 보이는 이름은 과목 필터와 맞춰 두었다 («중학교»→중학교수학, «고1»→공통수학).
+  /* 보이는 이름은 과목 필터와 맞춰 두었다 («중학교»→중학교수학, «고1»→공통수학1·2).
+     설문은 공통수학1과 2를 가르지 않으므로, 이미 1이나 2로 가려 둔 문항은
+     설문이 덮어쓰지 않는다 (courseOf 를 보라).
      저장되는 값은 예전 그대로여야 이미 쌓인 응답이 살아 있다 — 아래 [3]에서 본다. */
   ok('여덟 갈래가 순서대로, 끝에 잘 모르겠음',
-     names.join(',')==='중학교수학,공통수학,대수,미적분Ⅰ,미적분Ⅱ,기하,확률과 통계,22개정에 해당 없음,잘 모르겠음',
+     names.join(',')==='중학교수학,공통수학1·2,대수,미적분Ⅰ,미적분Ⅱ,기하,확률과 통계,22개정에 해당 없음,잘 모르겠음',
      names.join(','));
   const subs=bs.map(b=>{const s=b.querySelector('.sub'); return s?s.textContent:'';});
   ok('15개정 표기', subs[2]==='15개정 수학Ⅰ'&&subs[3]==='15개정 수학Ⅱ'&&subs[4]==='15개정 미적분',
