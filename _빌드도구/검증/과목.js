@@ -34,14 +34,14 @@ const chips=()=>[...grp().querySelectorAll('.chip')];
   const 미적=T().IT.filter(it=>T().EX[it[0]].s==='미적');
   ok('선택과목 미적분은 모두 미적분Ⅱ', 미적.every(it=>T().courseOf(it)==='미적분Ⅱ'), 미적.length);
 
-  console.log('\n[3] 설문에서 확정되면 그것이 이긴다');
+  /* 교과목 설문으로 모은 값은 더 보지 않는다 — 사람마다 기준이 달라 어긋난 것이
+     많았다. 사람 손으로 고치는 길은 관리자 화면에 따로 두었다 (단원.js 참고). */
+  console.log('\n[3] 설문 값은 더 보지 않는다');
   const it0=T().IT.find(it=>T().courseOf(it)==='대수');
-  const p=it0[2];
-  const rows=[]; for(let i=0;i<4;i++) rows.push({t:'crs',p:p,c:'기하',who:'u'+i,at:'x'});
+  const rows=[]; for(let i=0;i<4;i++) rows.push({t:'crs',p:it0[2],c:'기하',who:'u'+i,at:'x'});
   T().CRSset(rows);
-  ok('설문 확정값으로 바뀐다', T().courseOf(it0)==='기하', T().courseOf(it0));
+  ok('설문이 과목을 덮어쓰지 않는다', T().courseOf(it0)==='대수', T().courseOf(it0));
   T().CRSset([]);
-  ok('설문을 지우면 자동값으로 돌아온다', T().courseOf(it0)==='대수', T().courseOf(it0));
 
   console.log('\n[4] 칩을 누르면 그 과목만');
   const c1=chips().find(c=>c.textContent==='미적분Ⅱ');

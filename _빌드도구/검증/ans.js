@@ -136,10 +136,15 @@ async function find(q){
   S.ok('해설 자료가 실렸다', !!SOL);
   const skeys=Object.keys(SOL||{});
   S.ok('해설이 500개 넘는다', skeys.length>500, skeys.length);
-  S.ok('해설 그림이 회색으로 줄어 있다 (용량)', (()=>{
-    const tot=skeys.reduce((s,k)=>s+fs.statSync(path.join(APP,'img','해설',SOL[k][0])).size,0);
-    return tot/skeys.length < 40*1024;      /* 한 장 평균 40KB 아래 */
-  })(), '평균 '+Math.round(skeys.reduce((s,k)=>s+fs.statSync(path.join(APP,'img','해설',SOL[k][0])).size,0)/skeys.length/1024)+'KB');
+  /* 그림이 4천 장 가까워 stat 이 느리다. 한 번만 재고 두 군데에서 나눠 쓴다.
+     (예전에는 같은 셈을 두 번 해서 이 한 줄이 검사 시간의 절반을 먹었다) */
+  const solAvg=(()=>{
+    let tot=0;
+    for(const k of skeys) tot+=fs.statSync(path.join(APP,'img','해설',SOL[k][0])).size;
+    return tot/skeys.length;
+  })();
+  S.ok('해설 그림이 회색으로 줄어 있다 (용량)', solAvg < 40*1024,
+       '평균 '+Math.round(solAvg/1024)+'KB');
   /* ── 로고 ── */
   S.ok('머리글에 로고가 있다', /<img id="logo" src="img\/logo-mark\.png"/.test(raw));
   S.ok('로고 그림 두 벌이 있다',

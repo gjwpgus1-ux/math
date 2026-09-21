@@ -61,15 +61,18 @@ async function doPrint(H, id){
 
   console.log('\n[5] 필터');
   ok('범위 칩 3개', $('scopebar').querySelectorAll('.chip').length===3);
-  ok('필터 접기/열기 문구', $('ftoggle').childNodes[0].nodeValue==='필터 열기');
-  click($('ftoggle')); await wait(40);
+  /* 필터는 왼쪽 사이드바로 옮겼다. ☰ 로 여닫는다. */
+  ok('사이드바는 닫혀 있다', !doc.body.classList.contains('side'));
+  click($('sideBtn')); await wait(60);
+  ok('☰ 로 열린다', doc.body.classList.contains('side'));
   const g0=$('filters').querySelector('.fgroup');
   ok('구분 문구', [...g0.querySelectorAll('.chip')].map(c=>c.textContent).join()==='수능,9월모평,6월모평,고1전국,고2전국,고3전국',
      [...g0.querySelectorAll('.chip')].map(c=>c.textContent).join());
   const g1=$('filters').querySelectorAll('.fgroup')[1];
   ok('시행은 3월부터 차례대로', [...g1.querySelectorAll('.chip')].map(c=>c.textContent).join()==='3월,4월,5월,6월,7월,9월,10월,11월',
      [...g1.querySelectorAll('.chip')].map(c=>c.textContent).join());
-  click($('ftoggle')); await wait(40);
+  click($('sideClose')); await wait(40);
+  ok('✕ 로 닫힌다', !doc.body.classList.contains('side'));
   ok('화살표 안내', /←/.test($('keyhint').textContent) && /Ctrl/.test($('keyhint').textContent));
 
   console.log('\n[6] 성취기준');

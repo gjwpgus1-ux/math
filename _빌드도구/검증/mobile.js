@@ -25,13 +25,17 @@ function size(sel){
   const m=/font-size:([0-9.]+)px/.exec(body);
   return m? +m[1] : null;
 }
-const BASE=13.5;
+/* 2026-09-21 — 전체 글씨를 한 단계 줄였다. 바탕 12.5px, 사이트 이름 19px. */
+const BASE=12.5;
 [['.modeswbutton','모드 단추'],['button','여느 단추'],['#keyhint','화살표 안내'],
- ['#scopebarb','범위 이름표'],['.chip','범위 알약'],['.filters','필터'],
  ['h1.by','제작자'],['h1.tagline','부제'],['#status','결과 줄'],['#q','검색창']].forEach(p=>{
   S.ok(p[1]+' 글씨가 '+BASE+'px', size(p[0])===BASE, size(p[0]));
 });
-S.ok('사이트 이름만 크게 남는다', size('h1.brand')===21, size('h1.brand'));
+/* 필터는 사이드바로 옮기면서 한 칸 더 작게 잡았다 — 좁은 칸에 줄줄이 들어가므로 */
+[['.chip','범위 알약',11],['.filters','필터',12]].forEach(p=>{
+  S.ok(p[1]+' 글씨가 '+p[2]+'px', size(p[0])===p[2], size(p[0]));
+});
+S.ok('사이트 이름만 크게 남는다', size('h1.brand')===19, size('h1.brand'));
 S.ok('좁은 화면에서는 검색창만 16px (아이폰 자동확대 막기)',
      /@media\(max-width:620px\)\{#q\{font-size:16px\}\}/.test(CSS.replace(/ /g,'')));
 

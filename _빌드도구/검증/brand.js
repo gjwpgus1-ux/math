@@ -22,7 +22,11 @@ S.ok('부제가 옆에 있다', !!tag && tag.textContent.length>10, tag&&tag.tex
 S.ok('부제에 하는 일이 적혀 있다', /오답노트/.test(tag.textContent), tag.textContent);
 S.ok('제작자 표시가 남아 있다', /제작자 : 허선생/.test($('title').textContent));
 const css=fs.readFileSync(path.join(APP,'index.html'),'utf8').replace(/\s+/g,'');
-S.ok('이름이 부제보다 크다', /h1\.brand\{[^}]*font-size:21px/.test(css));
+/* 값을 박아 두면 글씨 크기를 손볼 때마다 깨진다. 큰지 작은지만 본다. */
+const _sz=re=>{const m=re.exec(css); return m?+m[1]:0;};
+S.ok('이름이 부제보다 크다',
+     _sz(/h1\.brand\{[^}]*font-size:([\d.]+)px/) > _sz(/h1\.tagline\{[^}]*font-size:([\d.]+)px/),
+     _sz(/h1\.brand\{[^}]*font-size:([\d.]+)px/)+' vs '+_sz(/h1\.tagline\{[^}]*font-size:([\d.]+)px/));
 S.ok('좁은 화면에서는 부제를 숨긴다', /h1\.tagline\{display:none\}/.test(css));
 
 /* ---- 모드 단추 ---- */

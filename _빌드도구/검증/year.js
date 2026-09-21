@@ -16,7 +16,7 @@ const uniqEx=q=>[...new Set(T().search(q).list.map(it=>T().EX[it[0]].n))];
   ok('2025년 3월 고1 → 2025년', T().heldYear(EX.find(e=>e.g==='고1'&&e.r==='3월'&&e.y==='2025'))==='2025');
 
   console.log('\n[2] 연도 필터 — 2025를 고르면 26학년도 수능·모평이 들어와야');
-  click($('ftoggle')); await wait(80);
+  click($('sideBtn')); await wait(80);
   const gYear=[...doc.querySelectorAll('#filters .fgroup')].find(g=>g.querySelector('b').textContent==='연도');
   const chips=[...gYear.querySelectorAll('.chip')].map(c=>c.textContent);
   const held=[...new Set(EX.map(e=>T().heldYear(e)))].sort().reverse();

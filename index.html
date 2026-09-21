@@ -18,15 +18,15 @@
        font-family:"Malgun Gothic","맑은 고딕",-apple-system,"Segoe UI",sans-serif;}
   header{position:sticky;top:0;z-index:20;background:var(--card);
          border-bottom:1px solid var(--line);padding:11px 20px 0;}
-  h1{margin:0 0 9px;font-size:17px;letter-spacing:-.2px;user-select:none;
+  h1{margin:0 0 9px;font-size:15px;letter-spacing:-.2px;user-select:none;
      display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-  h1 small{font-weight:400;color:var(--dim);font-size:12px}
+  h1 small{font-weight:400;color:var(--dim);font-size:11.5px}
   .modesw{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-left:4px}
-  .modesw button{border:none;border-radius:0;padding:6px 14px;font-size:13.5px;background:var(--card)}
-  h1 .by{font-size:13.5px;font-weight:500;color:var(--dim);margin-left:6px;vertical-align:middle}
+  .modesw button{border:none;border-radius:0;padding:6px 14px;font-size:12.5px;background:var(--card)}
+  h1 .by{font-size:12.5px;font-weight:500;color:var(--dim);margin-left:6px;vertical-align:middle}
   /* 이름은 크게, 설명은 옆에 작게 — 검색 노출은 설명이 맡는다 */
-  h1 .brand{font-size:21px;font-weight:800;letter-spacing:-.6px;color:var(--accent)}
-  h1 .tagline{font-size:13.5px;font-weight:400;color:var(--dim);vertical-align:middle;
+  h1 .brand{font-size:19px;font-weight:800;letter-spacing:-.6px;color:var(--accent)}
+  h1 .tagline{font-size:12.5px;font-weight:400;color:var(--dim);vertical-align:middle;
               padding-left:9px;margin-left:2px;border-left:1px solid var(--line)}
   @media (max-width:620px){ h1 .tagline{display:none} }
   /* 유사문항 비교·교과목·성취기준은 시작할 때 팝업으로 여쭙는 것이라
@@ -35,65 +35,67 @@
   h1 #cmpBtn,h1 #stdBtn,h1 #crsBtn{display:none}
   .modesw button.on{background:var(--accent);color:#fff;font-weight:600}
 
-  /* ── 최소화 모드 ──
-     로고 · 줍줍닷컴 · 검색창 · 탭만 남기고 윗줄을 모두 접는다.
-     문항을 크게 보며 검색만 할 때 윗줄이 화면을 많이 먹기 때문이다.
-     이 단추만은 두 모드에서 늘 보여야 다시 펼 수 있다. */
-  h1 #minBtn{margin-left:auto;padding:5px 10px;font-size:14px;line-height:1;color:var(--dim)}
-  h1 #minBtn .kb{margin-left:5px}
-  body.min h1 .tagline,
-  body.min h1 .by,
-  body.min h1 #sub,
-  body.min h1 .modesw,
-  body.min #clear,
-  body.min #helpBtn,
-  body.min #keysBtn,
-  body.min #fbar,
-  body.min #filters,
-  body.min #status,
-  body.min #studybar{display:none !important}
-  body.min header{padding-bottom:0}
-  body.min h1{margin-bottom:2px}
-  body.min #minBtn{color:var(--accent)}
   .searchbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
   /* 윗줄에 들어가는 글씨는 모두 학습모드 단추와 같은 13.5px 로 맞춘다.
      다만 좁은 화면에서는 검색창만 16px 로 둔다 — 그보다 작으면 아이폰이
      칸을 누를 때마다 화면을 저절로 확대해 버려 오히려 쓰기 나빠진다. */
-  #q{flex:1;min-width:220px;padding:10px 13px;font-size:13.5px;border:1px solid var(--line);
+  #q{flex:1;min-width:220px;padding:10px 13px;font-size:12.5px;border:1px solid var(--line);
      border-radius:8px;outline:none}
   @media (max-width:620px){ #q{font-size:16px} }
   #q:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
-  button{font:inherit;font-size:13.5px;cursor:pointer;border:1px solid var(--line);
+  button{font:inherit;font-size:12.5px;cursor:pointer;border:1px solid var(--line);
          background:var(--card);color:var(--ink);border-radius:7px;padding:8px 13px}
   button:hover{background:#f0f2f5}
   button:disabled{opacity:.35;cursor:default}
   button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
   button.primary:hover{filter:brightness(1.08)}
   button.warn{border-color:#e8c9c4;color:var(--danger)}
-  .filters{display:none;flex-direction:column;gap:7px;margin-top:10px;font-size:13.5px}
-  .filters.open{display:flex}
-  .fgroup{display:flex;gap:5px;align-items:center;flex-wrap:wrap;width:100%}
-  .fgroup b{color:var(--dim);font-weight:600;width:38px;flex:none;font-size:13.5px}
-  #fbar{display:flex;align-items:center;gap:8px;margin-top:9px;flex-wrap:wrap}
-  #scopebar{display:flex;align-items:center;gap:5px;padding-left:9px;margin-left:2px;border-left:1px solid var(--line)}
-  #scopebar b{font-size:13.5px;color:var(--dim);font-weight:600;margin-right:1px}
-  #keyhint{margin-left:auto;font-size:13.5px;color:var(--dim)}
+  /* ── 필터 사이드바 ──
+     왼쪽에서 밀려 나온다. 문항 자리를 밀지 않고 위에 덮는다 —
+     열고 닫을 때마다 격자가 다시 짜이면 보던 자리를 놓치기 때문이다. */
+  #side{position:fixed;left:0;top:0;bottom:0;width:286px;z-index:40;background:var(--card);
+        border-right:1px solid var(--line);box-shadow:2px 0 14px rgba(0,0,0,.07);
+        transform:translateX(-100%);transition:transform .18s;
+        display:flex;flex-direction:column}
+  body.side #side{transform:none}
+  #sideDim{position:fixed;inset:0;z-index:39;background:rgba(15,20,30,.16);
+           opacity:0;pointer-events:none;transition:opacity .18s}
+  body.side #sideDim{opacity:1;pointer-events:auto}
+  #side .shd{display:flex;align-items:center;gap:8px;padding:11px 13px;
+             border-bottom:1px solid var(--line)}
+  #side .shd b{font-size:13px}
+  #side .shd .sp{flex:1}
+  #side #sideClear{padding:3px 9px;font-size:11px;border-radius:99px}
+  #side #sideClose{padding:3px 8px;font-size:12px;color:var(--dim)}
+  #side .sbody{flex:1;overflow:auto;padding:11px 13px 26px}
+  h1 #sideBtn{padding:4px 9px;font-size:14px;line-height:1;color:var(--dim);margin-right:-2px}
+  h1 #sideBtn:hover{color:var(--accent)}
+
+  .filters{display:flex;flex-direction:column;gap:10px;font-size:12px}
+  .fgroup{display:flex;gap:4px;align-items:flex-start;flex-wrap:wrap;width:100%}
+  .fgroup b{color:var(--dim);font-weight:600;width:100%;flex:none;font-size:11px;
+            letter-spacing:.2px;margin-bottom:1px}
+  /* 과목 아래에 붙는 단원 — 한 칸 들여 쓰고 칩을 조금 작게 */
+  .fgroup.unit{padding-left:10px;border-left:2px solid var(--accent-soft);margin-top:-4px}
+  .fgroup.unit b{color:var(--accent);font-size:10.5px}
+  .fgroup.unit .chip{padding:3px 9px;font-size:11px}
+  .fgroup.unit.hint{color:var(--dim);font-size:11px;padding-top:1px;padding-bottom:1px}
+  #fbar{display:flex;align-items:center;gap:8px;margin-top:9px;flex-wrap:wrap;min-height:22px}
+  #scopebar{margin-bottom:2px}
+  #keyhint{margin-left:auto;font-size:12.5px;color:var(--dim)}
   #keyhint b{display:inline-block;background:#eceff3;border:1px solid var(--line);border-radius:4px;
-             padding:0 5px;font-size:11.5px;color:var(--ink);margin:0 1px}
+             padding:0 5px;font-size:11px;color:var(--ink);margin:0 1px}
   @media (max-width:900px){ #keyhint{display:none} }
-  #ftoggle{padding:5px 12px;font-size:12.5px;border-radius:99px}
-  #ftoggle .arrow{display:inline-block;transition:transform .15s;margin-left:3px}
-  #ftoggle.open .arrow{transform:rotate(180deg)}
-  #fsummary{font-size:12.5px;color:var(--accent);font-weight:600}
-  #fclear{padding:4px 10px;font-size:12px;border-radius:99px}
-  #adminBtn{padding:5px 12px;font-size:12.5px;border-radius:99px;
+  #fsummary{font-size:12px;color:var(--accent);font-weight:600}
+  #fclear{padding:4px 10px;font-size:11.5px;border-radius:99px}
+  #adminBtn{padding:5px 12px;font-size:12px;border-radius:99px;
             border-color:#cfd8e8;color:var(--accent)}
   #adminBtn .n{background:var(--danger);color:#fff;border-radius:99px;padding:0 6px;
-               font-size:11px;margin-left:5px}
-  .chip{padding:4px 11px;font-size:13.5px;border:1px solid var(--line);border-radius:99px;background:var(--card);
-        font-size:12.5px;cursor:pointer;user-select:none}
+               font-size:10.5px;margin-left:5px}
+  .chip{padding:4px 11px;font-size:12.5px;border:1px solid var(--line);border-radius:99px;background:var(--card);
+        font-size:12px;cursor:pointer;user-select:none}
   .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
-  #status{margin:9px 0;font-size:13.5px;color:var(--dim);min-height:18px}
+  #status{margin:9px 0;font-size:12.5px;color:var(--dim);min-height:18px}
   #status b{color:var(--ink)}
   .badge.held{background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0}
   .pill.alt{background:#fff4e5;color:#b45309}
@@ -102,18 +104,18 @@
   .pill.way:hover{background:#fff4e5}
   .pill.way.on{background:#b45309;color:#fff;border-color:#b45309}
   .pill{display:inline-block;background:var(--accent-soft);color:var(--accent);border-radius:5px;
-        padding:1px 7px;margin-right:4px;font-size:12px;font-weight:600}
-  .hint{color:var(--dim);font-size:12px}
+        padding:1px 7px;margin-right:4px;font-size:11.5px;font-weight:600}
+  .hint{color:var(--dim);font-size:11.5px}
 
   /* 위쪽 여백은 필터·상태줄과 붙어 보이지 않을 만큼 띄운다.
      상태줄이 없을 때도 같은 간격이 되도록 위 여백을 넉넉히 준다(여백은 겹쳐 접힌다). */
   #studybar{display:none;align-items:center;gap:8px;flex-wrap:wrap;margin:15px 0 10px;
             background:var(--accent-soft);border:1px solid #d7e3f7;border-radius:8px;padding:8px 11px}
   #studybar.on{display:flex}
-  #studybar .cnt{font-size:13px;font-weight:600;color:var(--accent)}
-  #studybar button{padding:6px 11px;font-size:12.5px}
+  #studybar .cnt{font-size:12px;font-weight:600;color:var(--accent)}
+  #studybar button{padding:6px 11px;font-size:12px}
   /* 가장 자주 누르는 단추는 조금 더 크고 진하게 — 눈이 먼저 가야 한다 */
-  #studybar button.big{padding:8px 18px;font-size:13.5px;font-weight:700;
+  #studybar button.big{padding:8px 18px;font-size:12.5px;font-weight:700;
                        box-shadow:0 1px 3px rgba(37,99,235,.35)}
   #mbar button.primary{font-weight:700;flex:1.5}
   /* 단추 안에 넣는 단축키 표시 */
@@ -121,19 +123,19 @@
       border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;
       background:#f4f6f8;color:var(--dim);font-family:Consolas,monospace;
       font-size:10.5px;line-height:15px;vertical-align:1px}
-  button.on .kb,#ftoggle.open .kb{background:#fff;border-color:#cfd8e8}
+  button.on .kb{background:#fff;border-color:#cfd8e8}
   /* 문항 카드 왼쪽 위의 자리 번호 — 숫자키와 짝 */
   .knum{display:inline-flex;align-items:center;justify-content:center;
         width:17px;height:17px;flex:none;border-radius:5px;background:#eceff3;
         border:1px solid var(--line);color:var(--dim);
-        font-family:Consolas,monospace;font-size:11px;line-height:1}
+        font-family:Consolas,monospace;font-size:10.5px;line-height:1}
   .card.sel .knum{background:var(--accent);border-color:var(--accent);color:#fff}
   #helpBtn{border-color:#bcd3f0;color:#1d4ed8;background:#f5f9ff;white-space:nowrap}
   #helpBtn:hover{background:#e9f2ff}
   .tip kbd{display:inline-block;min-width:20px;text-align:center;padding:1px 6px;margin:0 1px;
      border:1px solid #cbd2da;border-bottom-width:2px;border-radius:5px;background:#fbfcfd;
-     font-family:Consolas,monospace;font-size:12px;color:#333}
-  .tip table{border-collapse:collapse;margin:4px 0 8px 26px;font-size:13px}
+     font-family:Consolas,monospace;font-size:11.5px;color:#333}
+  .tip table{border-collapse:collapse;margin:4px 0 8px 26px;font-size:12px}
   .tip table td{border:1px solid var(--line);padding:5px 10px}
   .tip table td:first-child{background:var(--bg);font-family:Consolas,monospace;white-space:nowrap}
   #tipBtn{border-color:#e5c9a0;color:#b45309;background:#fffaf2}
@@ -143,17 +145,17 @@
   /* 탭은 글자 길이와 상관없이 폭이 같아야 줄이 흔들리지 않는다.
      이름이 길면 … 으로 줄이고, 전체 이름은 갖다 대면 나온다. */
   .tab{display:flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--line);
-       border-bottom:none;border-radius:8px 8px 0 0;background:#f1f3f6;font-size:12.5px;
+       border-bottom:none;border-radius:8px 8px 0 0;background:#f1f3f6;font-size:12px;
        cursor:pointer;white-space:nowrap;color:var(--dim);
        width:186px;flex:none;overflow:hidden}
   .tab .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .tab:hover{background:#e9ecf1}
   .tab.on{background:var(--card);color:var(--ink);font-weight:600;box-shadow:0 1px 0 0 var(--card)}
   .tab.sim{background:#eef7f0;color:var(--ok)}
-  .tab .x{opacity:.45;font-size:14px;line-height:1;flex:none}
+  .tab .x{opacity:.45;font-size:13px;line-height:1;flex:none}
   .tab .x:hover{opacity:1;color:var(--danger)}
-  .tab .cnt{color:var(--dim);font-weight:400;font-size:11.5px}
-  #tabsEmpty{color:var(--dim);font-size:12px;padding:8px 2px}
+  .tab .cnt{color:var(--dim);font-weight:400;font-size:11px}
+  #tabsEmpty{color:var(--dim);font-size:11.5px;padding:8px 2px}
 
   main{padding:18px 20px 60px;max-width:1700px;margin:0 auto}
   /* align-items:start — 칸마다 제 내용만큼만 높다.
@@ -161,17 +163,17 @@
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:16px;
         align-items:start}
   .grid.page4{grid-template-columns:repeat(4,1fr);gap:10px;align-items:start}
-  .grid.page4 .card .head{padding:6px 8px;gap:5px;font-size:11.5px}
+  .grid.page4 .card .head{padding:6px 8px;gap:5px;font-size:11px}
   .grid.page4 .card .head .fp{display:none}
-  .grid.page4 .card .head button{padding:3px 7px;font-size:11px}
+  .grid.page4 .card .head button{padding:3px 7px;font-size:10.5px}
   /* ── 화면을 키우면(또는 브라우저를 확대하면) 칸이 좁아진다 ──
      예전에는 4열에서 곧바로 1열로 떨어져, 중간 배율에서 글씨가 너무 작거나
      갑자기 한 문항만 보였다. 사이에 2열(2행 × 2문항) 단계를 둔다.
      한 쪽에 넣는 문항 수는 그대로 넷이라, 2열에서는 두 줄로 놓인다. */
   @media (min-width:821px) and (max-width:1240px){
     .grid.page4{grid-template-columns:repeat(2,1fr);gap:12px}
-    .grid.page4 .card .head{font-size:12px;padding:7px 9px}
-    .grid.page4 .card .head button{padding:4px 8px;font-size:11.5px}
+    .grid.page4 .card .head{font-size:11.5px;padding:7px 9px}
+    .grid.page4 .card .head button{padding:4px 8px;font-size:11px}
     .grid.page4 .card .head .fp{display:inline}
   }
   .card{background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;
@@ -179,13 +181,13 @@
   .card.flagged{border-color:#e8c9c4}
   .card.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
   .card .head{display:flex;align-items:center;gap:8px;padding:8px 11px;border-bottom:1px solid var(--line);
-              font-size:12.5px;color:var(--dim);background:#fafbfc;flex-wrap:wrap}
+              font-size:12px;color:var(--dim);background:#fafbfc;flex-wrap:wrap}
   .card .head .tag{font-weight:700;color:var(--ink)}
   .card .head .sp{flex:1}
-  .card .head .fp{font-size:11px;color:#9aa1ab;font-family:Consolas,monospace;user-select:all}
-  .card .head button{padding:4px 9px;font-size:12px;border-radius:6px}
+  .card .head .fp{font-size:10.5px;color:#9aa1ab;font-family:Consolas,monospace;user-select:all}
+  .card .head button{padding:4px 9px;font-size:11.5px;border-radius:6px}
   .card .head input[type=checkbox]{width:17px;height:17px;cursor:pointer;flex:none}
-  .badge{font-size:11px;padding:2px 7px;border-radius:99px;font-weight:600}
+  .badge{font-size:10.5px;padding:2px 7px;border-radius:99px;font-weight:600}
   .badge.rep{background:#fdecea;color:var(--danger)}
   .badge.ov{background:#e7f6ec;color:var(--ok)}
   .badge.pt{background:#f1efe8;color:#5f5e5a}
@@ -193,7 +195,7 @@
   .badge.neg{background:#fdecea;color:var(--danger)}
   .badge.ans{background:#e8f0fe;color:#1a4fa0;border:1px solid #cfdffb}
   .badge.ansno{background:#f5f5f4;color:#a3a29e;border:1px solid #ebeae7;font-weight:500}
-  .ansbtn{font-size:11px;padding:2px 8px;border-radius:99px;font-weight:600;
+  .ansbtn{font-size:10.5px;padding:2px 8px;border-radius:99px;font-weight:600;
           background:#eef4ff;color:#1a4fa0;border:1px solid #cfdffb;cursor:pointer}
   .ansbtn:hover{background:#dde9ff}
   .solbox{max-height:64vh;overflow:auto;border:1px solid var(--line);border-radius:8px;
@@ -207,7 +209,7 @@
   .card .body:hover{background:#fcfdff}
   .card img{width:100%;height:auto;display:block}
   .card .cue{position:absolute;right:12px;top:10px;background:rgba(37,99,235,.92);color:#fff;
-             font-size:11.5px;padding:3px 8px;border-radius:5px;opacity:0;transition:opacity .15s;
+             font-size:11px;padding:3px 8px;border-radius:5px;opacity:0;transition:opacity .15s;
              pointer-events:none}
   .card .body:hover .cue{opacity:1}
   .empty{padding:60px 20px;text-align:center;color:var(--dim);line-height:1.9}
@@ -215,12 +217,12 @@
   #more{display:block;margin:26px auto 0;padding:11px 26px}
 
   .nav{position:fixed;top:50%;transform:translateY(-50%);z-index:22;width:44px;height:78px;
-       border-radius:10px;font-size:24px;line-height:1;background:rgba(255,255,255,.94);
+       border-radius:10px;font-size:22px;line-height:1;background:rgba(255,255,255,.94);
        box-shadow:0 2px 10px rgba(0,0,0,.13);display:none;align-items:center;justify-content:center}
   .nav.on{display:flex}
   #navPrev{left:8px} #navNext{right:8px}
   #pager{display:none;justify-content:center;align-items:center;gap:12px;margin-top:20px;
-         font-size:13px;color:var(--dim)}
+         font-size:12px;color:var(--dim)}
   #pager.on{display:flex}
   #pager b{color:var(--ink)}
 
@@ -229,59 +231,66 @@
           z-index:30;display:flex;flex-direction:column}
   .drawer.open{transform:none}
   .drawer .th{padding:13px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}
-  .drawer .th b{flex:1;font-size:14px}
+  .drawer .th b{flex:1;font-size:13px}
   .drawer .tl{flex:1;overflow:auto;padding:10px 16px}
   .drawer .th{position:sticky;top:0;background:var(--card);z-index:2}
   .drawer .tf{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:8px;flex-wrap:wrap}
   /* 비교데이터 — 기준·왼쪽·오른쪽을 클릭 없이 나란히 */
   .cmprow{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px}
   .cmprow .ctop{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:8px}
-  .cmprow .ctop .pick{font-weight:600;font-size:13.5px}
-  .cmprow .ctop .meta{color:var(--dim);font-size:12px;font-family:Consolas,monospace}
+  .cmprow .ctop .pick{font-weight:600;font-size:12.5px}
+  .cmprow .ctop .meta{color:var(--dim);font-size:11.5px;font-family:Consolas,monospace}
   .cmprow .ctop .sp{flex:1}
   .cmpimgs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
   .cmpimgs figure{margin:0;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff}
   .cmpimgs figure.anchor{border-color:#9aa1ab}
   .cmpimgs figure.picked{border:2px solid var(--accent);box-shadow:0 0 0 3px #dbeafe}
-  .cmpimgs figcaption{font-size:11.5px;padding:5px 8px;background:var(--bg);color:var(--dim);
+  .cmpimgs figcaption{font-size:11px;padding:5px 8px;background:var(--bg);color:var(--dim);
                       border-bottom:1px solid var(--line);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .cmpimgs figure.picked figcaption{background:#eff5ff;color:var(--accent);font-weight:600}
   .cmpimgs figure.anchor figcaption{font-weight:600;color:var(--ink)}
   .cmpimgs img{display:block;width:100%;max-height:320px;object-fit:contain;object-position:top}
   @media (max-width:800px){ .cmpimgs{grid-template-columns:1fr} }
 
-  .rrow{border:1px solid var(--line);border-radius:8px;padding:9px 10px;margin-bottom:8px;font-size:13px;max-width:1000px}
+  .rrow{border:1px solid var(--line);border-radius:8px;padding:9px 10px;margin-bottom:8px;font-size:12px;max-width:1000px}
   .rrow.done{opacity:.55}
   .rrow .rt{font-weight:600;margin-bottom:2px}
-  .rrow .rm{color:var(--dim);font-size:12.5px;margin:3px 0;white-space:pre-wrap;word-break:break-word}
-  .rrow .rf{font-family:Consolas,monospace;font-size:11px;color:#9aa1ab}
+  .rrow .rm{color:var(--dim);font-size:12px;margin:3px 0;white-space:pre-wrap;word-break:break-word}
+  .rrow .rf{font-family:Consolas,monospace;font-size:10.5px;color:#9aa1ab}
   .rrow .rb{display:flex;gap:5px;margin-top:7px;flex-wrap:wrap}
-  .rrow .rb button{padding:3px 9px;font-size:12px;border-radius:6px}
+  .rrow .rb button{padding:3px 9px;font-size:11.5px;border-radius:6px}
   /* ---- 방문 통계 ---- */
   .stcards{display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 14px}
   .stcard{flex:1 1 110px;border:1px solid var(--line);border-radius:9px;padding:9px 11px;background:var(--card)}
-  .stcard b{display:block;font-size:21px;line-height:1.25;color:var(--accent)}
-  .stcard span{font-size:11.5px;color:var(--dim)}
+  .stcard b{display:block;font-size:19px;line-height:1.25;color:var(--accent)}
+  .stcard span{font-size:11px;color:var(--dim)}
   .stsec{margin:0 0 18px}
-  .stsec h4{margin:0 0 7px;font-size:13px;color:var(--ink)}
-  .stsec h4 em{font-style:normal;color:var(--dim);font-weight:400;font-size:11.5px;margin-left:6px}
+  .stsec h4{margin:0 0 7px;font-size:12px;color:var(--ink)}
+  .stsec h4 em{font-style:normal;color:var(--dim);font-weight:400;font-size:11px;margin-left:6px}
   .stwrap{border:1px solid var(--line);border-radius:9px;padding:10px 12px 4px;background:var(--card);overflow-x:auto}
-  .sttab{width:100%;border-collapse:collapse;font-size:12.5px}
+  .sttab{width:100%;border-collapse:collapse;font-size:12px}
   .sttab td{border-bottom:1px solid var(--line);padding:5px 8px}
   .sttab td.r{text-align:right;color:var(--dim);white-space:nowrap;width:62px}
   .sttab td.k{color:var(--dim);width:26px;text-align:right}
   .sttab tr:last-child td{border-bottom:none}
   .stcols{display:flex;gap:12px;flex-wrap:wrap}
   .stcols>div{flex:1 1 300px;min-width:280px}
-  .stnone{padding:16px 4px;color:var(--dim);font-size:12.5px}
+  .stnone{padding:16px 4px;color:var(--dim);font-size:12px}
   /* 맨 아래 꼬리말 — 소개·개인정보 처리방침·문의로 들어가는 자리 */
   #foot{margin:26px 0 6px;padding:16px 4px 0;border-top:1px solid var(--line);
-        color:var(--dim);font-size:12.5px;line-height:1.8}
+        color:var(--dim);font-size:12px;line-height:1.8}
   #foot a{color:var(--dim);margin-right:16px;text-decoration:none}
   #foot a:hover{color:var(--accent);text-decoration:underline}
-  #foot .fnote{display:block;margin-top:6px;font-size:11.5px;color:#9aa1ab}
+  #foot .fnote{display:block;margin-top:6px;font-size:11px;color:#9aa1ab}
+  /* 관리자 — 카드 머리의 «과목·단원» 단추와 고치는 창 */
+  .cubtn{border-color:#cfd8e8;color:var(--accent)}
+  .cubtn.fixed{background:var(--accent);border-color:var(--accent);color:#fff}
+  .fixbox{display:flex;flex-direction:column;gap:11px;margin:12px 0 4px}
+  .fixrow{display:flex;gap:9px;align-items:flex-start}
+  .fixrow b{width:38px;flex:none;color:var(--dim);font-size:11.5px;padding-top:4px}
+  .fixchips{display:flex;gap:5px;flex-wrap:wrap}
   .atab{display:flex;gap:6px;padding:9px 12px 0;flex-wrap:wrap}
-  .atab button{border-radius:8px 8px 0 0;padding:6px 11px;font-size:12.5px;border-bottom:none}
+  .atab button{border-radius:8px 8px 0 0;padding:6px 11px;font-size:12px;border-bottom:none}
   .atab button.on{background:var(--accent-soft);border-color:#cfd8e8;color:var(--accent);font-weight:600}
 
   .modal{position:fixed;inset:0;background:rgba(17,24,39,.45);z-index:50;
@@ -296,11 +305,11 @@
   .mbox::after{content:"";position:absolute;right:16px;top:14px;width:34px;height:34px;
                background:url(img/logo-mark.png) no-repeat center/contain;opacity:.5;
                pointer-events:none}
-  .mbox h3{margin:0 44px 4px 0;font-size:15px}
-  .mbox p.sub{margin:0 0 14px;color:var(--dim);font-size:12.5px}
-  .mbox label{display:block;font-size:12.5px;color:var(--dim);margin:10px 0 4px}
+  .mbox h3{margin:0 44px 4px 0;font-size:14px}
+  .mbox p.sub{margin:0 0 14px;color:var(--dim);font-size:12px}
+  .mbox label{display:block;font-size:12px;color:var(--dim);margin:10px 0 4px}
   .mbox input[type=text],.mbox input[type=password],.mbox textarea,.mbox select{
-    width:100%;padding:9px 11px;font:inherit;font-size:14px;border:1px solid var(--line);
+    width:100%;padding:9px 11px;font:inherit;font-size:13px;border:1px solid var(--line);
     border-radius:7px;outline:none}
   .mbox textarea{min-height:74px;resize:vertical}
   .mbox .mb{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
@@ -308,33 +317,33 @@
   #rpKinds{display:flex;flex-direction:column;gap:2px}
   #rpKinds label{display:flex;align-items:flex-start;gap:9px;margin:0;padding:8px 10px;
                  border:1px solid var(--line);border-radius:8px;cursor:pointer;
-                 font-size:13.5px;color:var(--ink);line-height:1.45}
+                 font-size:12.5px;color:var(--ink);line-height:1.45}
   #rpKinds label:hover{background:var(--accent-soft)}
   #rpKinds label.on{border-color:var(--accent);background:var(--accent-soft)}
   #rpKinds input{width:16px;height:16px;margin:1px 0 0;flex:none;cursor:pointer}
   .mbox.wide{max-width:720px;max-height:86vh;overflow:auto}
-  .tip{font-size:13.5px;line-height:1.65}
-  .tip h4{margin:16px 0 6px;font-size:13.5px;color:var(--accent);
+  .tip{font-size:12.5px;line-height:1.65}
+  .tip h4{margin:16px 0 6px;font-size:12.5px;color:var(--accent);
           display:flex;align-items:center;gap:7px}
   .tip h4 i{font-style:normal;background:var(--accent);color:#fff;border-radius:99px;
-            width:19px;height:19px;line-height:19px;text-align:center;font-size:11.5px;flex:none}
+            width:19px;height:19px;line-height:19px;text-align:center;font-size:11px;flex:none}
   .tip p{margin:0 0 6px;padding-left:26px}
   .tip .ex{margin:4px 0 8px 26px;padding:7px 10px;background:var(--bg);
            border-left:3px solid var(--accent);border-radius:0 6px 6px 0;
-           font-family:Consolas,monospace;font-size:12.5px}
+           font-family:Consolas,monospace;font-size:12px}
   .tip .warn2{margin:4px 0 8px 26px;padding:7px 10px;background:#fff4e5;color:#8a4b09;
-              border-radius:6px;font-size:12.5px}
-  .tip .lead{margin:0 0 4px;padding:0;color:var(--dim);font-size:13px}
+              border-radius:6px;font-size:12px}
+  .tip .lead{margin:0 0 4px;padding:0;color:var(--dim);font-size:12px}
 
   #cmp{position:fixed;inset:0;background:var(--bg);z-index:40;display:none;flex-direction:column}
   #cmp.open{display:flex}
   #cmp .ch{background:var(--card);border-bottom:1px solid var(--line);padding:11px 18px;
            display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-  #cmp .ch b{font-size:15px}
+  #cmp .ch b{font-size:14px}
   #cmp .ch .sp{flex:1}
-  #cmp .ch input{padding:7px 11px;font:inherit;font-size:13px;border:1px solid var(--line);
+  #cmp .ch input{padding:7px 11px;font:inherit;font-size:12px;border:1px solid var(--line);
                  border-radius:7px;width:130px}
-  #cmp .cq{text-align:center;font-size:15px;padding:12px 10px 4px}
+  #cmp .cq{text-align:center;font-size:14px;padding:12px 10px 4px}
   #cmp .cq b{color:var(--accent)}
   #cmp .cb{flex:1;display:grid;grid-template-columns:1fr 2fr 230px;gap:12px;
            padding:12px 18px 14px;overflow:hidden;min-height:0;align-items:start}
@@ -345,23 +354,23 @@
   #cmp .cc.pick.on{border-color:var(--accent);border-width:2px;
                    transform:scale(1.015);box-shadow:0 4px 14px rgba(37,99,235,.16)}
   #cmp .cc .tick{margin-left:auto;width:18px;height:18px;border-radius:5px;
-                 border:1px solid var(--line);color:transparent;font-size:12px;
+                 border:1px solid var(--line);color:transparent;font-size:11.5px;
                  line-height:17px;text-align:center;flex:none}
   #cmp .cc.pick.on .tick{background:var(--accent);border-color:var(--accent);color:#fff}
   /* 오른쪽 안내판 — 비교·성취기준 두 화면이 함께 씁니다 */
   .crail{display:flex;flex-direction:column;gap:9px;min-height:0;
          background:var(--accent-soft);border:1px solid #d6e2f5;border-radius:10px;padding:13px 12px}
   .crail .sp{flex:1}
-  .crail button{padding:12px 10px;font-size:14px;width:100%}
+  .crail button{padding:12px 10px;font-size:13px;width:100%}
   .crail .primary{font-weight:600}
-  .crail .rq{font-size:17px;font-weight:600;color:var(--accent);line-height:1.4}
+  .crail .rq{font-size:15px;font-weight:600;color:var(--accent);line-height:1.4}
   .crail .rq b{color:var(--ink)}
-  .crail .rtag{font-size:12px;color:var(--accent);line-height:1.55;
+  .crail .rtag{font-size:11.5px;color:var(--accent);line-height:1.55;
                border-top:1px solid #d6e2f5;border-bottom:1px solid #d6e2f5;padding:8px 0}
   .crail .rtag span{color:#6b86ad}
-  .crail .rhint{font-size:11.5px;color:#6b86ad;line-height:1.6}
+  .crail .rhint{font-size:11px;color:#6b86ad;line-height:1.6}
   .crail .rhint b{display:inline-block;background:#fff;border:1px solid #d6e2f5;
-                  border-radius:4px;padding:0 5px;font-size:11px;color:var(--accent);margin:0 1px}
+                  border-radius:4px;padding:0 5px;font-size:10.5px;color:var(--accent);margin:0 1px}
   @media (max-width:1000px){
     #cmp .cb,#std .sb{grid-template-columns:1fr;overflow:auto}
     #cmp .cmid{grid-template-columns:1fr 1fr}
@@ -369,26 +378,26 @@
   #cmp .cc{background:var(--card);border:1px solid var(--line);border-radius:10px;
            display:flex;flex-direction:column;overflow:hidden}
   #cmp .cc.anchor{border-color:var(--accent);border-width:2px}
-  #cmp .cl{padding:7px 11px;font-size:12.5px;font-weight:600;border-bottom:1px solid var(--line);
+  #cmp .cl{padding:7px 11px;font-size:12px;font-weight:600;border-bottom:1px solid var(--line);
            background:#fafbfc;display:flex;align-items:center;gap:7px}
   #cmp .cl .lb{background:var(--accent-soft);color:var(--accent);border-radius:5px;
-               padding:1px 8px;font-size:12px}
+               padding:1px 8px;font-size:11.5px}
   #cmp .ci{flex:1;overflow:auto;padding:9px;background:#fff;max-height:40vh}
   #cmp .ci img{width:100%;height:auto;display:block}
   #cmp .cf{background:var(--card);border-top:1px solid var(--line);padding:11px 18px;
            display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center}
-  #cmp .cf button{padding:10px 18px;font-size:14px}
+  #cmp .cf button{padding:10px 18px;font-size:13px}
   #cmp .cf .k{display:inline-block;background:#eceff3;border-radius:4px;padding:0 5px;
-              font-size:11.5px;margin-right:5px;color:var(--dim)}
+              font-size:11px;margin-right:5px;color:var(--dim)}
   #cmp .cf .hint{width:100%;text-align:center;margin-top:4px}
   #cmp.gate #cmpClose{display:none}
   #std .ch{background:var(--card);border-bottom:1px solid var(--line);padding:11px 18px;
            display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-  #std .ch b{font-size:15px}
+  #std .ch b{font-size:14px}
   #std .ch .sp{flex:1}
   #cmp .gatebar{width:100%;height:6px;background:#e2e5ea;border-radius:99px;overflow:hidden;margin-top:8px}
   #cmp .gatebar i{display:block;height:100%;background:var(--accent);width:0;transition:width .25s}
-  #cmpGateMsg,#stdGateMsg{font-size:13px;color:var(--accent);font-weight:600}
+  #cmpGateMsg,#stdGateMsg{font-size:12px;color:var(--accent);font-weight:600}
 
   /* 교과목 고르기 — 성취기준 화면과 같은 짜임을 쓴다 */
   #crs{position:fixed;inset:0;background:var(--bg);z-index:40;display:none;flex-direction:column}
@@ -396,42 +405,42 @@
   #crs.gate #crsClose{display:none}
   #crs .ch{background:var(--card);border-bottom:1px solid var(--line);padding:11px 18px;
            display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-  #crs .ch b{font-size:15px}
+  #crs .ch b{font-size:14px}
   #crs .ch .sp{flex:1}
   #crs .sb{flex:1;display:grid;grid-template-columns:40% 1fr;gap:14px;
            padding:12px 18px 14px;overflow:hidden;min-height:0}
   #crs .cc{background:var(--card);border:1px solid var(--line);border-radius:10px;
            display:flex;flex-direction:column;overflow:hidden;min-height:0}
   #crs .cc.anchor{border-color:var(--accent);border-width:2px}
-  #crs .cl{padding:8px 12px;font-size:13px;font-weight:600;border-bottom:1px solid var(--line);
+  #crs .cl{padding:8px 12px;font-size:12px;font-weight:600;border-bottom:1px solid var(--line);
            background:#fafbfc;display:flex;align-items:center;gap:7px}
   #crs .cl .lb{background:var(--accent-soft);color:var(--accent);border-radius:5px;
-               padding:1px 8px;font-size:12px}
+               padding:1px 8px;font-size:11.5px}
   #crs .ci{flex:1;overflow:auto;padding:10px;background:#fff}
   #crs .ci img{width:100%;height:auto;display:block}
   #crs .sp2{display:flex;flex-direction:column;min-height:0;gap:10px;
             background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
   #crs .stop{flex:none}
-  #crs .stop .rq{font-size:19px;font-weight:600;color:var(--accent);line-height:1.35}
+  #crs .stop .rq{font-size:17px;font-weight:600;color:var(--accent);line-height:1.35}
   #crs .stop .rq b{color:var(--ink)}
-  #crs .stop .rtag{font-size:12.5px;color:var(--accent);line-height:1.5;margin-top:4px;
+  #crs .stop .rtag{font-size:12px;color:var(--accent);line-height:1.5;margin-top:4px;
                    background:var(--accent-soft);border-radius:7px;padding:7px 10px}
   #crs .stop .rtag span{color:#6b86ad}
-  #crs .shead{font-size:12.5px;color:var(--dim);margin:9px 0 0}
+  #crs .shead{font-size:12px;color:var(--dim);margin:9px 0 0}
   #crsBtns{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:7px}
-  #crsBtns button{width:100%;text-align:left;padding:12px 14px;font-size:15.5px;
+  #crsBtns button{width:100%;text-align:left;padding:12px 14px;font-size:14.5px;
                   display:flex;align-items:center;gap:11px}
   #crsBtns button .k{flex:none;background:#eceff3;border-radius:5px;padding:1px 8px;
-                     font-size:12px;color:var(--dim)}
-  #crsBtns button .sub{margin-left:auto;font-size:12px;color:var(--dim)}
+                     font-size:11.5px;color:var(--dim)}
+  #crsBtns button .sub{margin-left:auto;font-size:11.5px;color:var(--dim)}
   #crsBtns button:hover{border-color:var(--accent);background:#f6f9ff}
   #crsBtns button.none{color:var(--dim)}
   /* «잘 모르겠음» 은 보기가 아니라 빠져나가는 길이라 한 칸 띄워 둔다 */
   #crsBtns button.unsure{margin-top:4px;border-style:dashed}
   #crs .sfoot{flex:none;border-top:1px solid var(--line);padding-top:10px}
-  #crs .rhint{font-size:11.5px;color:var(--dim);line-height:1.6}
+  #crs .rhint{font-size:11px;color:var(--dim);line-height:1.6}
   #crs .rhint b{display:inline-block;background:#eceff3;border:1px solid var(--line);
-                border-radius:4px;padding:0 5px;font-size:11px;color:var(--ink);margin:0 1px}
+                border-radius:4px;padding:0 5px;font-size:10.5px;color:var(--ink);margin:0 1px}
   #crs .gatebar{width:100%;height:6px;background:#e2e5ea;border-radius:99px;overflow:hidden;margin-top:8px}
   #crs .gatebar i{display:block;height:100%;background:var(--accent);width:0;transition:width .25s}
   @media (max-width:900px){ #crs .sb{grid-template-columns:1fr;overflow:auto} }
@@ -445,65 +454,65 @@
   #std .cc{background:var(--card);border:1px solid var(--line);border-radius:10px;
            display:flex;flex-direction:column;overflow:hidden;min-height:0}
   #std .cc.anchor{border-color:var(--accent);border-width:2px}
-  #std .cl{padding:8px 12px;font-size:13px;font-weight:600;border-bottom:1px solid var(--line);
+  #std .cl{padding:8px 12px;font-size:12px;font-weight:600;border-bottom:1px solid var(--line);
            background:#fafbfc;display:flex;align-items:center;gap:7px}
   #std .cl .lb{background:var(--accent-soft);color:var(--accent);border-radius:5px;
-               padding:1px 8px;font-size:12px}
+               padding:1px 8px;font-size:11.5px}
   #std .ci{flex:1;overflow:auto;padding:10px;background:#fff}
   #std .ci img{width:100%;height:auto;display:block}
 
   #std .sp2{display:flex;flex-direction:column;min-height:0;gap:8px;
             background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
   #std .stop{flex:none}
-  #std .stop .rq{font-size:19px;font-weight:600;color:var(--accent);line-height:1.35}
+  #std .stop .rq{font-size:17px;font-weight:600;color:var(--accent);line-height:1.35}
   #std .stop .rq b{color:var(--ink)}
-  #std .stop .rtag{font-size:12.5px;color:var(--accent);line-height:1.5;margin-top:4px;
+  #std .stop .rtag{font-size:12px;color:var(--accent);line-height:1.5;margin-top:4px;
                    background:var(--accent-soft);border-radius:7px;padding:7px 10px}
   #std .stop .rtag span{color:#6b86ad}
-  #std .shead{font-size:12.5px;color:var(--dim);margin:9px 0 0}
+  #std .shead{font-size:12px;color:var(--dim);margin:9px 0 0}
   #stdScope{color:var(--accent);font-weight:600}
   #stdCands{overflow:auto;display:flex;flex-direction:column;gap:7px;min-height:0;flex:1}
   #stdHits{overflow:auto;max-height:30vh;display:flex;flex-direction:column;gap:7px;margin-top:7px}
   #std .srch{flex:none}
-  #std .srch input{width:100%;padding:10px 12px;font:inherit;font-size:14px;
+  #std .srch input{width:100%;padding:10px 12px;font:inherit;font-size:13px;
                    border:1px solid var(--line);border-radius:8px;box-sizing:border-box}
   #std .sfoot{flex:none;border-top:1px solid var(--line);padding-top:10px}
   #std .sbtn{display:flex;gap:8px}
-  #std .sbtn button{flex:1;padding:12px 8px;font-size:14px}
+  #std .sbtn button{flex:1;padding:12px 8px;font-size:13px}
   #std .sbtn .primary{flex:1.6;font-weight:600}
-  #std .rhint{font-size:11.5px;color:var(--dim);line-height:1.6;margin-top:7px}
+  #std .rhint{font-size:11px;color:var(--dim);line-height:1.6;margin-top:7px}
   #std .rhint b{display:inline-block;background:#eceff3;border:1px solid var(--line);
-                border-radius:4px;padding:0 5px;font-size:11px;color:var(--ink);margin:0 1px}
+                border-radius:4px;padding:0 5px;font-size:10.5px;color:var(--ink);margin:0 1px}
   #std .gatebar{width:100%;height:6px;background:#e2e5ea;border-radius:99px;overflow:hidden;margin-top:8px}
   #std .gatebar i{display:block;height:100%;background:var(--accent);width:0;transition:width .25s}
 
   .scand{display:flex;gap:10px;align-items:flex-start;text-align:left;width:100%;
          background:var(--card);border:1px solid var(--line);border-radius:9px;
-         padding:10px 12px;font:inherit;font-size:15px;cursor:pointer;line-height:1.5}
+         padding:10px 12px;font:inherit;font-size:14px;cursor:pointer;line-height:1.5}
   .scand:hover{border-color:var(--accent);background:#f6f9ff}
   .scand .k{flex:none;background:#eceff3;border-radius:5px;padding:1px 7px;
-            font-size:11.5px;color:var(--dim);margin-top:2px}
+            font-size:11px;color:var(--dim);margin-top:2px}
   .scand .tx{flex:1;min-width:0}
-  .scand .cd{font-family:Consolas,monospace;font-size:12px;color:var(--accent);font-weight:600}
-  .scand .sj{font-size:12px;color:var(--dim);margin-left:6px}
-  .scand .bd{margin-top:3px;line-height:1.5;font-size:15px}
-  .scand .why{margin-top:4px;font-size:12px;color:#b45309}
+  .scand .cd{font-family:Consolas,monospace;font-size:11.5px;color:var(--accent);font-weight:600}
+  .scand .sj{font-size:11.5px;color:var(--dim);margin-left:6px}
+  .scand .bd{margin-top:3px;line-height:1.5;font-size:14px}
+  .scand .why{margin-top:4px;font-size:11.5px;color:#b45309}
   .scand.prop{border-color:#f0c98a;background:#fffaf2}
   .scand .ck{flex:none;width:19px;height:19px;border-radius:5px;border:1px solid var(--line);
-             color:transparent;font-size:12px;line-height:18px;text-align:center;margin-top:2px}
+             color:transparent;font-size:11.5px;line-height:18px;text-align:center;margin-top:2px}
   .scand.on{border-color:var(--accent);background:#eff5ff;box-shadow:0 0 0 2px #dbeafe}
   .scand.on .ck{background:var(--accent);border-color:var(--accent);color:#fff}
   #stdSel{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:9px;min-height:22px;align-items:center}
-  #stdSel .none{font-size:12px;color:var(--dim)}
+  #stdSel .none{font-size:11.5px;color:var(--dim)}
   #stdSel .stag{background:var(--accent-soft);color:var(--accent);border-radius:99px;
-                padding:3px 6px 3px 10px;font-size:12.5px;font-family:Consolas,monospace;
+                padding:3px 6px 3px 10px;font-size:12px;font-family:Consolas,monospace;
                 display:inline-flex;align-items:center;gap:5px}
   #stdSel .stag i{font-style:normal;cursor:pointer;background:#fff;border-radius:99px;
-                  width:16px;height:16px;line-height:15px;text-align:center;font-size:12px}
+                  width:16px;height:16px;line-height:15px;text-align:center;font-size:11.5px}
   @media (max-width:900px){ #std .sb{grid-template-columns:1fr;overflow:auto} }
 
   #toast{position:fixed;left:50%;bottom:32px;transform:translateX(-50%) translateY(20px);
-         background:#111827;color:#fff;padding:11px 20px;border-radius:8px;font-size:14px;
+         background:#111827;color:#fff;padding:11px 20px;border-radius:8px;font-size:13px;
          opacity:0;pointer-events:none;transition:all .2s;z-index:60;max-width:80vw;text-align:center}
   #toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 
@@ -630,7 +639,7 @@
 <body>
 
 <header>
-  <h1 id="title"><img id="logo" src="img/logo-mark.png" alt="줍줍닷컴"><b class="brand">줍줍닷컴</b> <span class="tagline">빠른 오답노트와 기출문항 검색</span> <span class="by">제작자 : 허선생</span> <small id="sub"></small>
+  <h1 id="title"><button id="sideBtn" title="필터 열기 (f)">☰</button><img id="logo" src="img/logo-mark.png" alt="줍줍닷컴"><b class="brand">줍줍닷컴</b> <span class="tagline">빠른 오답노트와 기출문항 검색</span> <span class="by">제작자 : 허선생</span> <small id="sub"></small>
     <span class="modesw">
       <button id="modeStudy">학습모드</button>
       <button id="modeSearch" class="on">복붙모드</button>
@@ -639,8 +648,6 @@
     <button id="cmpBtn">유사문항 비교</button>
     <button id="crsBtn">교과목 고르기</button>
     <button id="stdBtn">성취기준 달기</button>
-    <!-- 최소화 — 켜면 로고·이름·검색창·탭만 남는다. 이 단추는 늘 보인다. -->
-    <button id="minBtn" title="최소화 — 검색창만 남깁니다 (m)">▴<i class="kb">m</i></button>
   </h1>
   <div class="searchbar">
     <input id="q" placeholder="검색어를 입력하세요          /  키를 누르면 여기로 옵니다" autocomplete="off">
@@ -649,14 +656,11 @@
     <button id="keysBtn" title="키보드 단축키">⌨ 단축키<i class="kb">k</i></button>
   </div>
   <div id="fbar">
-    <button id="ftoggle">필터 열기<i class="kb">f</i><span class="arrow">▾</span></button>
-    <span id="scopebar"><b>범위</b></span>
     <span id="fsummary"></span>
     <button id="fclear" style="display:none">필터 해제</button>
     <span id="keyhint"><b>←</b> <b>→</b> 다음 4문항 · <b>Ctrl</b>+<b>←</b> <b>→</b> 탭 이동</span>
     <button id="adminBtn" style="display:none">관리자<span class="n" id="adminN" style="display:none">0</span></button>
   </div>
-  <div class="filters" id="filters"></div>
   <div id="status"></div>
   <div id="studybar">
     <span class="cnt" id="selCnt">선택 0개</span>
@@ -670,6 +674,23 @@
   </div>
   <div id="tabs"></div>
 </header>
+
+<!-- ── 필터 사이드바 ──
+     예전에는 머리글 아래에 펼쳐 놓았는데, 과목 아래 단원까지 붙으면서
+     윗줄이 너무 두꺼워졌다. 왼쪽으로 빼내 ☰ 로 여닫는다. -->
+<div id="sideDim"></div>
+<aside id="side">
+  <div class="shd">
+    <b>필터</b>
+    <span class="sp"></span>
+    <button id="sideClear">모두 해제</button>
+    <button id="sideClose" title="닫기 (Esc)">✕</button>
+  </div>
+  <div class="sbody">
+    <div class="fgroup" id="scopebar"><b>범위</b></div>
+    <div class="filters" id="filters"></div>
+  </div>
+</aside>
 
 <main>
   <div class="grid" id="grid"></div>
@@ -707,7 +728,8 @@
     <button id="atabUse">방문 통계</button>
     <button id="atabOv">교체한 이미지</button>
     <button id="atabCmp">비교데이터</button>
-    <button id="atabCrs">교과목</button>
+    <button id="atabFix">과목·단원</button>
+    <button id="atabCrs">교과목 설문</button>
     <button id="atabStd">성취기준</button>
     <button id="atabSync">수집 상태</button>
   </div>
@@ -1353,28 +1375,36 @@
        · 가형 — 거기에 미적분Ⅱ·기하까지
      그래서 문항마다 과목을 적어 둔 data/course.js 를 따로 둔다.
 
-     보는 차례는 셋이다.
-       ① 설문에서 여럿이 같은 답을 해 «확정» 된 것  — 사람 손이 이긴다
-       ② 자동으로 가려 둔 것 (course.js)
-       ③ 그래도 없으면 시험 이름 (가형·나형·공통 …)
-     ③ 이 있어서, 못 가린 문항도 여전히 어딘가에는 걸린다. */
+     data/course.js 는 «그림경로: [과목, 단원]» 이다.
+
+     보는 차례는 둘이다.
+       ① 관리자가 손으로 고친 것 (이 브라우저에 쌓이고, JSON으로 내려받을 수 있다)
+       ② 자동으로 가려 둔 것 (course.js) — 없으면 시험 이름으로 메운다
+     교과목 설문으로 모은 값은 더 보지 않는다. 사람마다 기준이 달라 어긋난 것이
+     많았다. 설문 기능과 쌓인 자료는 그대로 두었고, 보는 데만 쓰지 않는다. */
   var CRS=(typeof window!=='undefined' && window.QCRS) || {};
   var CRS_ORDER=['중학교수학','공통수학1','공통수학2','대수','미적분Ⅰ','미적분Ⅱ','확통','기하',
                  '교육과정 밖'];
-  /* 설문에서 고른 값은 이름이 조금 다르다 (교육과정 표기를 그대로 썼다) */
-  var CRS_SAME={'중학교':'중학교수학','고1':'공통수학1','대수':'대수',
-                '미적분I':'미적분Ⅰ','미적분II':'미적분Ⅱ',
-                '확률과 통계':'확통','기하':'기하'};
-  function courseOf(it){
-    var auto=CRS[it[2]] || subjOf(EX[it[0]]) || '그 밖';
-    var v=crsOf(it[2]);                       /* ① 설문에서 확정된 것 */
-    /* 설문의 «고1» 은 공통수학1·2를 가르지 않는다.
-       그래서 이미 공통수학1이나 2로 가려 둔 문항은 설문이 덮어쓰지 않는다.
-       (대수로 잘못 가린 것을 «고1» 로 바로잡는 일은 그대로 된다) */
-    if(v==='고1' && (auto==='공통수학1'||auto==='공통수학2')) return auto;
-    if(v && CRS_SAME[v]) return CRS_SAME[v];
-    return auto;                              /* ② 자동으로 가려 둔 것 */
+  /* 과목 아래 단원. 관리자 화면에서 고를 것이고, 필터에서도 이 차례로 보인다. */
+  var UNITS={
+    '공통수학1':['다항식','방정식과 부등식','경우의 수','행렬'],
+    '공통수학2':['도형의 방정식','집합과 명제','함수와 그래프'],
+    '대수':['지수함수와 로그함수','삼각함수','수열'],
+    '미적분Ⅰ':['함수의 극한과 연속','미분','적분'],
+    '미적분Ⅱ':['수열의 극한','미분법','적분법'],
+    '확통':['경우의 수','확률','통계'],
+    '기하':['이차곡선','공간도형과 공간좌표','벡터']
+  };
+  /* 관리자가 손으로 고친 것 — {그림경로: [과목, 단원]} */
+  var FIX=lsGet('gich_fix') || {};
+  function fixSave(){ lsSet('gich_fix', FIX); }
+  function pairOf(it){
+    var f=FIX[it[2]]; if(f) return f;
+    var a=CRS[it[2]];  if(a) return a;
+    return [subjOf(EX[it[0]]) || '그 밖', ''];
   }
+  function courseOf(it){ return pairOf(it)[0]; }
+  function unitOf(it){ return pairOf(it)[1] || ''; }
   var ROUNDS=['수능','11월','10월','9월','7월','6월','5월','4월','3월'];
 
   var YEARS=null;                       /* 자료에 실제로 있는 연도 */
@@ -1591,7 +1621,8 @@
   }
 
   /* ================= 필터 ================= */
-  var F={grade:new Set(),round:new Set(),subject:new Set(),year:new Set(),scope:new Set()};
+  var F={grade:new Set(),round:new Set(),subject:new Set(),unit:new Set(),
+         year:new Set(),scope:new Set()};
   function uniq(fn){ var out=[],has={};
     EX.forEach(function(e){ var v=fn(e); if(v&&!has[v]){has[v]=1;out.push(v);} }); return out; }
   /* 구분 — 평가원 시험은 수능·9월모평·6월모평으로 갈라 본다 */
@@ -1602,6 +1633,7 @@
   var DIV_ORDER=['수능','9월모평','6월모평','고1전국','고2전국','고3전국'];
   /* 시행 — 3월부터 차례대로. 수능·모평은 구분에서 고르므로 여기엔 두지 않는다 */
   var ROUND_ORDER=['3월','4월','5월','6월','7월','9월','10월','11월'];
+  var drawUnitsRef=function(){};
   function buildFilters(){
     var box=$('filters');
     /* 두 번 불릴 수 있다 (잠가 둔 자료를 풀면 시험이 늘어 다시 짓는다).
@@ -1614,30 +1646,67 @@
     var rounds=uniq(function(e){return e.r}).filter(function(r){ return ROUND_ORDER.indexOf(r)>=0; });
     rounds.sort(function(a,b){ return ROUND_ORDER.indexOf(a)-ROUND_ORDER.indexOf(b); });
     /* 과목은 시험이 아니라 문항마다 달려 있다. 그래서 자료를 훑어 모은다.
-       차례는 배우는 차례대로 — 중학교수학·공통수학·대수·미적분Ⅰ·미적분Ⅱ·확통·기하.
+       차례는 배우는 차례대로 — 중학교수학·공통수학1·2·대수·미적분Ⅰ·Ⅱ·확통·기하.
        아직 못 가린 문항이 남아 있으면 그 시험 이름(가형·나형 …)도 뒤에 붙는다. */
-    var cseen={};
-    IT.forEach(function(it){ var c=courseOf(it); if(c) cseen[c]=1; });
+    var cseen={}, useen={};
+    IT.forEach(function(it){
+      var c=courseOf(it); if(c) cseen[c]=1;
+      var u=unitOf(it);   if(u) useen[c+'/'+u]=1;
+    });
     var courses=CRS_ORDER.filter(function(c){ return cseen[c]; })
       .concat(Object.keys(cseen).filter(function(c){ return CRS_ORDER.indexOf(c)<0; }).sort());
-    [['구분','grade',divs],
-     ['시행','round',rounds],
-     ['과목','subject',courses],
-     ['연도','year',uniq(heldYear).sort().reverse()]].forEach(function(d){
-      var g=document.createElement('div'); g.className='fgroup';
-      var b=document.createElement('b'); b.textContent=d[0]; g.appendChild(b);
-      d[2].forEach(function(v){
-        var c=document.createElement('span'); c.className='chip'; c.textContent=v;
-        c.onclick=function(){
-          var S=F[d[1]];
-          if(S.has(v)){S.delete(v);c.classList.remove('on');} else {S.add(v);c.classList.add('on');}
-          fsummary(); run(false,true);
-        };
-        g.appendChild(c);
+
+    /* 칩 한 개 만들기 — 누르면 켜지고 꺼진다 */
+    function chip(key,v,label){
+      var c=document.createElement('span'); c.className='chip';
+      c.textContent=label||v; c.dataset.key=key; c.dataset.val=v;
+      c.onclick=function(){
+        var S=F[key];
+        if(S.has(v)){S.delete(v);c.classList.remove('on');} else {S.add(v);c.classList.add('on');}
+        if(key==='subject') drawUnitsRef();      /* 과목이 바뀌면 보일 단원도 바뀐다 */
+        fsummary(); run(false,true);
+      };
+      return c;
+    }
+    function group(title,key,vals,cls){
+      var g=document.createElement('div'); g.className='fgroup'+(cls?' '+cls:'');
+      var b=document.createElement('b'); b.textContent=title; g.appendChild(b);
+      vals.forEach(function(v){ g.appendChild(chip(key,v)); });
+      return g;
+    }
+    box.appendChild(group('구분','grade',divs));
+    box.appendChild(group('시행','round',rounds));
+    box.appendChild(group('과목','subject',courses));
+    /* 단원은 과목 바로 아래에 붙는다.
+       과목을 하나도 안 고르면 단원이 스물둘이라 너무 길다 — 그때는 감춘다. */
+    var ubox=document.createElement('div'); ubox.id='unitbox'; box.appendChild(ubox);
+    drawUnitsRef=function(){
+      ubox.innerHTML='';
+      var picked=courses.filter(function(c){ return F.subject.has(c); });
+      /* 보이지 않게 된 단원은 켜 둔 채로 남기지 않는다.
+         과목을 끄면 단원 칩이 사라지는데, 거름 조건만 살아 있으면
+         «아무것도 안 골랐는데 문항이 473개뿐» 인 일이 생긴다. */
+      var ok={};
+      picked.forEach(function(c){ (UNITS[c]||[]).forEach(function(u){ ok[u]=1; }); });
+      var drop=[]; F.unit.forEach(function(u){ if(!ok[u]) drop.push(u); });
+      drop.forEach(function(u){ F.unit['delete'](u); });
+      if(!picked.length){
+        var hint=document.createElement('div'); hint.className='uhint';
+        hint.textContent='과목을 고르면 단원이 나옵니다';
+        ubox.appendChild(hint); return;
+      }
+      picked.forEach(function(c){
+        var us=(UNITS[c]||[]).filter(function(u){ return useen[c+'/'+u]; });
+        if(!us.length) return;
+        ubox.appendChild(group(c,'unit',us,'unit'));
       });
-      box.appendChild(g);
-    });
-    // 출제 범위는 필터를 접어도 늘 보이도록 검색창 바로 아래 줄에 둔다
+      /* 접었다 펴도 이미 고른 단원은 켜진 채로 */
+      Array.prototype.forEach.call(ubox.querySelectorAll('.chip'),function(c){
+        if(F.unit.has(c.dataset.val)) c.classList.add('on');
+      });
+    }
+    drawUnitsRef();
+    box.appendChild(group('연도','year',uniq(heldYear).sort().reverse()));
     var sb=$('scopebar');
     ['중학','고1','고2·3'].forEach(function(v){
       var c=document.createElement('span'); c.className='chip'; c.textContent=v;
@@ -1652,7 +1721,7 @@
   }
   function fsummary(){
     var on=[];
-    ['scope','grade','round','subject','year'].forEach(function(k){
+    ['scope','grade','round','subject','unit','year'].forEach(function(k){
       F[k].forEach(function(v){ on.push(v); }); });
     $('fsummary').textContent=on.length?on.join(' · '):'';
     $('fclear').style.display=on.length?'':'none';
@@ -1664,11 +1733,15 @@
   }
   /* 과목만은 문항마다 다르므로 여기서 따로 본다 */
   function passItem(it){
-    return passFilter(EX[it[0]]) && (!F.subject.size || F.subject.has(courseOf(it)));
+    return passFilter(EX[it[0]])
+        && (!F.subject.size || F.subject.has(courseOf(it)))
+        && (!F.unit.size    || F.unit.has(unitOf(it)));
   }
   function clearFilters(){
-    F.grade.clear();F.round.clear();F.subject.clear();F.year.clear();F.scope.clear();
+    F.grade.clear();F.round.clear();F.subject.clear();F.unit.clear();
+    F.year.clear();F.scope.clear();
     Array.prototype.forEach.call(document.querySelectorAll('.chip'),function(c){c.classList.remove('on');});
+    drawUnitsRef();                     /* 과목을 다 껐으니 단원도 접는다 */
     fsummary();
   }
 
@@ -1887,7 +1960,12 @@
     if(SIM) mk('비슷한 문항',function(){ openSimTab(it); });
     if(curTabIsSim()) mk('유사하지 않아요',function(){ markNotSimilar(it); },'warn');
     mk('오류제보',function(){ openReport(it); },'warn');
-    if(isAdmin) mk('이미지 교체',function(){ pickImage(it); });
+    if(isAdmin){
+      mk('이미지 교체',function(){ pickImage(it); });
+      var cu=mk((courseOf(it)||'?')+(unitOf(it)?' · '+unitOf(it):' · 단원?'),
+                function(){ openFix(it); }, 'cubtn'+(FIX[it[2]]?' fixed':''));
+      cu.title='과목·단원 고치기';
+    }
 
     var study=(MODE==='study');
     var body=document.createElement('div'); body.className='body';
@@ -2086,7 +2164,7 @@
   /* 한 단(=2칸)에서 이 문항이 몇 칸을 쓸지.
      4점은 2칸, 2·3점은 1칸. 배점 글자가 그림으로 박혀 못 읽히는 문항(6%쯤)은
      그림이 세로로 얼마나 긴지로 정한다 — 자리를 잡는 데엔 그게 실제 기준이다. */
-  function unitOf(it){
+  function slotOf(it){
     var p=ptsOf(it);
     if(p) return p===4 ? 2 : 1;
     return (it[3] && it[4]/it[3] >= 0.48) ? 2 : 1;
@@ -2094,7 +2172,7 @@
   /* 단을 채운다. 남은 한 칸에 4점이 안 들어가면 뒤에서 2·3점을 당겨 와,
      2·3점 하나가 한 단을 통째로 차지하는 일이 없게 한다. */
   function packColumns(list){
-    var q=list.map(function(it){ return {it:it,u:unitOf(it)}; });
+    var q=list.map(function(it){ return {it:it,u:slotOf(it)}; });
     var cols=[], cur=[], used=0;
     while(q.length){
       var idx=0;
@@ -2407,6 +2485,48 @@
   function closeModal(){ $('modal').classList.remove('open'); $('mbox').classList.remove('wide'); }
   $('modal').onclick=function(e){ if(e.target===this) closeModal(); };
 
+  /* ================= 과목·단원 고치기 (관리자) =================
+     자동으로 가린 것이 틀렸을 때 사람이 바로잡는 자리다.
+     고친 것은 이 브라우저에 쌓이고, «과목·단원» 탭에서 JSON 으로 내려받아
+     _빌드도구\과목_손입력.json 에 넣으면 다음 판에 그대로 실린다. */
+  function openFix(it){
+    var nowC=courseOf(it), nowU=unitOf(it);
+    function draw(){
+      var h='<h3>과목·단원 고치기</h3><p class="sub">'+esc(label(it))+'</p>'+
+            '<div class="fixbox"><div class="fixrow"><b>과목</b><div class="fixchips" id="fixC"></div></div>'+
+            '<div class="fixrow"><b>단원</b><div class="fixchips" id="fixU"></div></div></div>'+
+            '<div class="mb">'+
+            (FIX[it[2]]?'<button id="fixDel" class="warn">고친 것 지우기</button>':'')+
+            '<button id="fixOk" class="primary">저장</button>'+
+            '<button id="fixNo">닫기</button></div>';
+      modal(h, function(){
+        function chips(box, vals, cur, pick){
+          box.innerHTML='';
+          vals.forEach(function(v){
+            var c=document.createElement('span');
+            c.className='chip'+(v===cur?' on':''); c.textContent=v||'(없음)';
+            c.onclick=function(){ pick(v); };
+            box.appendChild(c);
+          });
+        }
+        chips($('fixC'), CRS_ORDER, nowC, function(v){ nowC=v; nowU=''; draw(); });
+        chips($('fixU'), [''].concat(UNITS[nowC]||[]), nowU, function(v){ nowU=v; draw(); });
+        $('fixOk').onclick=function(){
+          FIX[it[2]]=[nowC,nowU]; fixSave();
+          sendCollect({t:'fix', p:it[2], c:nowC, u:nowU, who:UID, at:nowStr()});
+          closeModal(); buildFilters(); fsummary(); run(false,true);
+          toast('고쳤습니다 — '+nowC+(nowU?' · '+nowU:''));
+        };
+        if($('fixDel')) $('fixDel').onclick=function(){
+          delete FIX[it[2]]; fixSave(); closeModal();
+          buildFilters(); fsummary(); run(false,true); toast('자동 분류로 되돌렸습니다');
+        };
+        $('fixNo').onclick=closeModal;
+      });
+    }
+    draw();
+  }
+
   /* ================= 오답노트 팁 =================
      내용을 고치시려면 아래 TIPS 안의 글만 바꾸시면 됩니다. */
   var TIPS=[
@@ -2561,8 +2681,6 @@
    ['탭',
     [['Ctrl + ← →','앞·뒤 탭으로 이동 (끝에 닿으면 반대쪽 끝으로)'],
      ['Delete','지금 보고 있는 탭 닫기 — 마지막 탭을 닫으면 처음 화면으로 돌아갑니다']]],
-   ['화면',
-    [['m','최소화 — 로고·검색창·탭만 남깁니다 (한 번 더 누르면 되돌아옵니다)']]],
    ['이 창',
     [['k','단축키 목록 열기'],
      ['Esc','닫기']]]
@@ -2588,21 +2706,6 @@
   }
   $('keysBtn').onclick=openKeys;
 
-  /* ================= 최소화 =================
-     로고·이름·검색창·탭만 남기고 윗줄을 접는다. 고른 것은 다음에도 그대로 연다. */
-  function setMin(on){
-    document.body.classList.toggle('min', !!on);
-    $('minBtn').textContent = on ? '▾' : '▴';
-    $('minBtn').appendChild(Object.assign(document.createElement('i'),
-      {className:'kb', textContent:'m'}));
-    $('minBtn').title = (on ? '최소화 풀기 — 윗줄을 다시 폅니다'
-                            : '최소화 — 검색창만 남깁니다') + ' (m)';
-    try{ localStorage.setItem('gich_min', on?'1':'0'); }catch(e){}
-    /* 윗줄 높이가 달라졌으니 아래 막대·칸을 다시 맞춘다 */
-    try{ fitCards(); showMbar(); }catch(e){}
-  }
-  function toggleMin(){ setMin(!document.body.classList.contains('min')); }
-  $('minBtn').onclick=toggleMin;
 
   /* ================= 오류제보 ================= */
   /* 고르기만 하면 되도록 짧게 추렸다. 값(앞)은 시트에 그대로 쌓이므로 짧게,
@@ -3510,6 +3613,7 @@
   $('atabOv').onclick=function(){ adminTab='ov'; drawAdmin(); };
   $('atabCmp').onclick=function(){ adminTab='cmp'; drawAdmin(); };
   $('atabStd').onclick=function(){ adminTab='std'; drawAdmin(); };
+  $('atabFix').onclick=function(){ adminTab='fix'; drawAdmin(); };
   $('atabCrs').onclick=function(){ adminTab='crs'; drawAdmin(); };
   $('atabSync').onclick=function(){ adminTab='sync'; drawAdmin(); };
 
@@ -3611,6 +3715,7 @@
     $('atabOv').className =adminTab==='ov' ?'on':'';
     $('atabCmp').className=adminTab==='cmp'?'on':'';
     $('atabStd').className=adminTab==='std'?'on':'';
+    $('atabFix').className=adminTab==='fix'?'on':'';
     $('atabCrs').className=adminTab==='crs'?'on':'';
     $('atabSync').className=adminTab==='sync'?'on':'';
     var L=$('adminList'),Fo=$('adminFoot'); L.innerHTML=''; Fo.innerHTML='';
@@ -3652,6 +3757,8 @@
 
     } else if(adminTab==='sync'){
       drawSync(L,Fo);
+    } else if(adminTab==='fix'){
+      drawFixTab(L,Fo);
     } else if(adminTab==='crs'){
       drawCrsStats(L,Fo);
     } else if(adminTab==='std'){
@@ -3839,6 +3946,77 @@
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(function(){ URL.revokeObjectURL(a.href); },1000);
     toast('백업 파일을 내려받았습니다');
+  }
+
+  /* ── 과목·단원 탭 ──
+     자동 분류가 어디까지 됐는지 보이고, 단원을 못 가린 문항을 모아 준다.
+     거기서 바로 고칠 수 있고, 고친 것은 JSON 으로 내려받아 다음 판에 싣는다. */
+  function drawFixTab(L,Fo){
+    var noUnit=[], cnt={}, fixed=Object.keys(FIX);
+    IT.forEach(function(it){
+      var c=courseOf(it), u=unitOf(it);
+      cnt[c]=cnt[c]||{n:0,miss:0}; cnt[c].n++;
+      if(!u && UNITS[c]){ cnt[c].miss++; noUnit.push(it); }
+    });
+    var h='<div class="rrow"><div class="rt">문항 '+IT.length.toLocaleString()+'개</div>';
+    h+='<div class="rm">'+CRS_ORDER.filter(function(c){ return cnt[c]; }).map(function(c){
+         return esc(c)+' '+cnt[c].n+(cnt[c].miss?' <b>(단원 없음 '+cnt[c].miss+')</b>':'');
+       }).join(' · ')+'</div>';
+    h+='<div class="rm">단원을 못 가린 문항 <b>'+noUnit.length+'</b>개 · '+
+       '손으로 고친 문항 <b>'+fixed.length+'</b>개</div></div>';
+    L.innerHTML=h;
+
+    if(!noUnit.length && !fixed.length){
+      L.innerHTML+='<div style="padding:18px;color:#6b7280;font-size:12px">'+
+        '고칠 것이 없습니다.</div>';
+    }
+    /* 단원을 못 가린 문항 — 눌러서 바로 고친다 */
+    noUnit.slice(0,300).forEach(function(it){
+      var d=document.createElement('div'); d.className='rrow';
+      d.innerHTML='<div class="rt">'+esc(label(it))+'</div>'+
+                  '<div class="rf">'+esc(it[2])+' — '+esc(courseOf(it))+' · 단원 없음</div>';
+      var bar=document.createElement('div'); bar.className='rb';
+      function mkb(t,fn,cls){ var b=document.createElement('button'); b.textContent=t;
+        if(cls)b.className=cls; b.onclick=fn; bar.appendChild(b); }
+      mkb('단원 고르기',function(){ openFix(it); },'primary');
+      mkb('문항 보기',function(){
+        $('admin').classList.remove('open');
+        $('q').value=label(it); run(true); drawTabs();
+      });
+      d.appendChild(bar); L.appendChild(d);
+    });
+    if(noUnit.length>300){
+      var more=document.createElement('div'); more.className='rrow';
+      more.innerHTML='<div class="rm">… 그 밖 '+(noUnit.length-300)+'개는 다음에 보입니다.</div>';
+      L.appendChild(more);
+    }
+
+    function fbtn(t,fn,cls){ var b=document.createElement('button'); b.textContent=t;
+      if(cls)b.className=cls; b.onclick=fn; Fo.appendChild(b); }
+    fbtn('고친 것 JSON으로 저장',function(){
+      if(!fixed.length){ toast('고친 것이 없습니다',true); return; }
+      var o={'_설명':'관리자 화면에서 고친 과목·단원. _빌드도구\\과목_손입력.json 에 합치세요.',
+             '_적은날':nowStr()};
+      fixed.forEach(function(k){ o[k]=FIX[k]; });
+      var a=document.createElement('a');
+      a.href=URL.createObjectURL(new Blob([JSON.stringify(o,null,1)],{type:'application/json'}));
+      a.download='과목_단원_고친것_'+nowStr().replace(/[^0-9]/g,'').slice(0,8)+'.json';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      toast(fixed.length+'개를 내려받았습니다');
+    },'primary');
+    fbtn('못 가린 문항 목록 CSV',function(){
+      var rows=[['그림','시험','번호','과목']].concat(noUnit.map(function(it){
+        return [it[2], EX[it[0]].n, it[1], courseOf(it)]; }));
+      var csv='\ufeff'+rows.map(function(r){ return r.join(','); }).join('\n');
+      var a=document.createElement('a');
+      a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+      a.download='단원_못가린문항.csv';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    });
+    if(fixed.length) fbtn('고친 것 모두 지우기',function(){
+      if(!confirm('손으로 고친 '+fixed.length+'개를 모두 지울까요?')) return;
+      FIX={}; fixSave(); drawAdmin(); buildFilters(); run(false,true);
+    },'warn');
   }
 
   function drawCrsStats(L,Fo){
@@ -4228,13 +4406,17 @@
   $('more').onclick=function(){ render(false); };
   $('clear').onclick=function(){ $('q').value=''; clearFilters(); activeTab=-1; run(false); drawTabs(); $('q').focus(); };
   $('fclear').onclick=function(){ clearFilters(); run(false,true); };
-  $('ftoggle').onclick=function(){
-    var box=$('filters'), open=!box.classList.contains('open');
-    box.classList.toggle('open',open); this.classList.toggle('open',open);
-    this.childNodes[0].nodeValue = open?'필터 접기':'필터 열기';
-    fitCards();
-    try{ localStorage.setItem('gich_filters_open',open?'1':'0'); }catch(e){}
-  };
+  /* ── 사이드바 여닫기 ── */
+  function setSide(on){
+    document.body.classList.toggle('side', !!on);
+    $('sideBtn').title = on ? '필터 닫기 (f)' : '필터 열기 (f)';
+    try{ localStorage.setItem('gich_filters_open', on?'1':'0'); }catch(e){}
+  }
+  function toggleSide(){ setSide(!document.body.classList.contains('side')); }
+  $('sideBtn').onclick=toggleSide;
+  $('sideClose').onclick=function(){ setSide(false); };
+  $('sideDim').onclick=function(){ setSide(false); };
+  $('sideClear').onclick=function(){ clearFilters(); run(false,true); };
   function goPage(d){
     page+=d; render(true);
     // 페이지를 넘긴 뒤에는 화살표 키가 바로 듣도록 검색창에서 커서를 뗀다
@@ -4297,6 +4479,8 @@
       else if(e.key===' '){ e.preventDefault(); drawStd(); }
       return;
     }
+    if(e.key==='Escape' && document.body.classList.contains('side')
+       && !$('modal').classList.contains('open')){ setSide(false); return; }
     if(e.key==='Escape'){
       /* 검색창에 커서가 있으면 먼저 거기서 빠져나온다 — 그래야 화살표가 바로 듣는다 */
       if(document.activeElement===$('q')){ $('q').blur(); return; }
@@ -4315,13 +4499,10 @@
         return;
       }
       if(e.key==='f' || e.key==='F' || e.code==='KeyF'){
-        e.preventDefault(); $('ftoggle').onclick.call($('ftoggle')); return;
+        e.preventDefault(); toggleSide(); return;
       }
       if(e.key==='k' || e.key==='K' || e.code==='KeyK'){
         e.preventDefault(); openKeys(); return;
-      }
-      if(e.key==='m' || e.key==='M' || e.code==='KeyM'){
-        e.preventDefault(); toggleMin(); return;
       }
       if(e.key==='Delete'){
         /* 지금 보고 있는 탭을 닫는다. 고른 탭이 없으면 맨 앞 탭 */
@@ -4370,11 +4551,7 @@
   ovLoad(function(){
     buildFilters(); fsummary();
     try{
-      if(localStorage.getItem('gich_filters_open')==='1'){
-        $('filters').classList.add('open'); $('ftoggle').classList.add('open');
-        $('ftoggle').childNodes[0].nodeValue='필터 접기';
-      }
-      if(localStorage.getItem('gich_min')==='1') setMin(true);
+      if(localStorage.getItem('gich_filters_open')==='1') setSide(true);
       if(localStorage.getItem('gich_mode')==='study'){
         MODE='study'; $('modeStudy').className='on'; $('modeSearch').className='';
         $('studybar').classList.add('on');

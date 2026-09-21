@@ -1,5 +1,5 @@
 const {boot,wait,scorer}=require('./harness');
-const H=boot('IT:IT,EX:EX,packColumns:packColumns,unitOf:unitOf,ptsOf:ptsOf,SELset:function(v){SEL=v;updateSel();},selectedItems:selectedItems,printWork:printWork,label:label');
+const H=boot('IT:IT,EX:EX,packColumns:packColumns,slotOf:slotOf,ptsOf:ptsOf,SELset:function(v){SEL=v;updateSel();},selectedItems:selectedItems,printWork:printWork,label:label');
 const {w,doc,$,click,key,html}=H;
 const {ok,done}=scorer();
 const T=()=>w.__T;
@@ -19,11 +19,11 @@ async function doPrint(H, id){
   console.log('\n[1] 한 문항이 몇 칸을 쓰는가');
   const IT=T().IT;
   const p4=IT.find(it=>T().ptsOf(it)===4), p3=IT.find(it=>T().ptsOf(it)===3), p2=IT.find(it=>T().ptsOf(it)===2);
-  ok('4점 → 2칸', T().unitOf(p4)===2, T().unitOf(p4));
-  ok('3점 → 1칸', T().unitOf(p3)===1, T().unitOf(p3));
-  ok('2점 → 1칸', T().unitOf(p2)===1, T().unitOf(p2));
+  ok('4점 → 2칸', T().slotOf(p4)===2, T().slotOf(p4));
+  ok('3점 → 1칸', T().slotOf(p3)===1, T().slotOf(p3));
+  ok('2점 → 1칸', T().slotOf(p2)===1, T().slotOf(p2));
   const unk=IT.find(it=>T().ptsOf(it)===0);
-  ok('배점을 못 읽어도 칸 수는 나옴', [1,2].includes(T().unitOf(unk)), T().unitOf(unk));
+  ok('배점을 못 읽어도 칸 수는 나옴', [1,2].includes(T().slotOf(unk)), T().slotOf(unk));
 
   console.log('\n[2] 단 채우기 — 규칙대로인가');
   const mk=(...ps)=>ps.map(p=>IT.find(it=>T().ptsOf(it)===p));
@@ -50,7 +50,7 @@ async function doPrint(H, id){
   click($('selAll')); await wait(120);
   const n=+$('selCnt').textContent.replace(/[^0-9]/g,'');
   ok('22문항 선택', n===22, n);
-  ok('4점 문항이 섞여 있음', T().selectedItems().some(it=>T().unitOf(it)===2));
+  ok('4점 문항이 섞여 있음', T().selectedItems().some(it=>T().slotOf(it)===2));
   const b=w.__printed||0;
   await doPrint(H,'printWork');
   ok('인쇄됨', (w.__printed||0)>b);

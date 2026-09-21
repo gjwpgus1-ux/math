@@ -11,15 +11,16 @@ const key=(k,o)=>doc.dispatchEvent(new w.KeyboardEvent('keydown',
 /* ---- 화면 표시 ---- */
 S.ok('검색창 안내에 / 가 적혀 있다', /\//.test($('q').placeholder), $('q').placeholder);
 S.ok('안내에 «검색어를 입력하세요» 가 남아 있다', /검색어를 입력하세요/.test($('q').placeholder));
-S.ok('필터 단추에 f 표시', !!$('ftoggle').querySelector('.kb') &&
-     $('ftoggle').querySelector('.kb').textContent==='f');
+/* 필터는 사이드바로 옮겼다. 여는 단추는 로고 왼쪽 ☰ 이고, f 키도 그대로 듣는다. */
+S.ok('☰ 단추가 로고 왼쪽에', !!$('sideBtn') &&
+     $('sideBtn').nextElementSibling && $('sideBtn').nextElementSibling.id==='logo');
 S.ok('도움말 단추에 ? 표시', !!$('helpBtn').querySelector('.kb') &&
      $('helpBtn').querySelector('.kb').textContent==='?');
 S.ok('단축키 단추가 따로 있다', !!$('keysBtn'));
 S.ok('단축키 단추가 도움말 오른쪽에', $('helpBtn').nextElementSibling===$('keysBtn'));
 S.ok('단축키 단추에 k 표시', !!$('keysBtn').querySelector('.kb') &&
      $('keysBtn').querySelector('.kb').textContent==='k');
-S.ok('필터 단추 글씨는 그대로', /필터 열기/.test($('ftoggle').textContent));
+S.ok('☰ 단추에 안내가 붙어 있다', /필터/.test($('sideBtn').title), $('sideBtn').title);
 
 /* ---- 자리 번호 ---- */
 $('q').value=''; T.render(true);
@@ -79,14 +80,14 @@ S.ok('Shift+/ 로도 도움말이 열린다', $('modal').classList.contains('ope
 $('helpOk').click();
 
 /* ---- f 로 필터 ---- */
-const opened=$('filters').classList.contains('open');
+const opened=doc.body.classList.contains('side');
 key('f');
-S.ok('f 로 필터가 열린다', $('filters').classList.contains('open')!==opened);
-S.ok('단추 글씨도 바뀐다', /필터 접기|필터 열기/.test($('ftoggle').textContent), $('ftoggle').textContent.trim());
+S.ok('f 로 필터가 열린다', doc.body.classList.contains('side')!==opened);
+S.ok('안내 글도 바뀐다', /필터 (열기|닫기)/.test($('sideBtn').title), $('sideBtn').title);
 key('f');
-S.ok('한 번 더 누르면 되돌아온다', $('filters').classList.contains('open')===opened);
+S.ok('한 번 더 누르면 되돌아온다', doc.body.classList.contains('side')===opened);
 key('Process',{code:'KeyF'});
-S.ok('한글 자판에서도 f 가 듣는다', $('filters').classList.contains('open')!==opened);
+S.ok('한글 자판에서도 f 가 듣는다', doc.body.classList.contains('side')!==opened);
 key('Process',{code:'KeyF'});
 
 /* ---- 1~4 로 문항 ---- */

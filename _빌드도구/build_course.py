@@ -24,6 +24,7 @@
       python3 build_course.py --show 가형 30   (그 갈래에서 30개를 뽑아 보여 줌)
 """
 import sys, os, re, json, collections, random
+import 단원표
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.dirname(HERE)
@@ -205,6 +206,37 @@ def guess(text, allow, signs=False):
     return None
 
 
+def unit_of(course, intent, fx):
+    """과목 아래 단원을 가린다. 못 가리면 빈 글.
+
+    학평은 해설의 «출제의도» 한 마디가 단원을 거의 그대로 말해 준다.
+    평가원(수능·모평)은 출제의도가 없어 문제 글의 낱말과 기호로 가린다."""
+    rows = 단원표.UNITS.get(course)
+    if not rows:
+        return ''                      # 중학교수학·교육과정 밖은 단원을 두지 않는다
+    # 평가원 선택과목 해설은 단이 어긋나 «옆 과목의 출제의도» 가 붙기도 한다.
+    # 확통 25번에 「법선벡터를 이용하여…」가 붙는 식이다. 그런 출제의도는 버리고
+    # 문제 글만 본다 — 안 그러면 엉뚱한 단원으로 간다.
+    if intent and guess(intent, [course]) is None:
+        other = guess(intent, list(ORDER))
+        if other and other != course:
+            intent = ''
+    if intent:
+        t = re.sub(r'\s', '', intent)
+        for name, pat in rows:
+            if re.search(pat, t):
+                return name
+    if fx:
+        t = re.sub(r'\s', '', fx.split('①')[0])
+        for name, pat in rows:            # 문제 글에도 낱말이 그대로 있을 때가 많다
+            if re.search(pat, t):
+                return name
+        for name, pat in 단원표.UNIT_SIGNS.get(course, []):
+            if re.search(pat, t):
+                return name
+    return ''
+
+
 def load(path, head):
     s = open(path, encoding='utf-8').read()
     return json.loads(s.split('=', 1)[1].rstrip(';\n')) if head else \
@@ -233,14 +265,19 @@ def main():
     stat = collections.defaultdict(collections.Counter)
     src = collections.Counter()
     miss = collections.Counter()
+    ucnt = collections.defaultdict(collections.Counter)
     samples = collections.defaultdict(list)
 
     for it in IT:
         e = EX[it[0]]
         allow = scope_of(e)
         why = ''
-        if it[2] in HAND:                       # 사람이 적어 둔 것이 가장 세다
-            c, why = HAND[it[2]], '손입력'
+        hand = HAND.get(it[2])
+        hand_unit = ''
+        if isinstance(hand, list):              # ["과목","단원"] 꼴
+            hand, hand_unit = (hand + [''])[:2]
+        if hand:                                # 사람이 적어 둔 것이 가장 세다
+            c, why = hand, '손입력'
         elif len(allow) == 1:                   # 시험만 보고 정해진다
             c, why = allow[0], '시험'
         else:
@@ -257,8 +294,12 @@ def main():
                 why = '못가림'
                 miss[intent or '(출제의도 없음)'] += 1
         if c:
-            out[it[2]] = c
+            intent = INT.get(e['n'] + '#' + str(it[1]))
+            fx = (it[6] if len(it) > 6 else '') or it[5]
+            u = hand_unit or unit_of(c, intent, fx)
+            out[it[2]] = [c, u]
             src[why] += 1
+            ucnt[c][u or '－'] += 1
         stat[e['s'] or e['g']][c or '－'] += 1
         if show and (e['s'] == show[0] or e['g'] == show[0]):
             samples[c or '－'].append((e['n'], it[1], INT.get(e['n'] + '#' + str(it[1])) or it[5][:40]))
@@ -271,6 +312,16 @@ def main():
     print('%-8s' % '' + ''.join('%8s' % c for c in cols))
     for k in sorted(stat, key=lambda x: -sum(stat[x].values())):
         print('%-8s' % k + ''.join('%8d' % stat[k][c] for c in cols))
+    print()
+    print('── 단원 ──')
+    for c in ORDER:
+        if c not in 단원표.UNITS:
+            continue
+        tot2 = sum(ucnt[c].values())
+        got = tot2 - ucnt[c]['－']
+        print('%-8s %4d문항 중 %4d개 가림 (%3.0f%%)  %s'
+              % (c, tot2, got, 100 * got / max(1, tot2),
+                 ' · '.join('%s %d' % (k, v) for k, v in ucnt[c].most_common())))
     print()
     print('못 가린 출제의도 (많은 것부터)')
     for k, v in miss.most_common(20):

@@ -7,7 +7,7 @@ const chips=g=>[...doc.querySelectorAll('#filters .fgroup')[g].querySelectorAll(
 (async()=>{
   await wait(180);
   key('1'); key('Enter'); await wait(140);
-  click($('ftoggle')); await wait(80);
+  click($('sideBtn')); await wait(80);
 
   console.log('\n[1] 구분 — 여섯 갈래, 정한 차례대로');
   const g0=doc.querySelectorAll('#filters .fgroup')[0];
