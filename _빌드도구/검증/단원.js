@@ -2,7 +2,7 @@
 const {boot,wait,scorer}=require('./harness');
 const H=boot('IT:IT,EX:EX,courseOf:courseOf,unitOf:unitOf,passItem:passItem,F:F,'+
              'UNITS:UNITS,CRS_ORDER:CRS_ORDER,FIX:FIX,search:search');
-const {w,doc,$,click,key}=H;
+const {w,doc,$,click,key,html}=H;
 const {ok,done}=scorer();
 const T=()=>w.__T;
 const grp=t=>[...doc.querySelectorAll('#filters .fgroup')]
@@ -32,6 +32,12 @@ const grp=t=>[...doc.querySelectorAll('#filters .fgroup')]
 
   console.log('\n[3] 필터 — 과목을 고르면 단원이 나온다');
   click($('sideBtn')); await wait(120);
+  /* 사이드바가 인쇄 양식과 이름을 나눠 쓰면 안 된다.
+     예전에 머리·몸을 .shd/.sbody 로 두었다가, 인쇄 쪽 .sbody{display:flex}
+     가 넘어와 범위와 나머지 필터가 좌우로 갈라졌다 (높이도 5mm로 눌렸다). */
+  ok('사이드바는 제 이름을 쓴다', !!doc.querySelector('#side .sdhd') && !!doc.querySelector('#side .sdbody'));
+  ok('인쇄 양식 이름을 안 쓴다', !doc.querySelector('#side .shd') && !doc.querySelector('#side .sbody'));
+  ok('범위와 필터가 위아래로', /#side \.sdbody\{[^}]*flex-direction:column/.test(html));
   ok('단원 안내가 먼저 보인다', /과목을 고르면/.test($('unitbox').textContent));
   const sub=grp('과목');
   const 대수=[...sub.querySelectorAll('.chip')].find(c=>c.textContent==='대수');

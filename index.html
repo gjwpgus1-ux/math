@@ -61,13 +61,16 @@
   #sideDim{position:fixed;inset:0;z-index:39;background:rgba(15,20,30,.16);
            opacity:0;pointer-events:none;transition:opacity .18s}
   body.side #sideDim{opacity:1;pointer-events:auto}
-  #side .shd{display:flex;align-items:center;gap:8px;padding:11px 13px;
-             border-bottom:1px solid var(--line)}
-  #side .shd b{font-size:13px}
-  #side .shd .sp{flex:1}
+  /* 이름을 sdhd·sdbody 로 둔다. 인쇄 양식에도 .shd/.sbody 가 있어서
+     같은 이름을 쓰면 «한 장(5mm)» 높이와 display:flex 가 넘어와 옆으로 눕는다. */
+  #side .sdhd{display:flex;align-items:center;gap:8px;padding:10px 13px;
+             border-bottom:1px solid var(--line);flex:none}
+  #side .sdhd b{font-size:13px}
+  #side .sdhd .sp{flex:1}
   #side #sideClear{padding:3px 9px;font-size:11px;border-radius:99px}
   #side #sideClose{padding:3px 8px;font-size:12px;color:var(--dim)}
-  #side .sbody{flex:1;overflow:auto;padding:11px 13px 26px}
+  #side .sdbody{flex:1;min-height:0;overflow:auto;padding:12px 13px 26px;
+             display:flex;flex-direction:column;gap:10px}
   h1 #sideBtn{padding:4px 9px;font-size:14px;line-height:1;color:var(--dim);margin-right:-2px}
   h1 #sideBtn:hover{color:var(--accent)}
 
@@ -79,7 +82,10 @@
   .fgroup.unit{padding-left:10px;border-left:2px solid var(--accent-soft);margin-top:-4px}
   .fgroup.unit b{color:var(--accent);font-size:10.5px}
   .fgroup.unit .chip{padding:3px 9px;font-size:11px}
-  .fgroup.unit.hint{color:var(--dim);font-size:11px;padding-top:1px;padding-bottom:1px}
+  /* 과목을 아직 안 고른 자리에 놓는 안내. .fgroup 이 아니다 —
+     b 를 찾는 곳들이 있어서 갈래 묶음처럼 보이면 안 된다. */
+  .uhint{color:var(--dim);font-size:11px;padding-left:10px;
+         border-left:2px solid var(--line);margin-top:-4px}
   #fbar{display:flex;align-items:center;gap:8px;margin-top:9px;flex-wrap:wrap;min-height:22px}
   #scopebar{margin-bottom:2px}
   #keyhint{margin-left:auto;font-size:12.5px;color:var(--dim)}
@@ -680,13 +686,13 @@
      윗줄이 너무 두꺼워졌다. 왼쪽으로 빼내 ☰ 로 여닫는다. -->
 <div id="sideDim"></div>
 <aside id="side">
-  <div class="shd">
+  <div class="sdhd">
     <b>필터</b>
     <span class="sp"></span>
     <button id="sideClear">모두 해제</button>
     <button id="sideClose" title="닫기 (Esc)">✕</button>
   </div>
-  <div class="sbody">
+  <div class="sdbody">
     <div class="fgroup" id="scopebar"><b>범위</b></div>
     <div class="filters" id="filters"></div>
   </div>
