@@ -207,6 +207,12 @@
   .solbox{max-height:64vh;overflow:auto;border:1px solid var(--line);border-radius:8px;
           background:#fff;padding:10px;text-align:center}
   .solbox img{max-width:100%;height:auto}
+  /* 옛 해설지 가운데는 단을 나누지 않고 쪽 너비를 다 쓴 것이 있다(2019년 10월 고3).
+     그런 그림을 칸 너비에 맞추면 글씨가 깨알만 해진다. 그럴 때는 원래 크기로
+     펼쳐 두고 좌우로 밀어 보게 한다. */
+  .solbox.raw{text-align:left}
+  .solbox.raw img{max-width:none}
+  #solZoom{margin-right:6px}
   .card.dim{opacity:.5}
   /* 문항칸 안에서는 굴리지 않는다. 그림은 칸 너비에 꽉 채우고,
      칸은 문항 길이만큼 세로로 늘어난다. 긴 문항은 쪽을 내려 보면 된다.
@@ -1083,10 +1089,17 @@
     var h='<h3>'+esc(label(it))+' 해설</h3>'+
       '<p class="sub">'+(av===null?'':'정답 '+ansText(av)+' · ')+
       '해설지에서 이 문항 부분만 오려 온 것입니다.</p>'+
-      '<div class="solbox"><img src="'+solSrc(f)+'" alt="해설"></div>'+
-      '<div class="mb"><button class="primary" id="solOk">닫기</button></div>';
+      '<div class="solbox" id="solBox"><img src="'+solSrc(f)+'" alt="해설"></div>'+
+      '<div class="mb">'+
+        (s[1]>1200 ? '<button id="solZoom">원래 크기로</button>' : '')+
+        '<button class="primary" id="solOk">닫기</button></div>';
     modal(h, function(){
       $('mbox').classList.add('wide');
+      /* 가로로 긴 해설은 한 번 눌러 원래 크기로 펼칠 수 있게 한다 */
+      if($('solZoom')) $('solZoom').onclick=function(){
+        var b=$('solBox'), on=b.classList.toggle('raw');
+        this.textContent = on ? '폭 맞추기' : '원래 크기로';
+      };
       $('solOk').onclick=function(){ $('mbox').classList.remove('wide'); closeModal(); };
     });
     if(typeof statLog==='function') statLog('해설', EX[it[0]].n, 1);

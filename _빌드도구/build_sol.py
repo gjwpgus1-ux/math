@@ -19,7 +19,11 @@ DB = os.path.abspath(os.path.join(APP, '..', '데이터베이스', '해설파일
 OUT = os.path.join(APP, 'img', '해설')
 
 ANCHOR = re.compile(r'^\s*(\d{1,2})\s*\.\s*\[\s*출제의도\s*\]')
-SECT = re.compile(r'\[\s*(확률과\s*통계|미적분|기하)\s*\]')
+# 선택과목이 바뀌는 자리 표시. 「[확률과 통계]」처럼 괄호를 치기도 하지만,
+# 「확률과 통계 정답」·「미적분 해설」처럼 괄호 없이 쓴 해설지가 더 많았다.
+# 괄호만 보다가 2022·2023·2025년 7월 고3에서 세 과목 해설이 한 그림에 들어갔다.
+SECT = re.compile(r'\[\s*(확률과\s*통계|미적분|기하)\s*\]'
+                  r'|(확률과\s*통계|미적분|기하)\s*(?:정답|해설)')
 SCALE = 2.4          # 그림 해상도
 PAD = 4.0            # 잘라낼 때 둘레 여백(pt)
 
@@ -103,6 +107,25 @@ def pick_jobs(n=None):
 
 
 JOBS = None          # main() 에서 채운다
+
+
+def rule_cols(pg, W):
+    """단 사이에 그어 둔 «세로줄» 을 찾아 단을 나눈다 → 경계 x 목록.
+
+    해설지는 단과 단 사이에 실선을 긋는다. 그러면 글자가 없는 띠가 생기지 않아
+    find_cols 가 단을 하나도 못 찾고, 쪽 전체가 한 단으로 잘린다.
+    2019년 10월 고3, 2025년 6월 고1 … 여덟 회차가 그래서 가로로 길게 붙어 나왔다.
+    그림을 그려 놓고 세로로 길게 이어진 잉크를 찾으면 곧바로 보인다."""
+    import numpy as np
+    S = 0.5                       # 줄만 찾으면 되니 작게 그려도 된다
+    a = np.array(pg.render(scale=S).to_pil().convert('L')) < 170
+    H = a.shape[0]
+    out = []
+    for x in np.where(a.sum(0) > 0.45 * H)[0]:
+        x = x / S
+        if not out or x - out[-1] > W * 0.06:
+            out.append(x)
+    return [int(x) for x in out]
 
 
 def find_cols(chars, W):
@@ -223,7 +246,8 @@ def page_pieces(pg, cuts=None):
         for top, bot, s in rows:
             m = SECT.search(s)
             if m:
-                pieces.append(('과목', m.group(1).replace(' ', ''), top, ci))
+                name = (m.group(1) or m.group(2)).replace(' ', '')
+                pieces.append(('과목', name, top, ci))
 
         anchors = [(i, ANCHOR.match(r[2])) for i, r in enumerate(rows)]
         anchors = [(i, int(m.group(1))) for i, m in anchors if m]
@@ -252,7 +276,26 @@ def crop(pg, box, W, H, tail=True):
     if x1 - x0 < 20 or y1 - y0 < 12:
         return None
     im = pg.render(scale=SCALE).to_pil()
-    return im.crop((int(x0 * SCALE), int(y0 * SCALE), int(x1 * SCALE), int(y1 * SCALE)))
+    im = im.crop((int(x0 * SCALE), int(y0 * SCALE), int(x1 * SCALE), int(y1 * SCALE)))
+    return trim_side(im)
+
+
+def trim_side(im, pad=10):
+    """좌우에 남은 흰 여백을 걷어낸다.
+
+    단을 못 나눈 해설지는 글이 쪽의 절반에만 있는데도 쪽 너비만큼 잘려,
+    그림이 가로로 길어 카드 안에서 글씨가 깨알만 해졌다.
+    세로는 건드리지 않는다 — 문항이 이어질 때 이어 붙여야 하기 때문이다."""
+    import numpy as np
+    a = np.array(im.convert('L')) < 170
+    xs = np.where(a.any(0))[0]
+    if not len(xs):
+        return im
+    x0 = max(0, int(xs[0]) - pad)
+    x1 = min(im.width, int(xs[-1]) + 1 + pad)
+    if x1 - x0 < 20 or x1 - x0 > im.width - 8:
+        return im
+    return im.crop((x0, 0, x1, im.height))
 
 
 def stack(imgs):
@@ -280,16 +323,18 @@ def run_job(job, sol):
     ALIAS = {'확률과통계': 0, '미적분': 1, '기하': 2}
 
     d = pdfium.PdfDocument(path)
-    # ① 먼저 쪽마다 단 경계를 재어 다수결로 정한다
-    percuts = []
+    # ① 먼저 쪽마다 단 경계를 재어 다수결로 정한다.
+    #    세로줄이 그어져 있으면 그것이 가장 또렷하다. 없으면 빈 띠를 본다.
+    percuts, rulecuts = [], []
     for pi in range(len(d)):
         pg = d[pi]
         try:
             ch, W, H = layout.get_chars(pg)
             percuts.append(find_cols(ch, W) if ch else [])
+            rulecuts.append(rule_cols(pg, W))
         finally:
             pg.close()
-    CUTS = agree_cuts(percuts)
+    CUTS = agree_cuts(rulecuts) or agree_cuts(percuts)
 
     cur = None            # 지금 읽고 있는 선택과목
     prev = None           # 바로 앞 문항 (단·쪽을 넘어 이어질 때 쓴다)

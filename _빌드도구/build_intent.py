@@ -36,7 +36,9 @@ SAME_X = 30             # 이어지는 줄은 첫 줄과 왼쪽 끝이 거의 �
 # 뒤에 딸려 온 «정답 ②», «정답풀이 :», 다음 문항 번호 따위는 잘라 낸다
 TAIL = re.compile(r'\s*(정답\s*풀이|정답\s*[①-⑤]|\d{1,2}\s*\.\s*출제|■|\[공통).*$')
 # 고3 해설의 선택과목 갈림 표시
-SECT = re.compile(r'\[\s*(확률과\s*통계|미적분|기하)\s*\]')
+# 괄호 없이 「확률과 통계 정답」 꼴로 쓴 해설지가 더 많다 (build_sol 과 같게 고쳤다)
+SECT = re.compile(r'\[\s*(확률과\s*통계|미적분|기하)\s*\]'
+                  r'|(확률과\s*통계|미적분|기하)\s*(?:정답|해설)')
 ALIAS = {'확률과통계': 0, '미적분': 1, '기하': 2}
 
 
@@ -69,15 +71,17 @@ def read_intents(path):
     # 1쪽은 「빠른 정답」 표가 단을 가로질러 놓여 있어 경계를 못 찾는데,
     # 그러면 표와 풀이가 한 줄로 붙어 «6④7⑤8⑤9④10②8. [출제의도] 인수분해 이해하기»
     # 가 되고, 줄 첫머리를 보는 ANCHOR 가 8·9번을 놓친다.
-    percuts = []
+    percuts, rulecuts = [], []
     for pi in range(len(d)):
         pg = d[pi]
         try:
             ch, W, H = layout.get_chars(pg)
             percuts.append(BS.find_cols(ch, W) if ch else [])
+            rulecuts.append(BS.rule_cols(pg, W))
         finally:
             pg.close()
-    CUTS = BS.agree_cuts(percuts)
+    # 단 사이에 세로줄이 그어져 있으면 그것이 가장 또렷하다 (build_sol 과 같게)
+    CUTS = BS.agree_cuts(rulecuts) or BS.agree_cuts(percuts)
     try:
         for pi in range(len(d)):
             pg = d[pi]
@@ -99,7 +103,7 @@ def read_intents(path):
                     for k, (top, x0, s) in enumerate(rows):
                         ms = SECT.search(s)
                         if ms:
-                            out.append(('과목', ms.group(1).replace(' ', '')))
+                            out.append(('과목', (ms.group(1) or ms.group(2)).replace(' ', '')))
                         m = ANCHOR.match(s)
                         if not m:
                             continue
