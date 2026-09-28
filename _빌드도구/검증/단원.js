@@ -76,8 +76,28 @@ const grp=t=>[...doc.querySelectorAll('#filters .fgroup')]
   ok('못 가린 수가 보인다', /단원을 못 가린 문항/.test($('adminList').textContent));
   ok('내려받기 단추', [...$('adminFoot').querySelectorAll('button')]
        .some(b=>/JSON으로 저장/.test(b.textContent)));
-  const pick=[...doc.querySelectorAll('#adminList .rb button')].find(b=>b.textContent==='단원 고르기');
-  ok('바로 고칠 수 있다', !!pick);
+  /* 문항 그림과 단원 칩이 줄 안에 함께 있어야 한다.
+     예전에는 «문항 보기» 로 관리자 화면을 닫고 검색으로 찾아가야 했다. */
+  const row=doc.querySelector('#adminList .fixrow2');
+  ok('못 가린 문항 줄이 있다', !!row);
+  ok('문항 그림이 줄 안에 있다', !!(row && row.querySelector('.fiximg img')));
+  ok('그림은 늦게 불러온다', row.querySelector('.fiximg img').getAttribute('loading')==='lazy');
+  const uchip=[...row.querySelectorAll('.fixchips .chip')];
+  ok('단원 칩이 바로 있다', uchip.length>=3, uchip.length);
+  ok('검색으로 보내지 않는다',
+     ![...row.querySelectorAll('button')].some(b=>b.textContent==='문항 보기'));
+  /* 칩을 누르면 그 자리에서 고쳐진다 */
+  const before=Object.keys(T().FIX).length;
+  const want=uchip[0].textContent, path=row.querySelector('.rf').textContent.split(' — ')[0];
+  click(uchip[0]); await wait(260);
+  ok('눌러서 바로 고쳐진다', Object.keys(T().FIX).length===before+1,
+     Object.keys(T().FIX).length);
+  ok('고른 단원이 들어갔다', T().FIX[path] && T().FIX[path][1]===want,
+     JSON.stringify(T().FIX[path])+' / '+want);
+  delete T().FIX[path];
+
+  const pick=[...doc.querySelectorAll('#adminList .rb button')].find(b=>b.textContent==='과목까지 바꾸기');
+  ok('과목까지 바꿀 수도 있다', !!pick);
   click(pick); await wait(220);
   ok('고치는 창이 열린다', $('modal').classList.contains('open'));
   ok('과목 칩 아홉', doc.querySelectorAll('#fixC .chip').length===9,

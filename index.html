@@ -301,6 +301,13 @@
   .fixrow{display:flex;gap:9px;align-items:flex-start}
   .fixrow b{width:38px;flex:none;color:var(--dim);font-size:11.5px;padding-top:4px}
   .fixchips{display:flex;gap:5px;flex-wrap:wrap}
+  /* 관리자 «과목·단원» 탭 — 문항 그림을 줄 안에 바로 놓는다.
+     높이를 묶어 두어야 서른 줄을 훑을 때 눈이 덜 흔들린다. */
+  .fiximg{margin:7px 0;border:1px solid var(--line);border-radius:6px;background:#fff;
+          max-height:320px;overflow:auto}
+  .fiximg img{width:100%;display:block}
+  .fixrow2 .fixchips{margin-top:4px}
+  .fixrow2 .fixchips .chip{cursor:pointer}
   .atab{display:flex;gap:6px;padding:9px 12px 0;flex-wrap:wrap}
   .atab button{border-radius:8px 8px 0 0;padding:6px 11px;font-size:12px;border-bottom:none}
   .atab button.on{background:var(--accent-soft);border-color:#cfd8e8;color:var(--accent);font-weight:600}
@@ -928,6 +935,7 @@
   var hits=[], TABS=[], activeTab=-1, SEL={};
   var OV={}, REPORTS=[], PAIRS=[], NEG={}, NEGV=[], DEL={}, PREF=null;
   var isAdmin=false, adminTab='rep';
+  var fixShow=30;          /* 과목·단원 탭에서 한 번에 보여 주는 문항 수 */
   var gateLeft=0, SIM_ANCHOR='', SIM_SAME=0, WAY_PIN=-1;
   var STD=window.QSTD||null, STDV=[], STDMAP=null, stdCur=null, stdPick=[], stdSel=[];
 
@@ -3989,25 +3997,42 @@
       L.innerHTML+='<div style="padding:18px;color:#6b7280;font-size:12px">'+
         '고칠 것이 없습니다.</div>';
     }
-    /* 단원을 못 가린 문항 — 눌러서 바로 고친다 */
-    noUnit.slice(0,300).forEach(function(it){
-      var d=document.createElement('div'); d.className='rrow';
+    /* 단원을 못 가린 문항 — 그림과 단원 칩을 한자리에 놓는다.
+       예전에는 «문항 보기» 를 눌러 관리자 화면을 닫고 검색으로 찾아가야 해서,
+       한 문항 고칠 때마다 오갔다. 이제 보고 바로 누르면 된다. */
+    var STEP=30;
+    if(fixShow>noUnit.length) fixShow=STEP;
+    noUnit.slice(0,fixShow).forEach(function(it){
+      var d=document.createElement('div'); d.className='rrow fixrow2';
       d.innerHTML='<div class="rt">'+esc(label(it))+'</div>'+
-                  '<div class="rf">'+esc(it[2])+' — '+esc(courseOf(it))+' · 단원 없음</div>';
-      var bar=document.createElement('div'); bar.className='rb';
-      function mkb(t,fn,cls){ var b=document.createElement('button'); b.textContent=t;
-        if(cls)b.className=cls; b.onclick=fn; bar.appendChild(b); }
-      mkb('단원 고르기',function(){ openFix(it); },'primary');
-      mkb('문항 보기',function(){
-        $('admin').classList.remove('open');
-        $('q').value=label(it); run(true); drawTabs();
+                  '<div class="rf">'+esc(it[2])+' — '+esc(courseOf(it))+' · 단원 없음</div>'+
+                  '<div class="fiximg"><img loading="lazy" src="'+imgSrc(it)+'" alt=""></div>';
+      /* 단원 칩 — 누르면 그 자리에서 저장되고 줄이 사라진다 */
+      var chips=document.createElement('div'); chips.className='fixchips';
+      (UNITS[courseOf(it)]||[]).forEach(function(u){
+        var c=document.createElement('span'); c.className='chip'; c.textContent=u;
+        c.onclick=function(){
+          FIX[it[2]]=[courseOf(it),u]; fixSave();
+          sendCollect({t:'fix', p:it[2], c:courseOf(it), u:u, who:UID, at:nowStr()});
+          buildFilters(); fsummary(); run(false,true); drawAdmin();
+          toast('고쳤습니다 — '+courseOf(it)+' · '+u);
+        };
+        chips.appendChild(c);
       });
+      d.appendChild(chips);
+      var bar=document.createElement('div'); bar.className='rb';
+      var b=document.createElement('button'); b.textContent='과목까지 바꾸기';
+      b.onclick=function(){ openFix(it); }; bar.appendChild(b);
       d.appendChild(bar); L.appendChild(d);
     });
-    if(noUnit.length>300){
+    if(noUnit.length>fixShow){
       var more=document.createElement('div'); more.className='rrow';
-      more.innerHTML='<div class="rm">… 그 밖 '+(noUnit.length-300)+'개는 다음에 보입니다.</div>';
-      L.appendChild(more);
+      var mb=document.createElement('button');
+      mb.textContent='다음 '+Math.min(STEP,noUnit.length-fixShow)+'개 더 보기 (남은 것 '+
+                     (noUnit.length-fixShow)+'개)';
+      mb.style.width='100%';
+      mb.onclick=function(){ fixShow+=STEP; drawAdmin(); };
+      more.appendChild(mb); L.appendChild(more);
     }
 
     function fbtn(t,fn,cls){ var b=document.createElement('button'); b.textContent=t;
