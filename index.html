@@ -1096,7 +1096,8 @@
     var av=ansOf(it);
     var h='<h3>'+esc(label(it))+' 해설</h3>'+
       '<p class="sub">'+(av===null?'':'정답 '+ansText(av)+' · ')+
-      '해설지에서 이 문항 부분만 오려 온 것입니다.</p>'+
+      /* 넷째 값이 1 이면 해설지가 없어 AI 가 풀어 쓴 해설이다 (예시문항) */
+      (s[3]===1 ? '이것은 AI가 해결한 풀이과정입니다.' : '해설지에서 이 문항 부분만 오려 온 것입니다.')+'</p>'+
       '<div class="solbox" id="solBox"><img src="'+solSrc(f)+'" alt="해설"></div>'+
       '<div class="mb">'+
         (s[1]>1200 ? '<button id="solZoom">원래 크기로</button>' : '')+
@@ -1432,7 +1433,7 @@
   }
   function courseOf(it){ return pairOf(it)[0]; }
   function unitOf(it){ return pairOf(it)[1] || ''; }
-  var ROUNDS=['수능','11월','10월','9월','7월','6월','5월','4월','3월'];
+  var ROUNDS=['수능','11월','10월','9월','7월','6월','5월','4월','3월','예시'];
 
   var YEARS=null;                       /* 자료에 실제로 있는 연도 */
   function yearSet(){
@@ -1654,10 +1655,11 @@
     EX.forEach(function(e){ var v=fn(e); if(v&&!has[v]){has[v]=1;out.push(v);} }); return out; }
   /* 구분 — 평가원 시험은 수능·9월모평·6월모평으로 갈라 본다 */
   function divOf(e){
+    if(e.r==='예시') return '예시문항';     /* 평가원이 새 체제를 앞두고 낸 예시문항 */
     if(e.g==='수능·모평') return e.r==='수능' ? '수능' : (e.r+'모평');
     return e.g+'전국';
   }
-  var DIV_ORDER=['수능','9월모평','6월모평','고1전국','고2전국','고3전국'];
+  var DIV_ORDER=['수능','9월모평','6월모평','예시문항','고1전국','고2전국','고3전국'];
   /* 시행 — 3월부터 차례대로. 수능·모평은 구분에서 고르므로 여기엔 두지 않는다 */
   var ROUND_ORDER=['3월','4월','5월','6월','7월','9월','10월','11월'];
   var drawUnitsRef=function(){};
