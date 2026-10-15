@@ -985,6 +985,15 @@
   var CIRC_WORD=/^(합성|합성함수|circ)$/;
   function circMatch(it){ return !!(it[6] && it[6].indexOf('∘')>=0) || it[5].indexOf('합성함수')>=0; }
   function circQuery(phrase, fq){ return CIRC_WORD.test(phrase) || fq==='∘'; }
+  /* 구간별로 정의된 식 — 한글 수식의 cases. 수식글에는 «={| … |)» 꼴로 남아 있다.
+     구간별 함수와, 홀짝으로 나눈 점화식이 함께 걸린다 (124문항). */
+  var CASES_WORD=/^(cases|구간함수|구간별함수)$/;
+  function casesMatch(it){
+    var f=it[6]||''; return /=\{\|/.test(f) || (/=\{/.test(f) && /\|\)/.test(f));
+  }
+  /* 역함수 — 수식글에 f^-1 과 f-^1 두 꼴로 찍혀 있다 (fnorm 이 하나로 맞춘다) */
+  var INV_WORD=/^(역함수|inverse)$/;
+  function invMatch(it){ return fxOf(it).indexOf('^-1')>=0 || it[5].indexOf('역함수')>=0; }
 
   /* «옳은 것만을 있는 대로 고른 것은?» — 보기 ㄱㄴㄷ 유형을 찾는 말이다.
      그런데 같은 유형이면서 다르게 쓴 문항이 다섯 개 있다.
@@ -1025,8 +1034,52 @@
     }
     return out.join('');
   }
+  /* ---- 한글(hwp) 수식 명령어로 쳐도 알아듣기 ----
+     한글 수식 편집기에서 복사한 스크립트를 그대로 붙여 넣어도 찾히게,
+     명령어를 수식글에 실제로 찍힌 기호로 바꾼다. 낱말은 «홀로 쓴 것» 만 바꾼다. */
+  var HWP_WORD=[
+    ['leq','≤'],['le','≤'],['geq','≥'],['ge','≥'],['neq','≠'],['ne','≠'],
+    ['times','×'],['cdot','·'],['div','÷'],['pm','±'],['angle','∠'],
+    ['cap','∩'],['cup','∪'],['notin','∉'],['in','∈'],['subset','⊂'],['emptyset','∅'],
+    ['perp','⊥'],['bot','⊥'],['cdots','⋯'],['ldots','⋯'],['dots','⋯'],['prod','∏'],
+    ['infinity','∞'],['rarrow','→'],['rightarrow','→'],['prime','′'],
+    /* 꾸밈 명령어는 버린다 — 찾는 데 쓸모가 없다 */
+    ['rm',''],['it',''],['roman',''],['italic',''],['bold',''],['left',''],['right','']];
+  var HWP_RE=new RegExp('\\b('+HWP_WORD.map(function(p){return p[0];}).join('|')+')\\b','gi');
+  var HWP_MAP={}; HWP_WORD.forEach(function(p){ HWP_MAP[p[0]]=p[1]; });
+  function hwpconv(s){
+    s=s.replace(/[`~]/g,' ');
+    /* root 3 of x → ³√ (수식글에는 ^3√ 로 찍혀 있다) */
+    s=s.replace(/\broot\s*\{?\s*(\d+)\s*\}?\s*of\b/gi,'^$1√');
+    /* {7} over {2} · 7 over 2 → (7)/(2) */
+    s=s.replace(/\{([^{}]*)\}\s*over\s*\{([^{}]*)\}/gi,function(_,a,b){ return '('+a.replace(/\s/g,'')+')/('+b.replace(/\s/g,'')+')'; });
+    s=s.replace(/(\S+)\s+over\s+(\S+)/gi,'($1)/($2)');
+    s=s.replace(HWP_RE,function(w){ var k=w.toLowerCase(); return HWP_MAP.hasOwnProperty(k)?HWP_MAP[k]:w; });
+    s=s.split('<=').join('≤').split('>=').join('≥').split('!=').join('≠').split('+-').join('±');
+    /* 첨자 중괄호 — 한 글자면 벗기고, 길면 수식글처럼 괄호로: x^{2}→x^2, a_{n+1}→a_(n+1) */
+    s=s.replace(/\{\s*\}/g,'');
+    for(var k=0;k<3;k++){
+      s=s.replace(/([\^_√])\s*\{\s*([^{}]*?)\s*\}/g,function(_,op,c){
+        c=c.replace(/\s/g,''); return op+(c.length>1?'('+c+')':c); });
+      s=s.replace(/\{\s*([^{},]*?)\s*\}(?=\s*[\^_])/g,function(_,c){ return c.replace(/\s/g,''); });
+    }
+    /* 조합·순열·중복조합 — 9C7, nCr, _9 C _7 → _9C_7 (원 이름 C₁ 과 섞이지 않게 숫자로 둘러싸인 것만) */
+    s=s.replace(/(^|[^A-Za-z0-9_])_?\s*(\d+|n)\s*([CPH])\s*_?\s*(\d+|r)(?![A-Za-z0-9])/g,'$1_$2$3_$4');
+    /* 여사건·여집합 A^c → A^C */
+    s=s.replace(/\^\s*c(?![A-Za-z])/g,'^C');
+    return s;
+  }
+  /* 수식글과 검색어 양쪽의 표기 흔들림을 맞춘다 — 같은 기호가 여러 글자로 찍혀 있다 */
+  function fnorm(s){
+    return s.replace(/[⋅∙]/g,'·').replace(/∊/g,'∈').replace(/…/g,'⋯').split('-^1').join('^-1');
+  }
+  /* 문항의 수식글(맞춘 것)을 한 번만 만들어 둔다 */
+  function fxOf(it){
+    if(it.nf===undefined) it.nf = it[6] ? fnorm(it[6]) : '';
+    return it.nf;
+  }
   function fconv(s){
-    s=(s||'');
+    s=hwpconv(s||'');
     F_KOR.forEach(function(p){ s=s.split(p[0]).join(p[1]); });
     s=s.split('->').join('→');
     /* 도함수 — 자판의 ' 와 스마트 따옴표를 시험지에 찍힌 프라임(′)으로 맞춘다.
@@ -1036,14 +1089,14 @@
     s=s.replace(/circ(?!le)/gi,'∘');
     /* 로마자는 덩어리째 맞을 때만 바꾼다 — «point» 안의 «int» 는 건드리지 않는다 */
     s=s.replace(/[A-Za-z]+/g,fsplit);
-    return s.replace(/\s+/g,'');
+    return fnorm(s.replace(/\s+/g,''));
   }
   /* 수식으로 볼지 가르는 자국 — 수학기호·로마자·함수이름 중 하나라도 있으면.
      예전에는 대문자만 보아서, x 와 X 가 서로 다른 곳을 뒤졌다.
        X → 수식글에서 찾음      x → 수식이 지워진 예전 글에서 찾음
      그래서 «대소문자를 가린다» 면서 실제로는 가리지 못했다.
      이제 소문자도 수식글에서 찾는다. 수식글에 없으면 예전 글로 내려간다. */
-  var F_MARK=/[\^_|()=+\-\/<>≤≥√Σ∫π∞·∘θαβγ→′]|lim|sin|cos|tan|log|[A-Za-z]/;
+  var F_MARK=/[\^_|()=+\-\/<>≤≥≠√Σ∫∏π∞·∘θαβγσ→′×÷±∠∩∪∈∉⊂∅⊥⋯]|lim|sin|cos|tan|log|[A-Za-z]/;
   function isF(q){ return F_MARK.test(q); }
   function esc(s){ return String(s).replace(/[&<>"]/g,function(c){
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
@@ -1510,8 +1563,13 @@
         cut=true;
       }else toks.push(t);
     });
-    toks.forEach(function(t){
+    /* 수식 명령어·연산자 바로 옆의 맨숫자는 문항번호·연도가 아니라 수식의 일부다
+       («x leq 3», «7 over 2», «root 3 of 2») */
+    var OP_TOK=/^(over|of|root|leq|le|geq|ge|neq|ne|times|cdot|div|pm|in|notin|subset|cap|cup|rarrow|rightarrow|prime|[CPHx-z])$|[{}^_=<>≤≥≠+×÷±·∈∉⊂∩∪→\/]/i;
+    function opTok(t){ return t!==undefined && OP_TOK.test(t); }
+    toks.forEach(function(t,i){
       var m, g;
+      if(/^\d+$/.test(t) && (opTok(toks[i-1]) || opTok(toks[i+1]))){ text.push(t); return; }
       /* 뜻이 분명한 것부터 */
       if((m=t.match(/^(\d{2,4})학년도$/))){
         /* «26학년도»라고 적으면 학년도 그대로 찾는다 */
@@ -1613,11 +1671,13 @@
   function termMatch(it,term){
     if(absQuery(norm(term), fconv(term))) return absMatch(it);
     if(circQuery(norm(term), fconv(term))) return circMatch(it);
+    if(CASES_WORD.test(norm(term))) return casesMatch(it);
+    if(INV_WORD.test(norm(term))) return invMatch(it);
     if(bogiWord(norm(term))) return it[5].indexOf(norm(term))>=0 || bogiMatch(it);
     var f=fconv(term);
     if(isF(f)){
       var ph=norm(term);
-      return it[6] ? it[6].indexOf(f)>=0 : (f===ph && it[5].indexOf(ph)>=0);
+      return it[6] ? fxOf(it).indexOf(f)>=0 : (f===ph && it[5].indexOf(ph)>=0);
     }
     return it[5].indexOf(norm(term))>=0;
   }
@@ -1630,12 +1690,16 @@
         return plan.text.every(function(t){ return termMatch(it,t); });
       }), mode:'comma', spec:plan};
     }
-    var joined=plan.text.join('');
+    /* 띄어쓰기를 살려 넘긴다 — «x leq 3» 의 leq 를 낱말로 알아보려면 앞뒤가 떨어져 있어야 한다.
+       (fconv 가 마지막에 공백을 모두 지운다) */
+    var joined=plan.text.join(' ');
     var phrase=norm(joined);
     var fq=fconv(joined);
     if(!phrase && !fq) return {list:pool,mode:raw.trim()?'spec':'all',spec:plan};
     if(absQuery(phrase, fq)) return {list:pool.filter(absMatch), mode:'abs', spec:plan};
     if(circQuery(phrase, fq)) return {list:pool.filter(circMatch), mode:'circ', spec:plan};
+    if(CASES_WORD.test(phrase)) return {list:pool.filter(casesMatch), mode:'cases', spec:plan};
+    if(INV_WORD.test(phrase)) return {list:pool.filter(invMatch), mode:'inv', spec:plan};
     if(bogiWord(phrase)) return {list:pool.filter(function(it){
       return it[5].indexOf(phrase)>=0 || bogiMatch(it);
     }), mode:'bogi', spec:plan};
@@ -1648,7 +1712,7 @@
            엉뚱한 문항이 잔뜩 걸린다. 그런 검색어는 수식글 있는 문항에서만 찾는다. */
       var canOld = (fq === phrase);
       var fl = pool.filter(function(it){
-        return it[6] ? it[6].indexOf(fq)>=0 : (canOld && it[5].indexOf(phrase)>=0);
+        return it[6] ? fxOf(it).indexOf(fq)>=0 : (canOld && it[5].indexOf(phrase)>=0);
       });
       if(fl.length) return {list:fl, mode:'formula', spec:plan};
       /* 수식으로 하나도 못 찾으면 여기서 끝내지 않고, 아래 «글자 그대로»와
@@ -2650,7 +2714,23 @@
      ['pi · 파이','π'],
      ['theta · 세타','θ  (alpha·beta 도 됩니다)'],
      ['abs · vert · |','절댓값 (셋 다 «절댓값» 과 같습니다)'],
-     ['합성 · circ · ∘','합성함수 f∘g (기호가 없고 «합성함수» 라고만 쓴 문항도 함께)'],
+     ['합성 · circ · ∘','합성함수 f∘g (기호가 없고 «합성함수» 라고만 쓴 문항도 함께)']]],
+   ['한글 수식 명령어로 쳐도 됩니다',
+    '한글 수식 편집기에서 쓰는 명령어를 그대로 알아듣습니다. 수식을 복사해 붙여 넣어도 됩니다 '+
+    '(중괄호·`·~·rm·it·left·right 는 알아서 걷어 냅니다).',
+    [['leq · <=   geq · >=   neq · !=','≤  ≥  ≠'],
+     ['times · cdot · div · +-','×  ·  ÷  ±'],
+     ['cap · cup · in · notin · subset · emptyset','∩  ∪  ∈  ∉  ⊂  ∅'],
+     ['A^C · A^c','여사건·여집합'],
+     ['angle · perp','∠  ⊥'],
+     ['cdots · ldots · prod','⋯  ∏'],
+     ['infinity · rarrow · prime','∞  →  ′'],
+     ['9C7 · nCr · {}_{9} C _{7}','조합 ₉C₇  (8P2 → 순열, 4H2 → 중복조합)'],
+     ['{7} over {2} · 7 over 2','분수 7/2 (분수가 글자로 남은 문항만 찾힙니다)'],
+     ['x ^{2} · a _{n+1} · log _{2}','x^2 · a_(n+1) · log_2'],
+     ['root 3 of 2','세제곱근 ³√2'],
+     ['cases · 구간함수','구간별로 정의된 식 (구간별 함수·경우를 나눈 점화식)'],
+     ['역함수 · f^-1','역함수 (기호가 없고 «역함수» 라고만 쓴 문항도 함께)'],
      ['-> ','→  (예: lim x->0)'],
      ['inf · 무한대','∞'],
      ['lim · sin · cos · tan · log','그대로 치시면 됩니다'],
@@ -4415,6 +4495,8 @@
       if(!hits.length) msg+='결과 없음';
       else if(r.mode==='and') msg+='문구 그대로는 없어서 <b>낱말을 모두 포함</b>하는 <b>'+hits.length+'</b>문항';
       else if(r.mode==='abs') msg+='<b>'+hits.length.toLocaleString()+'</b>문항 <span class="dim">(절댓값 기호 |…| 가 든 문항)</span>';
+      else if(r.mode==='cases') msg+='<b>'+hits.length.toLocaleString()+'</b>문항 <span class="dim">(구간별로 정의된 식 — 구간별 함수·경우를 나눈 점화식)</span>';
+      else if(r.mode==='inv') msg+='<b>'+hits.length.toLocaleString()+'</b>문항 <span class="dim">(역함수 — 기호 f^-1 나 «역함수» 가 든 문항)</span>';
       else if(r.mode==='circ') msg+='<b>'+hits.length.toLocaleString()+'</b>문항 <span class="dim">(합성함수 — 기호 ∘ 나 «합성함수» 가 든 문항)</span>';
       else if(r.mode==='bogi') msg+='<b>'+hits.length.toLocaleString()+'</b>문항 <span class="dim">(&lt;보기&gt; ㄱㄴㄷ 유형 · 다르게 쓴 문항까지)</span>';
       else if(r.mode==='formula') msg+='<b>'+hits.length.toLocaleString()+'</b>문항 <span class="dim">(수식으로 찾음 · 대소문자 구분)</span>';
