@@ -978,6 +978,13 @@
   var ABS_PAIR=/\|[^|{}=]{1,25}\|/;
   function absMatch(it){ return !!(it[6] && ABS_PAIR.test(it[6])); }
   function absQuery(phrase, fq){ return ABS_WORD.test(phrase) || fq==='|'; }
+  /* 합성함수 ∘ — «합성» «합성함수» «circ» «∘» 모두 같은 뜻으로 본다.
+     수식글에 ∘ 가 든 문항(f∘g, 71문항 — 모두 합성 표기였다)과
+     ∘ 없이 «합성함수» 라고만 쓴 문항을 함께 보여 준다.
+     ○ ◦ 는 도(°)·선지 표시라 넣지 않는다. «합성수» 는 다른 말이라 건드리지 않는다. */
+  var CIRC_WORD=/^(합성|합성함수|circ)$/;
+  function circMatch(it){ return !!(it[6] && it[6].indexOf('∘')>=0) || it[5].indexOf('합성함수')>=0; }
+  function circQuery(phrase, fq){ return CIRC_WORD.test(phrase) || fq==='∘'; }
 
   /* «옳은 것만을 있는 대로 고른 것은?» — 보기 ㄱㄴㄷ 유형을 찾는 말이다.
      그런데 같은 유형이면서 다르게 쓴 문항이 다섯 개 있다.
@@ -996,11 +1003,11 @@
     return false;
   }
   var F_ENG={sqrt:'√',root:'√',sum:'Σ',int:'∫',pi:'π',theta:'θ',alpha:'α',beta:'β',
-             abs:'|',vert:'|',inf:'∞',infty:'∞'};
+             abs:'|',vert:'|',inf:'∞',infty:'∞',circ:'∘'};
   /* 붙여 쓴 낱말도 알아듣기 — costheta → cosθ, sinalpha → sinα
      함수 이름은 그대로 두되, 쪼개는 데는 쓸 줄 알아야 한다. */
   var F_TOK={sqrt:'√',root:'√',sum:'Σ',int:'∫',pi:'π',theta:'θ',alpha:'α',beta:'β',
-             abs:'|',vert:'|',inf:'∞',infty:'∞',gamma:'γ',sigma:'σ',
+             abs:'|',vert:'|',inf:'∞',infty:'∞',gamma:'γ',sigma:'σ',circ:'∘',
              sin:'sin',cos:'cos',tan:'tan',log:'log',ln:'ln',lim:'lim'};
   /* 아는 낱말«만»으로 온전히 쪼개질 때만 바꾼다.
      point 는 po+int 로 쪼개지지 않으므로 그대로 두어, 낱말 속 int 를 안 건드린다. */
@@ -1025,6 +1032,8 @@
     /* 도함수 — 자판의 ' 와 스마트 따옴표를 시험지에 찍힌 프라임(′)으로 맞춘다.
        2계도함수 ″ 는 색인에서 ′′ 로 펴 두었으므로 두 번 친 것과 그대로 맞는다. */
     s=s.replace(/[‴]/g,'′′′').replace(/[″]/g,'′′').replace(/['’‘´`]/g,'′');
+    /* circ 는 f·g 에 붙여 쓰기 쉽다 — «fcircg» 도 f∘g 로 (circle 은 빼고) */
+    s=s.replace(/circ(?!le)/gi,'∘');
     /* 로마자는 덩어리째 맞을 때만 바꾼다 — «point» 안의 «int» 는 건드리지 않는다 */
     s=s.replace(/[A-Za-z]+/g,fsplit);
     return s.replace(/\s+/g,'');
@@ -1480,8 +1489,11 @@
       var re=new RegExp(pr[0].replace(/ /g,'\\s*'),'g');
       if(re.test(s)){ if(base.subjects.indexOf(pr[1])<0) base.subjects.push(pr[1]); s=s.replace(re,' '); }
     });
-    ['고1','고2','고3'].forEach(function(g){
-      var re=new RegExp('(?:^|[\\s,])'+g+'(?=[\\s,])','g');
+    /* 학년 — «고3» 말고 «3학년» «고3학년» 으로 쳐도 같다.
+       앞뒤가 띄어쓰기·쉼표로 끊길 때만 본다 — «21학년도» 는 학년도라 건드리지 않는다. */
+    ['1','2','3'].forEach(function(n){
+      var g='고'+n;
+      var re=new RegExp('(?:^|[\\s,])(?:고\\s*'+n+'\\s*학년|'+n+'\\s*학년|고'+n+')(?=[\\s,])','g');
       if(re.test(s)){ if(base.grades.indexOf(g)<0) base.grades.push(g); s=s.replace(re,' '); }
     });
     ROUNDS.forEach(function(r){
@@ -1600,6 +1612,7 @@
   /* 조건 하나가 이 문항에 들어 있는가 — 수식이면 수식글로, 아니면 예전 글로 */
   function termMatch(it,term){
     if(absQuery(norm(term), fconv(term))) return absMatch(it);
+    if(circQuery(norm(term), fconv(term))) return circMatch(it);
     if(bogiWord(norm(term))) return it[5].indexOf(norm(term))>=0 || bogiMatch(it);
     var f=fconv(term);
     if(isF(f)){
@@ -1622,6 +1635,7 @@
     var fq=fconv(joined);
     if(!phrase && !fq) return {list:pool,mode:raw.trim()?'spec':'all',spec:plan};
     if(absQuery(phrase, fq)) return {list:pool.filter(absMatch), mode:'abs', spec:plan};
+    if(circQuery(phrase, fq)) return {list:pool.filter(circMatch), mode:'circ', spec:plan};
     if(bogiWord(phrase)) return {list:pool.filter(function(it){
       return it[5].indexOf(phrase)>=0 || bogiMatch(it);
     }), mode:'bogi', spec:plan};
@@ -2614,7 +2628,8 @@
      칸이 둘인 줄은 «친 것 → 나오는 것» 표가 됩니다. */
   var HELP=[
    ['섞어서 한 번에 치시면 됩니다',
-    '연도·시행·학년·과목·문항번호·문구를 차례에 상관없이 함께 적으시면 됩니다. 띄어쓰기는 무시합니다.',
+    '연도·시행·학년·과목·문항번호·문구를 차례에 상관없이 함께 적으시면 됩니다. 띄어쓰기는 무시합니다. '+
+    '학년은 «고3» «3학년» 어느 쪽으로 쓰셔도 됩니다.',
     [['25 고3 3월 1,2,3,7','2025년 3월 고3 학평의 그 여섯 문항'],
      ['고3 6월 22','해마다 6월 모평 22번을 모두'],
      ['확통 정규분포','확률과 통계 중 정규분포가 나온 문항']]],
@@ -2635,6 +2650,7 @@
      ['pi · 파이','π'],
      ['theta · 세타','θ  (alpha·beta 도 됩니다)'],
      ['abs · vert · |','절댓값 (셋 다 «절댓값» 과 같습니다)'],
+     ['합성 · circ · ∘','합성함수 f∘g (기호가 없고 «합성함수» 라고만 쓴 문항도 함께)'],
      ['-> ','→  (예: lim x->0)'],
      ['inf · 무한대','∞'],
      ['lim · sin · cos · tan · log','그대로 치시면 됩니다'],
@@ -4399,6 +4415,7 @@
       if(!hits.length) msg+='결과 없음';
       else if(r.mode==='and') msg+='문구 그대로는 없어서 <b>낱말을 모두 포함</b>하는 <b>'+hits.length+'</b>문항';
       else if(r.mode==='abs') msg+='<b>'+hits.length.toLocaleString()+'</b>문항 <span class="dim">(절댓값 기호 |…| 가 든 문항)</span>';
+      else if(r.mode==='circ') msg+='<b>'+hits.length.toLocaleString()+'</b>문항 <span class="dim">(합성함수 — 기호 ∘ 나 «합성함수» 가 든 문항)</span>';
       else if(r.mode==='bogi') msg+='<b>'+hits.length.toLocaleString()+'</b>문항 <span class="dim">(&lt;보기&gt; ㄱㄴㄷ 유형 · 다르게 쓴 문항까지)</span>';
       else if(r.mode==='formula') msg+='<b>'+hits.length.toLocaleString()+'</b>문항 <span class="dim">(수식으로 찾음 · 대소문자 구분)</span>';
       else if(r.mode==='comma') msg+='<b>'+hits.length.toLocaleString()+'</b>문항 <span class="dim">('+esc(r.spec.text.join(' 와 '))+' 를 모두 포함)</span>';
