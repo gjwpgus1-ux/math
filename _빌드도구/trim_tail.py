@@ -130,8 +130,16 @@ def main():
     D = json.loads(src[src.index('=') + 1:].rstrip().rstrip(';'))
     EX, IT = D['exams'], D['items']
 
+    # 아래 덩어리가 실제 조건(다)·<보기> 끝줄이라 잘라선 안 되는 그림 — 손으로 되살린 것
+    keep = set()
+    kp = os.path.join(HERE, '꼬리_자르지말것.txt')
+    if os.path.exists(kp):
+        keep = {l.strip() for l in open(kp, encoding='utf-8') if l.strip() and not l.startswith('#')}
+
     hits = []
     for it in IT:
+        if it[2] in keep:
+            continue
         p = os.path.join(IMG, it[2].replace('/', os.sep))
         if not os.path.exists(p):
             continue
