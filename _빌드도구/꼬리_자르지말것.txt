@@ -1,2 +1,6 @@
 # trim_tail.py 가 건너뛸 그림 (아래 덩어리가 문항의 실제 조건이라 잘리면 안 됨)
 suneung/037_30.png
+suneung/012_22.png
+suneung/073_29.png
+suneung/077_27.png
+suneung/004_21.png
