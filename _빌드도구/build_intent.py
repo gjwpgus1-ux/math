@@ -210,10 +210,7 @@ def all_jobs():
 
     # 평가원(수능·모평) 해설은 저작권 때문에 본문을 손대지 않지만,
     # «[출제의도] … 이해하기» 한 줄 말마디는 문항을 묶는 이름표로만 쓴다.
-    files = sorted(glob.glob(os.path.join(BS.DB, '전국연합*', '*.pdf'))) + \
-            sorted(glob.glob(os.path.join(BS.DB, '전국연합*', '해설', '*.pdf'))) + \
-            sorted(glob.glob(os.path.join(BS.DB, '평가원*', '*.pdf'))) + \
-            sorted(glob.glob(os.path.join(BS.DB, '평가원*', '해설', '*.pdf')))
+    files = BA.source_files()
     jobs = []
     for f in files:
         rel = os.path.relpath(f, BS.DB)

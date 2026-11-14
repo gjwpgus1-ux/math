@@ -17,7 +17,7 @@ from openpyxl.utils import get_column_letter
 HERE = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.dirname(HERE)
 DBROOT = os.path.abspath(os.path.join(APP, '..', '데이터베이스'))
-DB = os.path.join(DBROOT, '해설파일(정리 전)')
+DB = DBROOT          # 해설·정답은 «데이터베이스\해설», «데이터베이스\정답» (2026-11-14 정리)
 COPYTO = os.path.join(DBROOT, '정답 입력할 파일')
 XLSX = os.path.join(DBROOT, '정답 입력표.xlsx')
 
@@ -45,10 +45,7 @@ def exam_files(Q):
     for i, e in enumerate(exams):
         by_key[(e['g'], e['y'], e['r'])].append(i)
 
-    files = sorted(glob.glob(os.path.join(DB, '*', '*.pdf'))) + \
-            sorted(glob.glob(os.path.join(DB, '*', '해설', '*.pdf'))) + \
-            sorted(glob.glob(os.path.join(DB, '*', '문항', '*.pdf')))
-    files = [f for f in files if '_지울것' not in f and '_확인필요' not in f]
+    files = BA.source_files()
 
     out = {}
     for f in files:
@@ -108,9 +105,7 @@ def main():
         if rel in copied:
             continue
         base = os.path.basename(rel)
-        folder = rel.split(os.sep)[0]
-        new = safe(folder.replace('전국연합_', '').replace('(3월 제외)', '')
-                   .replace('_3월(중학 범위)', '').replace('_3월(고1 범위)', '')) + '_' + base
+        new = safe(base)          # 정리한 이름에 학년·과목이 다 들어 있다
         shutil.copy2(os.path.join(DB, rel), os.path.join(COPYTO, new))
         copied[rel] = new
     for rec in rows_todo:

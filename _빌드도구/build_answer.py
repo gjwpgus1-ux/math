@@ -14,7 +14,15 @@ import anstable
 HAND = {}
 HERE = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.dirname(HERE)
-DB = os.path.abspath(os.path.join(APP, '..', '데이터베이스', '해설파일(정리 전)'))
+# 2026-11-14 데이터베이스 정리: 해설은 «데이터베이스\해설», 정답은 «데이터베이스\정답» 한 폴더에
+# «1806_고2_가형_해설.pdf», «22학년도 6월_미적_해설.pdf» 꼴 이름으로 모았다.
+DB = os.path.abspath(os.path.join(APP, '..', '데이터베이스'))
+
+
+def source_files():
+    """정답·해설을 읽을 수 있는 파일 전부 (해설 폴더 + 정답 폴더의 PDF)"""
+    return sorted(glob.glob(os.path.join(DB, '해설', '*.pdf'))) + \
+        sorted(glob.glob(os.path.join(DB, '정답', '*.pdf')))
 
 CIRC = '①②③④⑤'
 RUN = re.compile(r'(?:\d{1,2}[①②③④⑤]){2,}')
@@ -158,6 +166,20 @@ def parse_name(rel):
     if base.endswith('_전과목.pdf') or '다른본' in base:
         return None
 
+    # 정리한 이름: «22학년도 6월_미적_해설», «17학년도 수능_가형_해설», «26학년도 9월_정답»
+    stem = os.path.splitext(base)[0]
+    m = re.match(r'(\d{2})학년도 (수능|\d{1,2}월)(?:_(가형|나형|공통|확통|미적|기하))?(?:_|$)', stem)
+    if m:
+        hy = m.group(3) if m.group(3) in ('가형', '나형') else None
+        return ('수능·모평', str(2000 + int(m.group(1))), m.group(2), hy)
+    # «1806_고2_가형_해설», «2107_고3_기하_해설», «2506_고1_정답»
+    m = re.match(r'(\d{2})(\d{2})_(고[123])(?:_(가형|나형|공통|확통|미적|기하))?(?:_|$)', stem)
+    if m:
+        hy = m.group(4) if m.group(4) in ('가형', '나형') else None
+        return (m.group(3), str(2000 + int(m.group(1))), '%d월' % int(m.group(2)), hy)
+    if folder in ('해설', '정답', '문제지'):
+        return None
+
     if folder.startswith('평가원'):
         # 2021학년도까지는 가형·나형으로 갈렸다 (선택과목 없는 30문항 한 벌)
         hy = '가형' if '가형' in base else ('나형' if '나형' in base else None)
@@ -220,10 +242,7 @@ def main():
     for i, e in enumerate(exams):
         by_key[(e['g'], e['y'], e['r'])].append(i)
 
-    files = sorted(glob.glob(os.path.join(DB, '*', '*.pdf'))) + \
-            sorted(glob.glob(os.path.join(DB, '*', '해설', '*.pdf'))) + \
-            sorted(glob.glob(os.path.join(DB, '*', '문항', '*.pdf')))
-    files = [f for f in files if '_지울것' not in f and '_확인필요' not in f]
+    files = source_files()
 
     ANS = collections.defaultdict(dict)
     report = []

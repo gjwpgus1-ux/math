@@ -15,7 +15,7 @@ import layout
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.dirname(HERE)
-DB = os.path.abspath(os.path.join(APP, '..', '데이터베이스', '해설파일(정리 전)'))
+DB = os.path.abspath(os.path.join(APP, '..', '데이터베이스'))   # 해설은 DB\해설 (2026-11-14 정리)
 OUT = os.path.join(APP, 'img', '해설')
 
 ANCHOR = re.compile(r'^\s*(\d{1,2})\s*\.\s*\[\s*출제의도\s*\]')
@@ -52,8 +52,9 @@ def pick_jobs(n=None):
         for k in json.loads(open(sp, encoding='utf-8').read().split('=', 1)[1].rstrip(';\n')):
             done.add(k[:k.rfind('#')])
 
-    files = sorted(glob.glob(os.path.join(DB, '전국연합*', '*.pdf'))) + \
-            sorted(glob.glob(os.path.join(DB, '전국연합*', '해설', '*.pdf')))
+    # 평가원(수능·모평) 것은 빼고 학평 해설만
+    files = [f for f in BA.source_files()
+             if (BA.parse_name(os.path.relpath(f, DB)) or ('',))[0] != '수능·모평']
     jobs = []
     for f in files:
         rel = os.path.relpath(f, DB)
