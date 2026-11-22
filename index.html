@@ -1556,10 +1556,26 @@
 
     /* 쉼표로 나눈 여러 조건 — «lim, x^2» 은 둘 다 든 문항만.
        «1,2,3» 처럼 번호를 늘어놓은 것은 예전대로 한 덩어리로 둔다. */
+    /* 괄호 () {} [] 안의 쉼표·띄어쓰기는 글자 그대로 둔다 — «(1,2)» «{1,2,3}» «[0,1]» 은
+       좌표·집합·구간이지 «둘 다» 가 아니다. 괄호 밖의 쉼표만 조건을 나눈다.
+       (예전에는 «(1,2)» 가 «(1» 과 «2)» 로 쪼개져, 둘이 따로 든 문항이 잔뜩 걸렸다) */
+    function bsplit(str, sep){
+      var out=[], cur='', d=0;
+      for(var i=0;i<str.length;i++){
+        var ch=str.charAt(i);
+        if('([{'.indexOf(ch)>=0) d++;
+        else if(')]}'.indexOf(ch)>=0 && d>0) d--;
+        if(d===0 && sep.test(ch)){ if(cur) out.push(cur); cur=''; }
+        else cur+=ch;
+      }
+      if(cur) out.push(cur);
+      return out;
+    }
     var cut=false, toks=[];
-    s.trim().split(/\s+/).filter(Boolean).forEach(function(t){
-      if(t.indexOf(',')>=0 && !numGroup(t)){
-        t.split(',').filter(Boolean).forEach(function(p){ toks.push(p); });
+    bsplit(s.trim(), /\s/).forEach(function(t){
+      var parts=bsplit(t, /,/);
+      if(parts.length>1 && !numGroup(t)){
+        parts.forEach(function(p){ toks.push(p); });
         cut=true;
       }else toks.push(t);
     });
@@ -2751,7 +2767,8 @@
      ['x^2','968문항'],
      ['lim, x^2','81문항 — 둘 다 든 것만'],
      ['정규분포, 표준편차','43문항'],
-     ['고2, lim, sin','고2 중에서 둘 다 든 것']]],
+     ['고2, lim, sin','고2 중에서 둘 다 든 것'],
+     ['(1,2) · {1,2,3} · [0,1]','괄호 안의 쉼표는 나누지 않고 글자 그대로 — 좌표·집합·구간을 찾습니다']]],
    ['숫자만 늘어놓은 쉼표는 문항 번호로 읽습니다',
     '«1,2,3» 처럼 숫자뿐이면 예전대로 번호 목록입니다. 물결로 범위도 됩니다.',
     [['25 고3 3월 1,2,3,7,10,30','그 여섯 문항'],
